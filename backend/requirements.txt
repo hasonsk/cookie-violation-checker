@@ -1,0 +1,29 @@
+fastapi
+uvicorn
+kafka-python
+pymongo
+redis
+pydantic
+python-dotenv
+requests
+beautifulsoup4
+lxml
+pytest
+pytest-cov
+httpx
+playwright
+flake8
+black
+celery
+aiohttp
+isort
+fastapi
+uvicorn
+jwt
+# aiokafka
+# motor
+# python-multipart
+# python-jose
+# cryptography
+google
+google.genai
