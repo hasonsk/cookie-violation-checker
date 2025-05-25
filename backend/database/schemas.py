@@ -13,7 +13,7 @@ class MongoBaseSchema:
         elif isinstance(obj, dict):
             data = obj
         else:
-            data = obj.__dict__
+            data = obj
 
         # Add timestamps if not present
         if 'created_at' not in data:
