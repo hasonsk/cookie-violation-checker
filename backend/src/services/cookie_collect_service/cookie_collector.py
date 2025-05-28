@@ -6,8 +6,7 @@ from dataclasses import dataclass
 from typing import Optional
 from src.services.violation_detect_service.violation_detector import ViolationAnalyzer  # Replace 'some_module' with the actual module name
 
-@dataclass
-class ActualCookie:
+class ActualCookie(BaseModel):
     """Cấu trúc cookie thu thập được thực tế"""
     name: str
     value: str

@@ -1,9 +1,8 @@
 import logging
 from typing import Optional
-from dataclasses import asdict
 
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from schemas.cookie_schema import CookieFeatures
+from schemas.cookie_schema import PolicyCookieList
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +27,10 @@ class CookieExtractController:
             features = await self.extractor_service.extract_cookie_features(
                 policy_content, table_content
             )
-            return asdict(features)
+            return features
         except Exception as e:
             logger.error(f"Error in analyze_cookie_policy: {str(e)}")
-            return asdict(CookieFeatures(is_specific=0, cookies=[]))
+            return PolicyCookieList(is_specific=0, cookies=[])
 
     async def get_default_features(self, website_url: str) -> dict:
         """
@@ -45,7 +44,7 @@ class CookieExtractController:
         """
         try:
             features = await self.extractor_service.infer_default_features(website_url)
-            return asdict(features)
+            return features
         except Exception as e:
             logger.error(f"Error in get_default_features: {str(e)}")
-            return asdict(CookieFeatures(is_specific=0, cookies=[]))
+            return PolicyCookieList(is_specific=0, cookies=[])

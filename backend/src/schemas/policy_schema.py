@@ -10,8 +10,7 @@ class DiscoveryMethod(Enum):
     BING_SEARCH = "bing_search"
     SITEMAP = "sitemap"
 
-@dataclass
-class PolicyDiscoveryResult:
+class PolicyDiscoveryResult(BaseModel):
     website_url: str
     policy_url: Optional[str] = None
     discovery_method: Optional[DiscoveryMethod] = None
@@ -27,8 +26,7 @@ class PolicyDiscoveryResult:
             "confidence_score": self.confidence_score
         }
 
-@dataclass
-class PolicyContent:
+class PolicyContent(BaseModel):
     """Data structure for policy content"""
     website_url: str
     policy_url: Optional[str]

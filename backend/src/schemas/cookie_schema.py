@@ -1,53 +1,14 @@
-from pydantic import BaseModel
-from datetime import datetime
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from pydantic import BaseModel
+from typing import Dict, List, Optional, Any
+from datetime import datetime
 
 class CookieType(Enum):
-    """Cookie classification types"""
-    SPECIFIC = "specific"
-    GENERAL = "general"
-    UNDEFINED = "undefined"
+    SPECIFIC = "SPECIFIC"
+    GENERAL = "GENERAL"
+    UNDEFINED = "UNDEFINED"
 
-class CookiePurpose(Enum):
-    """Standard cookie purposes"""
-    STRICTLY_NECESSARY = "Strictly Necessary"
-    FUNCTIONALITY = "Functionality"
-    ANALYTICAL = "Analytical"
-    TARGETING = "Targeting/Advertising/Marketing"
-    PERFORMANCE = "Performance"
-    SOCIAL_SHARING = "Social Sharing"
-    UNKNOWN = "Unknown"
-
-@dataclass
-class CookieFeature:
-    """Individual cookie feature structure"""
-    cookie_name: Optional[str]
-    declared_purpose: Optional[str]
-    declared_retention: Optional[str]
-    declared_third_parties: List[str]
-    declared_description: Optional[str]
-    feature_type: str = CookieType.UNDEFINED.value
-
-@dataclass
-class CookieFeatures:
-    """Complete cookie features response structure"""
-    is_specific: int
-    cookies: List[CookieFeature]
-class Cookie(BaseModel):
-    """Schema cho cookie từ browser extension"""
-    name: str
-    value: str
-    domain: str
-    path: str
-    secure: bool
-    httpOnly: bool
-    sameSite: Optional[str] = None
-    expirationDate: Optional[datetime] = None
-
-@dataclass
-class PolicyCookie:
+class PolicyCookie(BaseModel):
     """Cấu trúc cookie được khai báo trong policy"""
     cookie_name: str
     declared_purpose: str
@@ -55,20 +16,28 @@ class PolicyCookie:
     declared_third_parties: List[str]
     declared_description: str
 
-@dataclass
-class ActualCookie:
+class PolicyCookieList(BaseModel):
+    """Cấu trúc danh sách cookie trong policy"""
+    is_specific: int
+    cookies: List[PolicyCookie]
+
+class ActualCookie(BaseModel):
     """Cấu trúc cookie thu thập được thực tế"""
     name: str
     value: str
     domain: str
-    expires: Optional[datetime]
+    expirationDate: Optional[datetime]
     secure: bool
     httpOnly: bool
     sameSite: Optional[str]
-    thirdParties: Optional[List[str]]
+    path: Optional[str] = "/"
 
-@dataclass
-class ComplianceIssue:
+class CookieSubmissionRequest(BaseModel):
+    website_url: str
+    cookies: List[dict]
+
+
+class ComplianceIssue(BaseModel):
     """Cấu trúc vấn đề compliance được phát hiện"""
     issue_id: int
     category: str
@@ -78,18 +47,33 @@ class ComplianceIssue:
     cookie_name: str
     details: Dict[str, Any]
 
-class ComplianceResult(BaseModel):
-    """Schema cho kết quả phân tích compliance"""
+
+class ComplianceRequest(BaseModel):
+    """Request schema cho compliance analysis"""
+    website_url: str
+    cookies: List[dict]
+    policy_json: Optional[PolicyCookieList] = None
+
+
+class ComplianceResponse(BaseModel):
+    """Response schema cho compliance analysis"""
     total_issues: int
-    issues: List[ComplianceIssue]
-    statistics: Dict[str, Dict[str, int]]
+    issues: List[Dict[str, Any]]
+    statistics: Dict[str, Any]
     policy_cookies_count: int
     actual_cookies_count: int
-    compliance_score: int
+    compliance_score: float
+    summary: Dict[str, Any]
 
 
-class CookieSubmissionResponse(BaseModel):
-    """Schema cho response khi submit cookies"""
-    status: str
-    count: int
-    violation: ComplianceResult
+class ComplianceAnalysisResult(BaseModel):
+    """Kết quả phân tích compliance để lưu vào database"""
+    website_url: str
+    analysis_date: datetime
+    total_issues: int
+    compliance_score: float
+    issues: List[ComplianceIssue]
+    statistics: Dict[str, Any]
+    summary: Dict[str, Any]
+    policy_cookies_count: int
+    actual_cookies_count: int

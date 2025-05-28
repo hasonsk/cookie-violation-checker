@@ -4,6 +4,7 @@ import logging
 import asyncio
 import aiohttp
 from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from dataclasses import dataclass
 from enum import Enum
 from bs4 import BeautifulSoup
@@ -20,8 +21,7 @@ class DiscoveryMethod(Enum):
     BING_SEARCH = "bing_search"
     SITEMAP = "sitemap"
 
-@dataclass
-class PolicyDiscoveryResult:
+class PolicyDiscoveryResult(BaseModel):
     website_url: str
     policy_url: Optional[str] = None
     discovery_method: Optional[DiscoveryMethod] = None
@@ -137,6 +137,7 @@ class PolicyFinderService:
                 logger.info(f"Found policy via DOM parsing: {result.policy_url}")
                 return result
 
+            print("SEARCH WITH BING -----------")
             # Fallback to Bing search (mocked for now)
             bing_url = await self.search_policy_with_bing(website_url)
             if bing_url:

@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-from schemas.cookie_schema import CookieFeature, CookieFeatures, CookieType
+from schemas.cookie_schema import PolicyCookie, CookieType
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ class CookieClassifier:
             return CookieType.UNDEFINED.value
 
     @staticmethod
-    def get_common_cookies(domain: str) -> List[CookieFeature]:
+    def get_common_cookies(domain: str) -> List[PolicyCookie]:
         """Get common cookies based on domain patterns"""
         common_cookies = [
-            CookieFeature(
+            PolicyCookie(
                 cookie_name=None,
                 declared_purpose="Strictly Necessary",
                 declared_retention="Session",
@@ -58,7 +58,7 @@ class CookieClassifier:
         # Add analytics cookies for most domains
         if not any(pattern in domain.lower() for pattern in ['gov', 'edu', 'internal']):
             common_cookies.append(
-                CookieFeature(
+                PolicyCookie(
                     cookie_name="_ga",
                     declared_purpose="Analytical",
                     declared_retention="13 months",

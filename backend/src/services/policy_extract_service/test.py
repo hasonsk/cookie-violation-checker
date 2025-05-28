@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
-
+from pydantic import BaseModel
 import langdetect
 from bs4 import BeautifulSoup, Tag
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
@@ -32,8 +32,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class PolicyContent:
+class PolicyContent(BaseModel):
     """Data structure for policy content"""
     website_url: str
     policy_url: Optional[str]

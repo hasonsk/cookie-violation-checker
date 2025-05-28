@@ -4,7 +4,7 @@ from typing import Optional
 
 from controllers.cookie_extract_controller import CookieExtractController
 
-router = APIRouter(prefix="", tags=["cookies"])
+router = APIRouter(prefix="/cookies", tags=["cookies"])
 controller = CookieExtractController()
 
 class PolicyAnalysisRequest(BaseModel):
@@ -22,6 +22,6 @@ async def analyze_cookie_policy(request: PolicyAnalysisRequest):
             request.policy_content,
             request.table_content
         )
-        return {"success": True, "data": result}
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

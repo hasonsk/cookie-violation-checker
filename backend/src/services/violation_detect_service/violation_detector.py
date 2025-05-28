@@ -1,78 +1,61 @@
-from typing import List, Dict, Any
+import json
+import re
+from typing import Dict, List, Optional, Any
 from datetime import datetime
-from schemas.cookie_schema import Cookie, ActualCookie
+
+from schemas.cookie_schema import ActualCookie, ComplianceIssue, ComplianceAnalysisResult
 from services.violation_detect_service.violation_analyzer import ViolationAnalyzer
+from utils.cookie_utils import extract_main_domain
 
 class ViolationDetectorService:
-    """Service xử lý logic nghiệp vụ cho cookies"""
+    """Service chính xử lý compliance analysis"""
 
     def __init__(self):
         self.analyzer = ViolationAnalyzer()
 
-    def convert_cookies_to_actual(self, cookies: List[Cookie]) -> List[ActualCookie]:
-        """Chuyển đổi Cookie schema thành ActualCookie dataclass"""
-        actual_cookies = []
-        for cookie in cookies:
-            actual_cookie = ActualCookie(
-                name=cookie.name,
-                value=cookie.value or "",
-                domain=cookie.domain,
-                expires=cookie.expirationDate.replace(tzinfo=None) if cookie.expirationDate else None,
-                secure=cookie.secure,
-                httpOnly=cookie.httpOnly,
-                sameSite=cookie.sameSite,
-                thirdParties=[]  # Placeholder for third-party requests
-            )
-            actual_cookies.append(actual_cookie)
-        return actual_cookies
+    async def analyze_website_compliance(self, website_url: str, cookies: List[ActualCookie],
+                                 policy_json: Optional[str] = None) -> ComplianceAnalysisResult:
+        """Phân tích compliance cho website"""
 
-    def analyze_cookie_compliance(self, cookies: List[Cookie], policy_json: str, main_domain: str = "example.com") -> Dict[str, Any]:
-        """Phân tích độ tuân thủ của cookies"""
-        # Chuyển đổi cookies
-        actual_cookies = self.convert_cookies_to_actual(cookies)
+        main_domain = extract_main_domain(website_url)
 
-        # Phân tích compliance
-        result = self.analyzer.analyze_compliance(policy_json, actual_cookies, main_domain)
+        # Sử dụng policy mặc định nếu không có
+        if not policy_json:
+            policy_json = self._get_default_policy()
 
-        return result
+        # Thực hiện phân tích
+        result = self.analyzer.analyze_compliance(policy_json, cookies, main_domain)
 
-    def log_analysis_summary(self, result: Dict[str, Any], cookie_count: int):
-        """Log tóm tắt kết quả phân tích"""
-        print("=== COOKIE POLICY COMPLIANCE ANALYSIS ===")
-        print(f"Total Issues Found: {result['total_issues']}")
-        print(f"Compliance Score: {result['compliance_score']}/100")
-        print(f"Policy Cookies: {result['policy_cookies_count']}")
-        print(f"Actual Cookies: {result['actual_cookies_count']}")
+        # Chuyển đổi sang format để lưu database
+        return ComplianceAnalysisResult(
+            website_url=website_url,
+            analysis_date=datetime.now(),
+            total_issues=result.get("total_issues", 0),
+            compliance_score=result.get("compliance_score", 0.0),
+            issues=[ComplianceIssue(**issue) for issue in result.get("issues", [])],
+            statistics=result.get("statistics", {}),
+            summary=result.get("summary", {}),
+            policy_cookies_count=result.get("policy_cookies_count", 0),
+            actual_cookies_count=result.get("actual_cookies_count", 0)
+        )
 
-        print("\n=== ISSUES BY SEVERITY ===")
-        for severity, count in result['statistics']['by_severity'].items():
-            print(f"{severity}: {count}")
-
-    def get_default_policy_json(self) -> str:
-        """Trả về policy JSON mặc định"""
-        return """{
-            "is_specific": 1,
+    def _get_default_policy(self) -> str:
+        """Trả về policy mặc định"""
+        return json.dumps({
             "cookies": [
                 {
                     "cookie_name": "_ga",
                     "declared_purpose": "Analytical",
                     "declared_retention": "13 months",
                     "declared_third_parties": ["Google Analytics"],
-                    "declared_description": "This Google Analytics cookie tracks user sessions and behavior."
+                    "declared_description": "Google Analytics tracking cookie."
                 },
                 {
                     "cookie_name": "session_id",
                     "declared_purpose": "Strictly Necessary",
                     "declared_retention": "Session",
                     "declared_third_parties": ["First Party"],
-                    "declared_description": "Essential cookie for maintaining user login sessions."
-                },
-                {
-                    "cookie_name": "check_rule_5",
-                    "declared_purpose": "Strictly Necessary",
-                    "declared_retention": "short-term",
-                    "declared_third_parties": ["First Party"],
-                    "declared_description": "Essential cookie for maintaining user login sessions."
+                    "declared_description": "Session management cookie."
                 }
             ]
-        }"""
+        })

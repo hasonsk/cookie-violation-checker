@@ -3,6 +3,7 @@ from typing import Optional
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from schemas.policy_schema import PolicyContent
 from utils.cache_utils import CacheManager
+from repositories.policy_repository import save_policy_content
 
 class PolicyExtractController:
     """Controller for handling policy extraction requests"""
@@ -27,12 +28,13 @@ class PolicyExtractController:
             Formatted policy content dictionary
         """
         async with PolicyExtractService() as extractor:
-            result = await extractor.extract_policy_content(
+            policy_content = await extractor.extract_policy_content(
                 website_url=website_url,
                 policy_url=policy_url,
                 translate_to_english=translate_to_english,
                 force_refresh=force_refresh
             )
+            await save_policy_content(policy_content)
 
             # Convert to required output format
-            return result
+            return policy_content

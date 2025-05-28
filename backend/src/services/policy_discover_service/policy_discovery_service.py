@@ -47,6 +47,7 @@ class PolicyDiscoveryService:
                 return result
 
             # Fallback to Bing search
+            print("++++++++SEARCH WITH BING++++++++")
             bing_url = await self.search_service.search_policy_with_bing(website_url)
             if bing_url:
                 result.policy_url = bing_url

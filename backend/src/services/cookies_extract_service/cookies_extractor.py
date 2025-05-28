@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from dataclasses import asdict
 
-from schemas.cookie_schema import CookieFeature, CookieFeatures
+from schemas.cookie_schema import PolicyCookie, PolicyCookieList
 from services.cookies_extract_service.gemini_service import GeminiService
 from utils.text_processing import prepare_content, extract_domain, extract_json_from_response
 from utils.cookie_classifier import CookieClassifier
@@ -19,7 +19,7 @@ class CookieExtractorService:
         self.gemini_service = GeminiService(api_key, model)
         self.classifier = CookieClassifier()
 
-    async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> CookieFeatures:
+    async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookieList:
         """
         Extract cookie features from policy content using Gemini AI
         """
@@ -42,9 +42,9 @@ class CookieExtractorService:
 
         except Exception as e:
             logger.error(f"Error extracting cookie features: {str(e)}")
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookieList(is_specific=0, cookies=[])
 
-    async def infer_default_features(self, website_url: str) -> CookieFeatures:
+    async def infer_default_features(self, website_url: str) -> PolicyCookieList:
         """
         Infer default cookie features when no policy is available
         """
@@ -54,16 +54,16 @@ class CookieExtractorService:
 
             logger.info(f"Inferred {len(default_cookies)} default cookie features for {domain}")
 
-            return CookieFeatures(
+            return PolicyCookieList(
                 is_specific=0,
                 cookies=default_cookies
             )
 
         except Exception as e:
             logger.error(f"Error inferring default features: {str(e)}")
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookieList(is_specific=0, cookies=[])
 
-    def _parse_gemini_response(self, response: str) -> CookieFeatures:
+    def _parse_gemini_response(self, response: str) -> PolicyCookieList:
         """Parse and validate Gemini response"""
         try:
             # Clean response - extract JSON if wrapped in text
@@ -76,10 +76,10 @@ class CookieExtractorService:
             if not isinstance(data, dict) or 'is_specific' not in data or 'cookies' not in data:
                 raise ValueError("Invalid response structure")
 
-            # Convert to CookieFeatures
+            # Convert to PolicyCookieList
             cookies = []
             for cookie_data in data.get('cookies', []):
-                cookie = CookieFeature(
+                cookie = PolicyCookie(
                     cookie_name=cookie_data.get('cookie_name'),
                     declared_purpose=cookie_data.get('declared_purpose'),
                     declared_retention=cookie_data.get('declared_retention'),
@@ -88,11 +88,11 @@ class CookieExtractorService:
                 )
                 cookies.append(cookie)
 
-            return CookieFeatures(
+            return PolicyCookieList(
                 is_specific=int(data.get('is_specific', 0)),
                 cookies=cookies
             )
 
         except Exception as e:
             logger.error(f"Error parsing Gemini response: {str(e)}")
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookieList(is_specific=0, cookies=[])

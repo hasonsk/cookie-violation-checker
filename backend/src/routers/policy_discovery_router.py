@@ -16,9 +16,10 @@ class BulkPolicyRequest(BaseModel):
 @router.post("/discover")
 async def find_policy(request: PolicyRequest):
     """Find cookie policy for a single website"""
+    # print(f"🔍 Discovering policy for: {request.website_url}")
     try:
         result = await controller.find_single_policy(request.website_url)
-        return {"success": True, "data": result}
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

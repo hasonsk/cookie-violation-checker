@@ -8,6 +8,7 @@ import json
 import asyncio
 import logging
 from typing import Dict, List, Optional, Union, Any
+from pydantic import BaseModel
 from dataclasses import dataclass, asdict
 from enum import Enum
 from dotenv import dotenv_values
@@ -38,8 +39,7 @@ class CookiePurpose(Enum):
     SOCIAL_SHARING = "Social Sharing"
     UNKNOWN = "Unknown"
 
-@dataclass
-class CookieFeature:
+class PolicyCookie(BaseModel):
     """Individual cookie feature structure"""
     cookie_name: Optional[str]
     declared_purpose: Optional[str]
@@ -48,11 +48,10 @@ class CookieFeature:
     declared_description: Optional[str]
     feature_type: str = CookieType.UNDEFINED.value
 
-@dataclass
-class CookieFeatures:
+class PolicyCookies(BaseModel):
     """Complete cookie features response structure"""
     is_specific: int
-    cookies: List[CookieFeature]
+    cookies: List[PolicyCookie]
 
 class FeatureAnalyzerService:
     """
@@ -121,7 +120,7 @@ Specific Requirements:
 IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
 """
 
-    async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> CookieFeatures:
+    async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookies:
         """
         Extract cookie features from policy content using Gemini AI
 
@@ -130,7 +129,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             table_content: Optional table content with cookie details
 
         Returns:
-            CookieFeatures object with extracted information
+            PolicyCookies object with extracted information
         """
         try:
             # Prepare content for analysis
@@ -152,9 +151,9 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         except Exception as e:
             logger.error(f"Error extracting cookie features: {str(e)}")
             # Return default structure on error
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookies(is_specific=0, cookies=[])
 
-    async def infer_default_features(self, website_url: str) -> CookieFeatures:
+    async def infer_default_features(self, website_url: str) -> PolicyCookies:
         """
         Infer default cookie features when no policy is available
 
@@ -162,7 +161,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             website_url: URL of the website to analyze
 
         Returns:
-            CookieFeatures with inferred common cookies
+            PolicyCookies with inferred common cookies
         """
         try:
             domain = self._extract_domain(website_url)
@@ -176,14 +175,14 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
 
             logger.info(f"Inferred {len(default_cookies)} default cookie features for {domain}")
 
-            return CookieFeatures(
+            return PolicyCookies(
                 is_specific=0,
                 cookies=default_cookies
             )
 
         except Exception as e:
             logger.error(f"Error inferring default features: {str(e)}")
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookies(is_specific=0, cookies=[])
 
     def classify_cookie_type(self, cookie_feature: dict) -> str:
         """
@@ -263,7 +262,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             logger.error(f"Gemini API error: {str(e)}")
             return "{\"is_specific\": 0, \"cookies\": []}"
 
-    def _parse_gemini_response(self, response: str) -> CookieFeatures:
+    def _parse_gemini_response(self, response: str) -> PolicyCookies:
         """Parse and validate Gemini response"""
         try:
             # Clean response - extract JSON if wrapped in text
@@ -280,10 +279,10 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             if not isinstance(data, dict) or 'is_specific' not in data or 'cookies' not in data:
                 raise ValueError("Invalid response structure")
 
-            # Convert to CookieFeatures
+            # Convert to PolicyCookies
             cookies = []
             for cookie_data in data.get('cookies', []):
-                cookie = CookieFeature(
+                cookie = PolicyCookie(
                     cookie_name=cookie_data.get('cookie_name'),
                     declared_purpose=cookie_data.get('declared_purpose'),
                     declared_retention=cookie_data.get('declared_retention'),
@@ -292,14 +291,14 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                 )
                 cookies.append(cookie)
 
-            return CookieFeatures(
+            return PolicyCookies(
                 is_specific=int(data.get('is_specific', 0)),
                 cookies=cookies
             )
 
         except Exception as e:
             logger.error(f"Error parsing Gemini response: {str(e)}")
-            return CookieFeatures(is_specific=0, cookies=[])
+            return PolicyCookies(is_specific=0, cookies=[])
 
     def _extract_domain(self, website_url: str) -> str:
         """Extract domain from URL"""
@@ -309,10 +308,10 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         except:
             return website_url
 
-    def _get_common_cookies(self, domain: str) -> List[CookieFeature]:
+    def _get_common_cookies(self, domain: str) -> List[PolicyCookie]:
         """Get common cookies based on domain patterns"""
         common_cookies = [
-            CookieFeature(
+            PolicyCookie(
                 cookie_name=None,
                 declared_purpose="Strictly Necessary",
                 declared_retention="Session",
@@ -325,7 +324,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         # Add analytics cookies for most domains
         if not any(pattern in domain.lower() for pattern in ['gov', 'edu', 'internal']):
             common_cookies.append(
-                CookieFeature(
+                PolicyCookie(
                     cookie_name="_ga",
                     declared_purpose="Analytical",
                     declared_retention="13 months",
@@ -337,14 +336,14 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
 
         return common_cookies
 
-    def _infer_domain_specific_cookies(self, domain: str) -> List[CookieFeature]:
+    def _infer_domain_specific_cookies(self, domain: str) -> List[PolicyCookie]:
         """Infer cookies based on domain characteristics"""
         inferred_cookies = []
 
         # E-commerce sites
         if any(keyword in domain.lower() for keyword in ['shop', 'store', 'cart', 'buy', 'commerce']):
             inferred_cookies.extend([
-                CookieFeature(
+                PolicyCookie(
                     cookie_name="cart_session",
                     declared_purpose="Strictly Necessary",
                     declared_retention="Session",
@@ -352,7 +351,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                     declared_description="Shopping cart functionality",
                     feature_type=CookieType.SPECIFIC.value
                 ),
-                CookieFeature(
+                PolicyCookie(
                     cookie_name=None,
                     declared_purpose="Targeting/Advertising/Marketing",
                     declared_retention="30 days",
@@ -365,7 +364,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
         # Social media or content sites
         if any(keyword in domain.lower() for keyword in ['social', 'blog', 'news', 'media']):
             inferred_cookies.append(
-                CookieFeature(
+                PolicyCookie(
                     cookie_name=None,
                     declared_purpose="Social Sharing",
                     declared_retention="Persistent",
