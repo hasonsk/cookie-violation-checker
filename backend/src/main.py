@@ -1,6 +1,8 @@
 from fastapi import HTTPException
 from fastapi import FastAPI
-from routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router
+from fastapi.middleware.cors import CORSMiddleware
+
+from routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router
 import httpx
 from schemas.cookie_schema import ActualCookie, CookieSubmissionRequest
 from configs.app_conf import app_config
@@ -11,6 +13,12 @@ import uvicorn
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_BASE = os.getenv("API_BASE")
 
 class Cookie(BaseModel):
     """Cookie schema với JSON serialization config cho Pydantic v2"""
@@ -28,8 +36,6 @@ class Cookie(BaseModel):
     httpOnly: bool = False
     sameSite: Optional[str] = None
 
-API_BASE = "http://localhost:8000"  # Base URL for internal API calls
-
 # Tạo FastAPI app
 app = FastAPI(
     title=app_config.api_title,
@@ -38,11 +44,20 @@ app = FastAPI(
     debug=app_config.debug
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Cho phép domain frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Đăng ký routers
 app.include_router(policy_discovery_router.router, tags=["policy discovery"])
 app.include_router(policy_extract_router.router, tags=["policy extraction"])
 app.include_router(cookie_extract_router.router, tags=["cookies extraction"])
 app.include_router(violation_detect_router.router)
+app.include_router(auth_router.router)
 
 @app.get("/")
 async def root():
