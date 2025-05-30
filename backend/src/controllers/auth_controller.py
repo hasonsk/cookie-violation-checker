@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Depends, Header
+# controllers/auth_controller.py
+from fastapi import APIRouter, Header
 from schemas.auth_schema import RegisterSchema, LoginSchema, TokenResponse
-from services.auth_service import auth_service
+from repositories.user_repository import UserRepository
+from services.auth_service.auth_service import AuthService
+from configs.database import get_db
 
 router = APIRouter()
+user_repo = UserRepository(get_db()["users"])
+auth_service = AuthService(user_repo)
 
 @router.post("/register")
 async def register(data: RegisterSchema):
@@ -16,7 +21,3 @@ async def login(data: LoginSchema):
 async def verify(authorization: str = Header(...)):
     token = authorization.replace("Bearer ", "")
     return await auth_service.verify_user(token)
-
-@router.post("/logout")
-async def logout():
-    return {"msg": "Đăng xuất thành công (xử lý phía client)"}

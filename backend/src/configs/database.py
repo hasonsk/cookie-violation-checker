@@ -1,12 +1,19 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from functools import lru_cache
+from dotenv import load_dotenv
+import os
 
-MONGO_URI = "mongodb://admin:12345678@0.0.0.0:27017"
-DB_NAME = "cookie_db"
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 client = AsyncIOMotorClient(MONGO_URI)
-db = client[DB_NAME]
+db = client[MONGO_DB_NAME]
 
 @lru_cache()
 def get_collection(name: str):
     return db[name]
+
+def get_db():
+    return client[MONGO_DB_NAME]

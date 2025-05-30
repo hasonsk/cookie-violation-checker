@@ -46,7 +46,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Cho phép domain frontend
+    allow_origins=["http://localhost:3000", "http://192.168.0.113:3000"],  # Cho phép domain frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
