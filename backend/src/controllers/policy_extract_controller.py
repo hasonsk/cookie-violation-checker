@@ -6,7 +6,6 @@ from utils.cache_utils import CacheManager
 from repositories.policy_repository import save_policy_content
 
 class PolicyExtractController:
-    """Controller for handling policy extraction requests"""
 
     async def extract_policy(
         self,
@@ -34,6 +33,7 @@ class PolicyExtractController:
                 translate_to_english=translate_to_english,
                 force_refresh=force_refresh
             )
+            print("Save to database policies")
             await save_policy_content(policy_content)
 
             # Convert to required output format

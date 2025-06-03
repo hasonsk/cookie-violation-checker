@@ -1,17 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from pydantic import BaseModel
+from schemas.policy_schema import PolicyRequest, BulkPolicyRequest
 
 from controllers.policy_discovery_controller import PolicyDiscoveryController
 
 router = APIRouter(prefix="/policy", tags=["policy"])
 controller = PolicyDiscoveryController()
-
-class PolicyRequest(BaseModel):
-    website_url: str
-
-class BulkPolicyRequest(BaseModel):
-    website_urls: List[str]
 
 @router.post("/discover")
 async def find_policy(request: PolicyRequest):

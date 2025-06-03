@@ -3,7 +3,6 @@ from schemas.cookie_schema import Cookie, PolicyCookies, CookieSubmissionRespons
 from services.violation_detect_service.violation_detector import ViolationDetectorService
 
 class ViolationDetectorController:
-    """Controller xử lý các request liên quan đến cookies"""
 
     def __init__(self):
         self.violation_service = ViolationDetectorService()

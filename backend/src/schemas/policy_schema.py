@@ -26,6 +26,12 @@ class PolicyDiscoveryResult(BaseModel):
             "confidence_score": self.confidence_score
         }
 
+class PolicyRequest(BaseModel):
+    website_url: str
+
+class BulkPolicyRequest(BaseModel):
+    website_urls: List[str]
+
 class PolicyContent(BaseModel):
     """Data structure for policy content"""
     website_url: str
@@ -54,3 +60,7 @@ class PolicyExtractRequest(BaseModel):
     policy_url: Optional[str] = None
     translate_to_english: Optional[bool] = True
     force_refresh: Optional[bool] = False
+
+class PolicyAnalysisRequest(BaseModel):
+    policy_content: str
+    table_content: Optional[str] = None

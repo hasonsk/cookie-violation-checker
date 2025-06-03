@@ -8,6 +8,10 @@ from schemas.cookie_schema import ActualCookie, CookieSubmissionRequest
 from configs.app_conf import app_config
 import uvicorn
 # from controllers.cookie_extract_controller import CookieExtractController
+from exceptions.custom_exceptions import (
+    PolicyDiscoveryError, PolicyExtractionError,
+    FeatureExtractionError, ComplianceCheckError
+)
 
 # Hoặc nếu dùng Pydantic v2:
 from pydantic import BaseModel, ConfigDict
@@ -46,7 +50,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://192.168.0.113:3000"],  # Cho phép domain frontend
+    allow_origins=["http://localhost:3000", "http://192.168.0.113:3000", "http://127.0.0.1:3000"],  # Cho phép domain frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,11 +81,10 @@ async def health_check():
 async def analyze_policy(payload: CookieSubmissionRequest):
     async with httpx.AsyncClient() as client:
         try:
-            # Phase 1: Policy Discovery
             print("🔍 Starting policy discovery for:", payload.website_url)
             resp1 = await client.post(f"{API_BASE}/policy/discover", json={"website_url": payload.website_url})
             if resp1.status_code != 200:
-                raise HTTPException(status_code=resp1.status_code, detail="Policy Discovery failed")
+                raise PolicyDiscoveryError(status_code=resp1.status_code)
             discovery = resp1.json()
             print("✅ Policy discovery completed successfully", discovery)
 
@@ -93,32 +96,32 @@ async def analyze_policy(payload: CookieSubmissionRequest):
                     "policy_url": discovery["policy_url"]
                 })
                 if resp2.status_code != 200:
-                    raise HTTPException(status_code=resp2.status_code, detail="Policy Extraction failed")
+                    raise PolicyExtractionError(status_code=resp2.status_code)
                 policy_content = resp2.json()
                 print("✅ Policy content extraction completed successfully", policy_content)
 
                 # Phase 3: Feature Extraction
-                json = {}
+                json_data = {}
                 if policy_content.get("detected_language") != "en":
-                    json = {
-                    "policy_content": policy_content["translated_content"],
-                    "table_content": policy_content["translated_table_content"]
+                    json_data = {
+                        "policy_content": policy_content["translated_content"],
+                        "table_content": policy_content["translated_table_content"]
                     }
                 else:
-                    json = {
-                    "policy_content": policy_content["original_content"],
-                    "table_content": str(policy_content["table_content"])
+                    json_data = {
+                        "policy_content": policy_content["original_content"],
+                        "table_content": str(policy_content["table_content"])
                     }
-                resp3 = await client.post(f"{API_BASE}/cookies/extract-features", json=json)
+                resp3 = await client.post(f"{API_BASE}/cookies/extract-features", json=json_data)
                 if resp3.status_code != 200:
-                    raise HTTPException(status_code=resp3.status_code, detail="Feature Extraction failed")
+                    raise FeatureExtractionError(status_code=resp3.status_code)
                 features = resp3.json()
                 print("✅ Feature extraction completed successfully", features)
             else:
                 features = {"is_specific": 0, "cookies": []}
 
-            # print("🔍 Starting cookie extraction for:", payload.website_url)
             print("🍪 Received cookies:", len(payload.cookies))
+
             # Phase 4: Compliance Check
             resp4 = await client.post(f"{API_BASE}/violations/detect", json={
                 "website_url": payload.website_url,
@@ -126,8 +129,9 @@ async def analyze_policy(payload: CookieSubmissionRequest):
                 "cookies":  payload.cookies,
             })
             if resp4.status_code != 200:
-                raise HTTPException(status_code=resp4.status_code, detail="Compliance Checking failed")
+                raise ComplianceCheckError(status_code=resp4.status_code)
             result = resp4.json()
+
             print("+++++++++++++++++++++DONE++++++++++++++++++++++")
             print("=== COOKIE POLICY COMPLIANCE ANALYSIS ===")
             print(f"Total Issues Found: {result['total_issues']}")

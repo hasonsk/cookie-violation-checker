@@ -4,7 +4,6 @@ from typing import List
 from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
 
 class PolicyDiscoveryController:
-    """Controller for handling policy discovery requests"""
 
     def __init__(self):
         self.policy_service = PolicyDiscoveryService()

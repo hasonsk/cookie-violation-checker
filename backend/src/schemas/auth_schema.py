@@ -9,10 +9,13 @@ class LoginSchema(BaseModel):
     email: EmailStr
     password: str
 
-class UserOut(BaseModel):
+class RegisterResponseSchema(BaseModel):
+    msg: str
+
+class UserInfo(BaseModel):
     name: str
     email: EmailStr
 
-class TokenResponse(BaseModel):
+class LoginResponseSchema(BaseModel):
     token: str
-    user: UserOut
+    user: UserInfo

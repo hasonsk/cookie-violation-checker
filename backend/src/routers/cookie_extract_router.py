@@ -1,18 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from schemas.policy_schema import PolicyAnalysisRequest
 
 from controllers.cookie_extract_controller import CookieExtractController
 
 router = APIRouter(prefix="/cookies", tags=["cookies"])
 controller = CookieExtractController()
-
-class PolicyAnalysisRequest(BaseModel):
-    policy_content: str
-    table_content: Optional[str] = None
-
-class DefaultFeaturesRequest(BaseModel):
-    website_url: str
 
 @router.post("/extract-features")
 async def analyze_cookie_policy(request: PolicyAnalysisRequest):
