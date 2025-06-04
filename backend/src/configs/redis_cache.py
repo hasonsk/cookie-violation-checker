@@ -2,14 +2,16 @@ import os
 import json
 from loguru import logger
 import redis.asyncio as redis
+from dotenv import load_dotenv, find_dotenv
 
-# # logger = logging.getLogger(__name__)
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+load_dotenv(find_dotenv())
 
-# Kết nối Redis
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
+REDIS_TTL = int(os.environ.get("REDIS_TTL", "3600"))
+
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
-async def set_cache(key: str, value: dict, ttl: int = 3600):
+async def set_cache(key: str, value: dict, ttl: int = REDIS_TTL):
     """Lưu cache với TTL (giây)"""
     try:
         await redis_client.set(key, json.dumps(value), ex=ttl)

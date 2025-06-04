@@ -50,10 +50,10 @@ const WebsiteList = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'grey.50' }}>
-                <TableCell sx={{ fontWeight: 'bold' }}>Tên Website</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Domain</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Công ty</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Thành phố</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Tiến độ</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Tuân thủ</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Ngày tạo</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
               </TableRow>

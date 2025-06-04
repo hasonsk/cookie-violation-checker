@@ -177,8 +177,8 @@ const WebsiteDetail = () => {
                 <Typography variant="body1" fontWeight="medium">{websiteData.city}</Typography>
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="body2" color="text.secondary">Tiến độ</Typography>
-                <Typography variant="body1" fontWeight="medium">{websiteData.progress}%</Typography>
+                <Typography variant="body2" color="text.secondary">Mức độ tuân thủ</Typography>
+                <Typography variant="body1" fontWeight="medium">{websiteData.progress}</Typography>
               </Grid>
             </Grid>
           </CardContent>

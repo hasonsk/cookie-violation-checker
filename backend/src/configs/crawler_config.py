@@ -1,8 +1,12 @@
-# Crawler configuration constants
-CRAWLER_USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
-CRAWLER_TIMEOUT = 50
+import os
+from dotenv import load_dotenv, find_dotenv
 
-# Browser configuration
+load_dotenv(find_dotenv())
+
+USER_AGENT = os.environ.get("USER_AGENT")
+CRAWLER_TIMEOUT = os.environ.get("CRAWLER_TIMEOUT")
+THREAD_POOL_MAX_WORKERS = int(os.environ.get("THREAD_POOL_MAX_WORKERS"))
+
 BROWSER_CONFIG = {
     "headless": True,
     "args": ['--no-sandbox', '--disable-dev-shm-usage']
@@ -16,13 +20,3 @@ BROWSER_CONTEXT_CONFIG = {
         'Accept-Encoding': 'gzip, deflate, br',
     }
 }
-
-# Translation settings
-TRANSLATION_CONFIG = {
-    "max_chunk_size": 4000,
-    "rate_limit_delay": 0.1,
-    "cache_ttl": 3600 * 24  # 24 hours
-}
-
-# Thread pool settings
-THREAD_POOL_MAX_WORKERS = 4

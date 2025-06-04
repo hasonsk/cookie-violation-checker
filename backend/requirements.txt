@@ -1,29 +1,27 @@
-fastapi
-uvicorn
-kafka-python
-pymongo
-redis
-pydantic
-python-dotenv
-requests
+aiohttp
 beautifulsoup4
-lxml
-pytest
-pytest-cov
-httpx
-playwright
-flake8
 black
 celery
-aiohttp
-isort
+deep_translator
 fastapi
-uvicorn
-jwt
-# aiokafka
-# motor
-# python-multipart
-# python-jose
-# cryptography
+flake8
 google
 google.genai
+httpx
+isort
+jwt
+kafka-python
+langdetect
+lxml
+motor
+passlib
+playwright
+pydantic
+pymongo
+pytest
+pytest-cov
+python-dotenv
+pydantic[email]
+redis
+requests
+uvicorn

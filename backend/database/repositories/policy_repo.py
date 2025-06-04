@@ -1,12 +1,10 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-import logging
+from loguru import logger
 
 from . import BaseRepository
 from ..connection import MongoDBConnection
 from ..schemas import PolicyContentSchema
-
-logger = logging.getLogger(__name__)
 
 class PolicyContentRepository(BaseRepository):
     """Repository for policy content operations"""

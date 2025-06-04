@@ -1,12 +1,10 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import logging
+from loguru import logger
 
 from . import BaseRepository
 from ..connection import MongoDBConnection
 from ..schemas import CookieFeatureSchema, LiveCookieSchema
-
-logger = logging.getLogger(__name__)
 
 class CookieFeatureRepository(BaseRepository):
     """Repository for cookie feature operations"""

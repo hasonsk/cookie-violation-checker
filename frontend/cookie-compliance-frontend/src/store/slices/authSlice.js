@@ -8,6 +8,7 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
+      console.log(credentials)
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -19,7 +20,7 @@ export const loginUser = createAsyncThunk(
       const data = await response.json();
 
       if (!response.ok) {
-        return rejectWithValue(data.message || 'Đăng nhập thất bại');
+        return rejectWithValue(data.detail || 'Đăng nhập thất bại');
       }
 
       // Lưu token vào localStorage
@@ -28,7 +29,7 @@ export const loginUser = createAsyncThunk(
 
       return data;
     } catch (error) {
-      return rejectWithValue(error.message || 'Có lỗi xảy ra');
+      return rejectWithValue(error.detail || 'Có lỗi xảy ra');
     }
   }
 );
@@ -48,12 +49,12 @@ export const registerUser = createAsyncThunk(
       const data = await response.json();
 
       if (!response.ok) {
-        return rejectWithValue(data.message || 'Đăng ký thất bại');
+        return rejectWithValue(data.detail || 'Đăng ký thất bại');
       }
 
       return data;
     } catch (error) {
-      return rejectWithValue(error.message || 'Có lỗi xảy ra');
+      return rejectWithValue(error.detail || 'Có lỗi xảy ra');
     }
   }
 );
@@ -117,7 +118,7 @@ export const checkAuthStatus = createAsyncThunk(
     } catch (error) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.detail);
     }
   }
 );

@@ -1,19 +1,14 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from functools import lru_cache
-from dotenv import load_dotenv
-import os
+from .app_settings import get_mongodb_uri, validate_required_configs, DB_NAME
 
-load_dotenv()
+validate_required_configs()
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+# Create MongoDB client
+client = AsyncIOMotorClient(get_mongodb_uri())
+database = client[DB_NAME]
 
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[MONGO_DB_NAME]
+def get_database():
+    return database
 
-@lru_cache()
-def get_collection(name: str):
-    return db[name]
-
-def get_db():
-    return client[MONGO_DB_NAME]
+def get_collection(collection_name: str):
+    return database[collection_name]

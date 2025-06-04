@@ -1,11 +1,9 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-import logging
+from loguru import logger
 
 from ..connection import MongoDBConnection
 from ..crud import BaseCRUD
-
-logger = logging.getLogger(__name__)
 
 class BaseRepository:
     """Base repository class with common operations"""

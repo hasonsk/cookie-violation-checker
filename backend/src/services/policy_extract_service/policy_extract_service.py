@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from playwright.async_api import async_playwright, Browser, BrowserContext
 
 from configs.crawler_config import (
-    CRAWLER_USER_AGENT, CRAWLER_TIMEOUT, BROWSER_CONFIG,
+    USER_AGENT, CRAWLER_TIMEOUT, BROWSER_CONFIG,
     BROWSER_CONTEXT_CONFIG, THREAD_POOL_MAX_WORKERS
 )
 from schemas.policy_schema import PolicyContent
@@ -15,13 +15,11 @@ from utils.translation_utils import TranslationManager
 from utils.table_extractor import TableExtractor
 from utils.cache_utils import CacheManager
 
-# # logger = logging.getLogger(__name__)
-
 class PolicyExtractService:
     """Service class for extracting and processing policy content"""
 
     def __init__(self):
-        self.user_agent = CRAWLER_USER_AGENT
+        self.user_agent = USER_AGENT
         self.timeout = CRAWLER_TIMEOUT
 
         self._browser: Optional[Browser] = None
@@ -180,5 +178,4 @@ class PolicyExtractService:
             translated_table_content=translated_table_content
         )
 
-        logger.info("Extracted main: ")
         return response

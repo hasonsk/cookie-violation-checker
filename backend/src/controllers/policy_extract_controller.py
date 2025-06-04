@@ -1,8 +1,6 @@
-import json
 from typing import Optional
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from schemas.policy_schema import PolicyContent
-from utils.cache_utils import CacheManager
 from repositories.policy_repository import save_policy_content
 
 class PolicyExtractController:

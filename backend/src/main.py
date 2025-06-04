@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router
 import httpx
 from schemas.cookie_schema import ActualCookie, CookieSubmissionRequest
-from configs.app_conf import app_config
+from configs.app_settings import HOST, PORT, API_TITLE, API_DESCRIPTION, API_VERSION, APP_DEBUG
 import uvicorn
 # from controllers.cookie_extract_controller import CookieExtractController
 from exceptions.custom_exceptions import (
@@ -20,9 +20,6 @@ from typing import Optional
 from dotenv import load_dotenv
 import os
 from loguru import logger
-
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -45,15 +42,21 @@ class Cookie(BaseModel):
 
 # Tạo FastAPI app
 app = FastAPI(
-    title=app_config.api_title,
-    description=app_config.api_description,
-    version=app_config.api_version,
-    debug=app_config.debug
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION,
+    debug=APP_DEBUG
 )
+
+origins = [
+    "http://localhost:3000",
+    "http://192.168.0.113:3000",
+    "http://127.0.0.1:3000"
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://192.168.0.113:3000", "http://127.0.0.1:3000"],  # Cho phép domain frontend
+    allow_origins=origins,  # Cho phép domain frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +74,7 @@ async def root():
     """Health check endpoint"""
     return {
         "message": "Cookie Compliance Analyzer API",
-        "version": app_config.api_version,
+        "version": API_VERSION,
         "status": "running"
     }
 
@@ -247,7 +250,7 @@ async def analyze_policy(payload: CookieSubmissionRequest):
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=app_config.host,
-        port=app_config.port,
-        reload=app_config.debug
+        host=HOST,
+        port=PORT,
+        reload=APP_DEBUG
     )

@@ -17,8 +17,6 @@ from google.genai import types
 load_dotenv(find_dotenv())
 
 # logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
-
 class CookieType(Enum):
     """Cookie classification types"""
     SPECIFIC = "specific"

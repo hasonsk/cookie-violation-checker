@@ -3,10 +3,11 @@ from fastapi import APIRouter, Header
 from schemas.auth_schema import RegisterSchema, LoginSchema, LoginResponseSchema
 from repositories.user_repository import UserRepository
 from services.auth_service.auth_service import AuthService
-from configs.database import get_db
+from configs.database import get_collection
+from configs.app_settings import USERS_COLLECTION
 
 router = APIRouter()
-user_repo = UserRepository(get_db()["users"])
+user_repo = UserRepository(get_collection(USERS_COLLECTION))
 auth_service = AuthService(user_repo)
 
 @router.post("/register")

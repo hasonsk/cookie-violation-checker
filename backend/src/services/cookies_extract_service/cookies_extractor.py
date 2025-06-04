@@ -4,15 +4,14 @@ from typing import Optional
 from schemas.cookie_schema import PolicyCookie, PolicyCookieList
 from services.cookies_extract_service.gemini_service import GeminiService
 from utils.text_processing import prepare_content, extract_domain, extract_json_from_response
-
-# # logger = logging.getLogger(__name__)
+from configs.cookie_extract_conf import GEMINI_API_KEY, GEMINI_MODEL
 
 class CookieExtractorService:
     """
     Service for analyzing cookie policies and extracting structured features
     """
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: Optional[str] = GEMINI_API_KEY, model: str = GEMINI_MODEL):
         self.gemini_service = GeminiService(api_key, model)
 
     async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookieList:
@@ -37,7 +36,6 @@ class CookieExtractorService:
             return PolicyCookieList(is_specific=0, cookies=[])
 
     def _parse_gemini_response(self, response: str) -> PolicyCookieList:
-        """Parse and validate Gemini response"""
         try:
             # Clean response - extract JSON if wrapped in text
             json_str = extract_json_from_response(response)

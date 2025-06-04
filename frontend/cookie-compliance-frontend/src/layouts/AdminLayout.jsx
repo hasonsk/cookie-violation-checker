@@ -1,6 +1,7 @@
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/topbars/TopBar';
 import { Outlet } from 'react-router-dom';
+import Footer from '../components/footer/Footer'
 
 export default function AdminLayout() {
   return (
@@ -10,6 +11,7 @@ export default function AdminLayout() {
         <Topbar />
         <main className="p-6">
           <Outlet />
+          <Footer />
         </main>
       </div>
     </div>

@@ -1,28 +1,25 @@
+from typing import Optional
 from loguru import logger
 from google import genai
 from google.genai import types
-from configs.cookie_extract_conf import cookie_extract_conf as settings
-
-# # logger = logging.getLogger(__name__)
+from configs.cookie_extract_conf import SYSTEM_PROMPT, GEMINI_TEMPERATURE, GEMINI_MAX_OUTPUT_TOKENS
 
 class GeminiService:
-    """Service for interacting with Google Gemini AI"""
-
-    def __init__(self, api_key: str = None, model: str = None):
-        self.api_key = api_key or settings.GEMINI_API_KEY
-        self.model = model or settings.GEMINI_MODEL
+    def __init__(self, api_key:  Optional[str] = None, model:  Optional[str] = None):
+        self.api_key = api_key
+        self.model = model
 
         if not self.api_key:
+            logger.info(self.api_key)
             raise ValueError("GEMINI_API_KEY must be provided or set as environment variable")
 
     async def generate_content(self, content: str) -> str:
-        """Generate response using Gemini API"""
         try:
             # Create the model client
             client = genai.Client(api_key=self.api_key)
 
             # Prepare the prompt
-            prompt = f"{settings.SYSTEM_PROMPT}\n\nContent to analyze:\n{content}"
+            prompt = f"{SYSTEM_PROMPT}\n\nContent to analyze:\n{content}"
 
             # Generate content
             response = client.models.generate_content(
@@ -34,8 +31,8 @@ class GeminiService:
                     )
                 ],
                 config=types.GenerateContentConfig(
-                    temperature=settings.TEMPERATURE,
-                    max_output_tokens=settings.MAX_OUTPUT_TOKENS,
+                    temperature=GEMINI_TEMPERATURE,
+                    max_output_tokens=GEMINI_MAX_OUTPUT_TOKENS,
                 )
             )
 

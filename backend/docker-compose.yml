@@ -1,22 +1,45 @@
 version: '3.8'
+
 services:
-  api:
+  app:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URL=mongodb://mongo:27017
-      - REDIS_URL=redis://redis:6379
+      - MONGO_URI=${MONGO_URI}
+      - ENVIRONMENT=production
+      - REDIS_URL=${REDIS_URL}
     depends_on:
-      - mongo
+      - mongodb
       - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  mongo:
-    image: mongo:7
+  mongodb:
+    image: mongo:7.0
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  redis_data:

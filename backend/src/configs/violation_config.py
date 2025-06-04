@@ -1,30 +1,28 @@
-from pydantic import BaseSettings
+import os
+from dotenv import load_dotenv, find_dotenv
 
-class ViolationAnalysisSettings(BaseSettings):
-    """Settings for violation analysis service"""
+load_dotenv(find_dotenv())
 
-    # Analysis thresholds
-    RETENTION_THRESHOLD_PERCENTAGE: float = 30.0
-    SEMANTIC_SIMILARITY_THRESHOLD: float = 0.5
-    LONG_TERM_RETENTION_DAYS: int = 365
-    SESSION_THRESHOLD_HOURS: int = 24
+RETENTION_THRESHOLD_PERCENTAGE = float(os.environ.get("RETENTION_THRESHOLD_PERCENTAGE", "30.0"))
+SEMANTIC_SIMILARITY_THRESHOLD = float(os.environ.get("SEMANTIC_SIMILARITY_THRESHOLD", "0.5"))
+LONG_TERM_RETENTION_DAYS = int(os.environ.get("LONG_TERM_RETENTION_DAYS", "365"))
+SESSION_THRESHOLD_HOURS = int(os.environ.get("SESSION_THRESHOLD_HOURS", "24"))
 
-    # Scoring
-    ISSUE_PENALTY_POINTS: int = 5
-    MAX_COMPLIANCE_SCORE: int = 100
+# Scoring
+ISSUE_PENALTY_POINTS: int = 5
+MAX_COMPLIANCE_SCORE: int = 100
 
-    # Known trackers (can be moved to database)
-    KNOWN_AD_TRACKERS: list = [
-        'doubleclick.net', 'google-analytics.com', 'facebook.com',
-        'twitter.com', 'linkedin.com', 'amazon-adsystem.com'
-    ]
+# Known trackers (can be moved to database)
+KNOWN_AD_TRACKERS: list = [
+    'doubleclick.net', 'google-analytics.com', 'googletagmanager.com',
+    'facebook.com', 'connect.facebook.net', 'twitter.com', 'linkedin.com',
+    'amazon-adsystem.com', 'googlesyndication.com', 'adsystem.amazon.com',
+    'youtube.com', 'googlevideo.com', 'hotjar.com', 'segment.com',
+    'mixpanel.com', 'intercom.io', 'zendesk.com'
+]
 
-    # Purpose labels for semantic analysis
-    STANDARD_PURPOSE_LABELS: list = [
-        "Strictly Necessary", "Functionality", "Analytical",
-        "Targeting/Advertising/Marketing", "Performance", "Social Sharing"
-    ]
-
-    class Config:
-        env_file = ".env"
-        env_prefix = "VIOLATION_"
+# Purpose labels for semantic analysis
+STANDARD_PURPOSE_LABELS: list = [
+"Strictly Necessary", "Functionality", "Analytical",
+"Targeting/Advertising/Marketing", "Performance", "Social Sharing"
+]

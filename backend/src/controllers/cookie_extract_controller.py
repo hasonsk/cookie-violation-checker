@@ -4,8 +4,6 @@ from typing import Optional
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
 from schemas.cookie_schema import PolicyCookieList
 
-# # logger = logging.getLogger(__name__)
-
 class CookieExtractController:
     """Controller for cookie policy analysis operations"""
 

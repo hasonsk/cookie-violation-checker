@@ -3,22 +3,16 @@ import re
 from typing import Dict, List, Any
 
 from schemas.cookie_schema import PolicyCookie, PolicyCookieList, ActualCookie, ComplianceIssue
+from configs.violation_config import KNOWN_AD_TRACKERS
 from utils.cookie_utils import (
     parse_cookie, parse_retention_to_days, calculate_actual_retention_days,
     is_third_party_domain, analyze_cookie_data_collection,
     calculate_semantic_similarity
 )
 
-
 class ViolationAnalyzer:
-    def __init__(self):
-        self.known_ad_trackers = [
-            'doubleclick.net', 'google-analytics.com', 'googletagmanager.com',
-            'facebook.com', 'connect.facebook.net', 'twitter.com', 'linkedin.com',
-            'amazon-adsystem.com', 'googlesyndication.com', 'adsystem.amazon.com',
-            'youtube.com', 'googlevideo.com', 'hotjar.com', 'segment.com',
-            'mixpanel.com', 'intercom.io', 'zendesk.com'
-        ]
+    def __init__(self, known_ad_trackers=KNOWN_AD_TRACKERS):
+        self.known_ad_trackers = known_ad_trackers
 
         # Mapping domain patterns to likely purposes
         self.domain_purpose_mapping = {

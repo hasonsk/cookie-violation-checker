@@ -7,9 +7,7 @@ from .policy_discovery import PolicyDiscoveryResult, DiscoveryMethod
 from .dom_parser_service import DOMParserService
 from .search_service import SearchService
 
-# logger = logging.getLogger(__name__)
-
-
+#
 class PolicyDiscoveryService:
     def __init__(self, timeout: int = 30, use_playwright: bool = True):
         self.timeout = timeout

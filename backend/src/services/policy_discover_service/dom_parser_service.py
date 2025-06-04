@@ -3,39 +3,17 @@ from loguru import logger
 from typing import List, Dict, Any
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-
+from configs.policy_discovery_conf import COOKIE_POLICY_PATTERNS, URL_PATTERNS, FOOTER_SELECTORS, NAV_SELECTORS
 from .policy_discovery import DiscoveryMethod
 
 class DOMParserService:
     """Service for parsing HTML DOM to find cookie policy links"""
 
     def __init__(self):
-        self.cookie_policy_patterns = [
-            r'cookie[s]?\s*policy',
-            r'cookie[s]?\s*notice',
-            r'cookie[s]?\s*statement',
-            r'cookie[s]?\s*information',
-            r'cookie[s]?\s*settings',
-            r'use\s*of\s*cookie[s]?',
-
-            r'chính\s*sách\s*cookie[s]?',
-            r'thông\s*báo\s*cookie[s]?',
-            r'sử\s*dụng\s*cookie[s]?',
-            r'quy\s*định\s*cookie[s]?',
-
-            r'política\s*de\s*cookie[s]?',  # Spanish/Portuguese
-            r'politique\s*de\s*cookie[s]?',  # French
-            r'cookie[s]?\s*richtlinie',  # German
-            r'informativa\s*cookie[s]?',  # Italian
-        ]
-
-        self.url_patterns = [
-            r'/cookie[s]?[-_]?policy',
-            r'/cookie[s]?[-_]?notice',
-            r'/privacy.*cookie',
-            r'/legal.*cookie',
-            r'/cookie[s]?$',
-        ]
+        self.cookie_policy_patterns =COOKIE_POLICY_PATTERNS
+        self.url_patterns = URL_PATTERNS
+        self.FOOTER_SELECTORS = FOOTER_SELECTORS
+        self.NAV_SELECTORS = NAV_SELECTORS
 
     def parse_policy_links_from_dom(self, html_content: str) -> List[Dict[str, Any]]:
         try:
@@ -57,12 +35,12 @@ class DOMParserService:
                     })
 
             # Method 2: Check footer links
-            footer_links = self._find_links_in_section(soup, ['footer', '.footer', '.site-footer'])
+            footer_links = self._find_links_in_section(soup, self.FOOTER_SELECTORS)
             found_links.extend([{**link, 'method': DiscoveryMethod.FOOTER_LINK, 'score': 0.8}
                                for link in footer_links])
 
             # Method 3: Check navigation links
-            nav_links = self._find_links_in_section(soup, ['nav', '.navigation', '.nav', '.menu'])
+            nav_links = self._find_links_in_section(soup, self.NAV_SELECTORS)
             found_links.extend([{**link, 'method': DiscoveryMethod.NAVIGATION_LINK, 'score': 0.7}
                                for link in nav_links])
 

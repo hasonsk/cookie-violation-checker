@@ -1,13 +1,11 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-import logging
+from loguru import logger
 from typing import Optional, Dict, Any
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from contextlib import asynccontextmanager
 import os
 from functools import lru_cache
 from datetime import datetime
-
-logger = logging.getLogger(__name__)
 
 class MongoDBConnection:
     """

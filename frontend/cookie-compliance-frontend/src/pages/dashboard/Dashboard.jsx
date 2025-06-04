@@ -74,7 +74,7 @@ export default function Dashboard() {
           <MetricCard title="Có chính sách cookie" value="125" icon={Shield} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard title="Vi phạm" value="256%" icon={TrendingUp} iconColor="text-red-600" />
+          <MetricCard title="Vi phạm" value="56%" icon={TrendingUp} iconColor="text-red-600" />
         </Grid>
       </Grid>
 

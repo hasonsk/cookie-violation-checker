@@ -3,7 +3,7 @@ import json
 from loguru import logger
 import re
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
@@ -12,24 +12,9 @@ import langdetect
 from bs4 import BeautifulSoup, Tag
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 from deep_translator import GoogleTranslator
-# from configs.settings import get_settings
-# from constants.policy_constants import (
-#     COOKIE_POLICY_PAGE_TITLES,
-#     COOKIE_POLICY_URL_KEYWORDS,
-# )
-# from exceptions.policy_exceptions import (
-#     CrawlTimeoutError,
-#     PolicyNotFoundException,
-#     TranslationError,
-#     WebsiteAccessError,
-# )
-# from utils.redis_cache import redis_cache
 
-CRAWLER_USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 CRAWLER_TIMEOUT = 80
-# Configure logginga
-logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
 
 
 class PolicyContent(BaseModel):
@@ -59,7 +44,7 @@ class ContentExtractor:
 
     def __init__(self):
         """Initialize the ContentExtractor with optimized settings"""
-        self.user_agent = CRAWLER_USER_AGENT
+        self.user_agent = USER_AGENT
         self.timeout = CRAWLER_TIMEOUT
 
         # Browser context for reuse

@@ -1,17 +1,14 @@
 import os
-from dotenv import dotenv_values
+from dotenv import load_dotenv, find_dotenv
 
-class CookiesExtractConfig:
-    """Application settings and configuration"""
+load_dotenv(find_dotenv())
 
-    def __init__(self):
-        self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBpPwWeKxESlPQQMA6qo8AtcVb-yyA3LSc")
-        self.GEMINI_MODEL = "gemini-1.5-flash"
-        self.TEMPERATURE = 0.1
-        self.MAX_OUTPUT_TOKENS = 2048
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_TEMPERATURE = os.getenv("GEMINI_TEMPERATURE")
+GEMINI_MAX_OUTPUT_TOKENS = os.getenv("GEMINI_MAX_OUTPUT_TOKENS")
 
-        # System prompt for cookie extraction
-        self.SYSTEM_PROMPT = """
+SYSTEM_PROMPT = """
 ROLE: You are a cookie policy analysis expert.
 Your task is to read a cookie policy text and extract detailed information about each cookie mentioned in that policy.
 
@@ -49,5 +46,3 @@ Specific Requirements:
 
 IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
 """
-
-cookie_extract_conf = CookiesExtractConfig()

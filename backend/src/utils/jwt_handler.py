@@ -1,10 +1,13 @@
 import jwt
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv, find_dotenv
 
-JWT_SECRET = os.getenv("JWT_SECRET", "myjwtsecret")
-JWT_ALGORITHM = "HS256"
-JWT_EXP_DELTA_MINUTES = 60
+load_dotenv(find_dotenv())
+
+JWT_SECRET = os.environ.get("JWT_SECRET")
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM")
+JWT_EXP_DELTA_MINUTES = int(os.environ.get("JWT_EXP_DELTA_MINUTES", "60"))
 
 def create_access_token(data: dict):
     to_encode = data.copy()

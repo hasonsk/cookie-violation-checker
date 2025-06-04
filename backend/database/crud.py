@@ -3,12 +3,10 @@ from datetime import datetime
 from bson import ObjectId
 from pymongo import ReturnDocument
 from motor.motor_asyncio import AsyncIOMotorCollection
-import logging
+from loguru import logger
 
 from .connection import MongoDBConnection
 from .schemas import MongoBaseSchema
-
-logger = logging.getLogger(__name__)
 
 class BaseCRUD:
     """Base CRUD operations for MongoDB collections"""
