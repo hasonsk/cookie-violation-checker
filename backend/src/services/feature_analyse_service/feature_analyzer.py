@@ -1,17 +1,12 @@
-"""
-Feature Analyzer Service - Cookie Policy Analysis with Gemini AI Integration
-Extracts structured cookie features from policy documents and handles feature inference
-"""
-
 import os
 import json
 import asyncio
-import logging
+from loguru import logger
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel
 from dataclasses import dataclass, asdict
 from enum import Enum
-from dotenv import dotenv_values
+from dotenv import load_dotenv, find_dotenv
 import re
 from urllib.parse import urlparse
 
@@ -19,25 +14,16 @@ from urllib.parse import urlparse
 from google import genai
 from google.genai import types
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+load_dotenv(find_dotenv())
+
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 class CookieType(Enum):
     """Cookie classification types"""
     SPECIFIC = "specific"
     GENERAL = "general"
     UNDEFINED = "undefined"
-
-class CookiePurpose(Enum):
-    """Standard cookie purposes"""
-    STRICTLY_NECESSARY = "Strictly Necessary"
-    FUNCTIONALITY = "Functionality"
-    ANALYTICAL = "Analytical"
-    TARGETING = "Targeting/Advertising/Marketing"
-    PERFORMANCE = "Performance"
-    SOCIAL_SHARING = "Social Sharing"
-    UNKNOWN = "Unknown"
 
 class PolicyCookie(BaseModel):
     """Individual cookie feature structure"""
@@ -46,7 +32,6 @@ class PolicyCookie(BaseModel):
     declared_retention: Optional[str]
     declared_third_parties: List[str]
     declared_description: Optional[str]
-    feature_type: str = CookieType.UNDEFINED.value
 
 class PolicyCookies(BaseModel):
     """Complete cookie features response structure"""
@@ -54,83 +39,17 @@ class PolicyCookies(BaseModel):
     cookies: List[PolicyCookie]
 
 class FeatureAnalyzerService:
-    """
-    Service for analyzing cookie policies and extracting structured features
-    """
-
     def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
-        """
-        Initialize the Feature Analyzer Service
-
-        Args:
-            api_key: Google AI API key (optional, can be set via environment variable)
-        """
-        # Load environment variables
-        # config = dotenv_values(".env")
-        # gemini_api_key = config.get("GEMINI_API_KEY")
-
-        # if gemini_api_key:
-        #   gemini_api_key = os.environ["GEMINI_API_KEY"]
-        # else:
-        #   logger.warning("GEMINI_API_KEY not found in environment or .env file")
-
-        # self.api_key = gemini_api_key
-        self.api_key = "AIzaSyBpPwWeKxESlPQQMA6qo8AtcVb-yyA3LSc"
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY must be provided or set as environment variable")
+            raise ValueError("GEMINI_API_KEY must be set")
         self.model = model
 
         # System prompt for cookie extraction
-        self.SYSTEM_PROMPT = """
-ROLE: You are a cookie policy analysis expert.
-Your task is to read a cookie policy text and extract detailed information about each cookie mentioned in that policy.
-
-RESPONSE Format: Return ONLY a valid JSON object with this exact structure:
-{
-  "is_specific": 1,
-  "cookies": [
-    {
-      "cookie_name": "cookie_name",
-      "declared_purpose": "declared_purpose",
-      "declared_retention": "declared_retention",
-      "declared_third_parties": ["declared_third_parties"],
-      "declared_description": "declared_description"
-    }
-  ]
-}
-
-If no specific cookies are described, return:
-{
-  "is_specific": 0,
-  "cookies": []
-}
-
-Specific Requirements:
-1. Read and Analyze the Text: Carefully read the entire content to understand cookie types, purposes, storage duration, and ownership.
-
-2. Extract Information for Each Cookie:
-   - "cookie_name": Technical or descriptive name exactly as mentioned
-   - "declared_purpose": Choose from: "Strictly Necessary", "Functionality", "Analytical", "Targeting/Advertising/Marketing", "Performance", "Social Sharing", or null
-   - "declared_retention": Duration (e.g., "6 months", "24 hours", "Session", "Persistent", "Until deleted")
-   - "declared_third_parties": Array of third parties, use ["First Party"] for first-party cookies
-   - "declared_description": Direct content from text without fabrication
-
-3. Set is_specific to 1 if specific cookies are found, 0 if only general descriptions exist.
-
-IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
-"""
+        with open("prompts/system_prompt.txt", "r", encoding="utf-8") as f:
+            self.SYSTEM_PROMPT = f.read()
 
     async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookies:
-        """
-        Extract cookie features from policy content using Gemini AI
-
-        Args:
-            policy_content: The translated cookie policy text
-            table_content: Optional table content with cookie details
-
-        Returns:
-            PolicyCookies object with extracted information
-        """
         try:
             # Prepare content for analysis
             content = self._prepare_content(policy_content, table_content)
@@ -141,10 +60,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             # Parse and validate response
             parsed_features = self._parse_gemini_response(response)
 
-            # Classify cookie types
-            for cookie in parsed_features.cookies:
-                cookie.feature_type = self.classify_cookie_type(asdict(cookie))
-
             logger.info(f"Extracted {len(parsed_features.cookies)} cookie features")
             return parsed_features
 
@@ -154,24 +69,10 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             return PolicyCookies(is_specific=0, cookies=[])
 
     async def infer_default_features(self, website_url: str) -> PolicyCookies:
-        """
-        Infer default cookie features when no policy is available
-
-        Args:
-            website_url: URL of the website to analyze
-
-        Returns:
-            PolicyCookies with inferred common cookies
-        """
         try:
             domain = self._extract_domain(website_url)
 
-            # Common cookies based on website type and domain
             default_cookies = self._get_common_cookies(domain)
-
-            # Add domain-specific inferred cookies
-            # inferred_cookies = self._infer_domain_specific_cookies(domain)
-            # default_cookies.extend(inferred_cookies)
 
             logger.info(f"Inferred {len(default_cookies)} default cookie features for {domain}")
 
@@ -185,15 +86,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             return PolicyCookies(is_specific=0, cookies=[])
 
     def classify_cookie_type(self, cookie_feature: dict) -> str:
-        """
-        Classify cookie type based on feature characteristics
-
-        Args:
-            cookie_feature: Dictionary containing cookie feature data
-
-        Returns:
-            CookieType classification as string
-        """
         try:
             # Check if cookie has specific name and detailed information
             has_name = cookie_feature.get('cookie_name') is not None
@@ -218,7 +110,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             return CookieType.UNDEFINED.value
 
     def _prepare_content(self, policy_content: str, table_content: Optional[str] = None) -> str:
-        """Prepare content for Gemini analysis"""
         content_parts = []
 
         if policy_content and policy_content.strip():
@@ -232,8 +123,24 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
 
         return "\n\n".join(content_parts)
 
+    def extract_json_content(self, response_text: str) -> str:
+        if not response_text:
+            return '{"is_specific": 0, "cookies": []}'
+
+        cleaned_text = response_text.strip()
+
+        json_pattern = r'```(?:json)?\s*(.*?)\s*```'
+        match = re.search(json_pattern, cleaned_text, re.DOTALL)
+
+        if match:
+            json_content = match.group(1).strip()
+        else:
+            json_content = cleaned_text
+
+        return json_content
+
+
     async def _generate_with_gemini(self, content: str) -> str:
-        """Generate response using Gemini API"""
         try:
             # Create the model client
             client = genai.Client(api_key=self.api_key)
@@ -241,7 +148,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
             # Prepare the prompt
             prompt = f"{self.SYSTEM_PROMPT}\n\nContent to analyze:\n{content}"
 
-            # Generate content
             response = client.models.generate_content(
                 model=self.model,
                 contents=[
@@ -256,16 +162,14 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                 )
             )
 
-            return response.text if response.text else "{\"is_specific\": 0, \"cookies\": []}"
+            return self.extract_json_content(response.text)
 
         except Exception as e:
             logger.error(f"Gemini API error: {str(e)}")
             return "{\"is_specific\": 0, \"cookies\": []}"
 
     def _parse_gemini_response(self, response: str) -> PolicyCookies:
-        """Parse and validate Gemini response"""
         try:
-            # Clean response - extract JSON if wrapped in text
             json_match = re.search(r'\{.*\}', response, re.DOTALL)
             if json_match:
                 json_str = json_match.group()
@@ -317,7 +221,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                 declared_retention="Session",
                 declared_third_parties=["First Party"],
                 declared_description="Essential cookies for basic website functionality",
-                feature_type=CookieType.GENERAL.value
             )
         ]
 
@@ -330,7 +233,6 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                     declared_retention="13 months",
                     declared_third_parties=["Google Analytics"],
                     declared_description="Google Analytics tracking cookie",
-                    feature_type=CookieType.SPECIFIC.value
                 )
             )
 
@@ -348,16 +250,14 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                     declared_purpose="Strictly Necessary",
                     declared_retention="Session",
                     declared_third_parties=["First Party"],
-                    declared_description="Shopping cart functionality",
-                    feature_type=CookieType.SPECIFIC.value
+                    declared_description="Shopping cart functionality"
                 ),
                 PolicyCookie(
                     cookie_name=None,
                     declared_purpose="Targeting/Advertising/Marketing",
                     declared_retention="30 days",
                     declared_third_parties=["Facebook", "Google Ads"],
-                    declared_description="Marketing and advertising cookies",
-                    feature_type=CookieType.GENERAL.value
+                    declared_description="Marketing and advertising cookies"
                 )
             ])
 
@@ -370,8 +270,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanations.
                     declared_retention="Persistent",
                     declared_third_parties=["Facebook", "Twitter", "LinkedIn"],
                     declared_description="Social media integration cookies",
-                    feature_type=CookieType.GENERAL.value
-                )
+                                    )
             )
 
         return inferred_cookies

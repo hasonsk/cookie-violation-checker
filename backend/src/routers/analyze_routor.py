@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 from typing import Dict, List, Optional, Any
 from backend.src.schemas.cookie_schema import CookieSubmissionRequest

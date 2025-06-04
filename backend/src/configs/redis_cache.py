@@ -1,9 +1,9 @@
 import os
 import json
-import logging
+from loguru import logger
 import redis.asyncio as redis
 
-logger = logging.getLogger(__name__)
+# # logger = logging.getLogger(__name__)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Kết nối Redis

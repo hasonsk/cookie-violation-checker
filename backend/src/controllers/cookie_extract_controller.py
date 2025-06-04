@@ -1,10 +1,10 @@
-import logging
+from loguru import logger
 from typing import Optional
 
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
 from schemas.cookie_schema import PolicyCookieList
 
-logger = logging.getLogger(__name__)
+# # logger = logging.getLogger(__name__)
 
 class CookieExtractController:
     """Controller for cookie policy analysis operations"""
@@ -30,21 +30,4 @@ class CookieExtractController:
             return features
         except Exception as e:
             logger.error(f"Error in analyze_cookie_policy: {str(e)}")
-            return PolicyCookieList(is_specific=0, cookies=[])
-
-    async def get_default_features(self, website_url: str) -> dict:
-        """
-        Get default cookie features for a website
-
-        Args:
-            website_url: URL of the website to analyze
-
-        Returns:
-            Dictionary containing inferred cookie features
-        """
-        try:
-            features = await self.extractor_service.infer_default_features(website_url)
-            return features
-        except Exception as e:
-            logger.error(f"Error in get_default_features: {str(e)}")
             return PolicyCookieList(is_specific=0, cookies=[])

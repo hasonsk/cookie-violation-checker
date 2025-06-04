@@ -11,5 +11,4 @@ async def detect_violations(request: ComplianceRequest) -> ComplianceAnalysisRes
     """
     Endpoint để nhận và phân tích cookies từ browser extension
     """
-    print("hello")
     return await service.analyze_website_compliance(request.website_url, request.cookies, request.policy_json)

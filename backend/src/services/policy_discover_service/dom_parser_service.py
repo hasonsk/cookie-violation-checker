@@ -1,21 +1,43 @@
-import logging
+import re
+from loguru import logger
 from typing import List, Dict, Any
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
-from schemas.policy_schema import DiscoveryMethod
-from utils.pattern_matcher import PatternMatcher
-from configs.discovery_conf import TIMEOUT, USER_AGENT, COOKIE_POLICY_PATTERNS, URL_PATTERNS, POLICY_SELECTORS, FOOTER_SELECTORS, NAV_SELECTORS
-
-logger = logging.getLogger(__name__)
+from .policy_discovery import DiscoveryMethod
 
 class DOMParserService:
-    """Service for parsing HTML DOM to find policy links"""
+    """Service for parsing HTML DOM to find cookie policy links"""
 
     def __init__(self):
-        self.pattern_matcher = PatternMatcher()
+        self.cookie_policy_patterns = [
+            r'cookie[s]?\s*policy',
+            r'cookie[s]?\s*notice',
+            r'cookie[s]?\s*statement',
+            r'cookie[s]?\s*information',
+            r'cookie[s]?\s*settings',
+            r'use\s*of\s*cookie[s]?',
+
+            r'chính\s*sách\s*cookie[s]?',
+            r'thông\s*báo\s*cookie[s]?',
+            r'sử\s*dụng\s*cookie[s]?',
+            r'quy\s*định\s*cookie[s]?',
+
+            r'política\s*de\s*cookie[s]?',  # Spanish/Portuguese
+            r'politique\s*de\s*cookie[s]?',  # French
+            r'cookie[s]?\s*richtlinie',  # German
+            r'informativa\s*cookie[s]?',  # Italian
+        ]
+
+        self.url_patterns = [
+            r'/cookie[s]?[-_]?policy',
+            r'/cookie[s]?[-_]?notice',
+            r'/privacy.*cookie',
+            r'/legal.*cookie',
+            r'/cookie[s]?$',
+        ]
 
     def parse_policy_links_from_dom(self, html_content: str) -> List[Dict[str, Any]]:
-        """Parse HTML content to find cookie policy links"""
         try:
             soup = BeautifulSoup(html_content, 'lxml')
             found_links = []
@@ -26,7 +48,7 @@ class DOMParserService:
                 href = link.get('href', '')
                 rel = link.get('rel', [])
 
-                if self._is_policy_link(href) or 'policy' in str(rel).lower():
+                if self._is_cookie_policy_link(href) or 'cookie' in str(rel).lower():
                     found_links.append({
                         'url': href,
                         'method': DiscoveryMethod.LINK_TAG,
@@ -35,12 +57,12 @@ class DOMParserService:
                     })
 
             # Method 2: Check footer links
-            footer_links = self._find_links_in_section(soup, FOOTER_SELECTORS)
+            footer_links = self._find_links_in_section(soup, ['footer', '.footer', '.site-footer'])
             found_links.extend([{**link, 'method': DiscoveryMethod.FOOTER_LINK, 'score': 0.8}
                                for link in footer_links])
 
             # Method 3: Check navigation links
-            nav_links = self._find_links_in_section(soup, NAV_SELECTORS)
+            nav_links = self._find_links_in_section(soup, ['nav', '.navigation', '.nav', '.menu'])
             found_links.extend([{**link, 'method': DiscoveryMethod.NAVIGATION_LINK, 'score': 0.7}
                                for link in nav_links])
 
@@ -50,12 +72,12 @@ class DOMParserService:
                 href = link.get('href', '')
                 text = link.get_text(strip=True)
 
-                if self._is_policy_link(href) or self._is_policy_text(text):
+                if self._is_cookie_policy_link(href) or self._is_policy_text(text):
                     # Avoid duplicates
                     if not any(existing['url'] == href for existing in found_links):
                         found_links.append({
                             'url': href,
-                            'method': DiscoveryMethod.FOOTER_LINK,
+                            'method': DiscoveryMethod.FOOTER_LINK,  # Default method
                             'text': text,
                             'score': 0.6
                         })
@@ -79,7 +101,7 @@ class DOMParserService:
                     href = link.get('href', '')
                     text = link.get_text(strip=True)
 
-                    if self._is_policy_link(href) or self._is_policy_text(text):
+                    if self._is_cookie_policy_link(href) or self._is_policy_text(text):
                         links.append({
                             'url': href,
                             'text': text
@@ -87,10 +109,47 @@ class DOMParserService:
 
         return links
 
-    def _is_policy_link(self, url: str) -> bool:
+    def _is_cookie_policy_link(self, url: str) -> bool:
         """Check if URL matches cookie policy patterns"""
-        return self.pattern_matcher.is_policy_link(url, URL_PATTERNS)
+        url_lower = url.lower()
+        return any(re.search(pattern, url_lower, re.IGNORECASE) for pattern in self.url_patterns)
 
     def _is_policy_text(self, text: str) -> bool:
         """Check if link text matches cookie policy patterns"""
-        return self.pattern_matcher.is_policy_text(text, COOKIE_POLICY_PATTERNS)
+        text_lower = text.lower()
+        return any(re.search(pattern, text_lower, re.IGNORECASE) for pattern in self.cookie_policy_patterns)
+
+    def rank_policy_links(self, links: List[Dict[str, Any]], base_url: str) -> Dict[str, Any]:
+        """Rank policy links by relevance and return the best match"""
+        if not links:
+            return None
+
+        # Process and score links
+        scored_links = []
+        for link in links:
+            url = link['url']
+
+            # Convert relative URLs to absolute
+            if not url.startswith(('http://', 'https://')):
+                url = urljoin(base_url, url)
+
+            # Calculate score
+            score = link.get('score', 0.5)
+
+            # Boost score for exact matches
+            if 'cookie-policy' in url.lower() or 'cookies-policy' in url.lower():
+                score += 0.2
+
+            # Boost score for shorter, cleaner URLs
+            if len(url.split('/')) <= 4:
+                score += 0.1
+
+            scored_links.append({
+                'url': url,
+                'method': link['method'],
+                'score': min(score, 1.0)
+            })
+
+        # Sort by score and return best match
+        scored_links.sort(key=lambda x: x['score'], reverse=True)
+        return scored_links[0]

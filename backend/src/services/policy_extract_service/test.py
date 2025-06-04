@@ -1,6 +1,6 @@
 import asyncio
 import json
-import logging
+from loguru import logger
 import re
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -29,7 +29,7 @@ CRAWLER_USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google
 CRAWLER_TIMEOUT = 80
 # Configure logginga
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 class PolicyContent(BaseModel):

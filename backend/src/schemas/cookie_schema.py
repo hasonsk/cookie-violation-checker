@@ -11,7 +11,7 @@ class CookieType(Enum):
 class PolicyCookie(BaseModel):
     """Cấu trúc cookie được khai báo trong policy"""
     cookie_name: str
-    declared_purpose: str
+    declared_purpose: Optional[str]
     declared_retention: str
     declared_third_parties: List[str]
     declared_description: str

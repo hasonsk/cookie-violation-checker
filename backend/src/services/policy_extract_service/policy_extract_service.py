@@ -1,6 +1,6 @@
 import asyncio
 import json
-import logging
+from loguru import logger
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from playwright.async_api import async_playwright, Browser, BrowserContext
@@ -15,7 +15,7 @@ from utils.translation_utils import TranslationManager
 from utils.table_extractor import TableExtractor
 from utils.cache_utils import CacheManager
 
-logger = logging.getLogger(__name__)
+# # logger = logging.getLogger(__name__)
 
 class PolicyExtractService:
     """Service class for extracting and processing policy content"""
@@ -170,7 +170,7 @@ class PolicyExtractService:
                 table_json = json.dumps([table for table in table_data], ensure_ascii=False, indent=2)
                 translated_table_content = await self.translation_manager.translate_content_to_english(table_json)
 
-        return PolicyContent(
+        response =  PolicyContent(
             website_url=website_url,
             policy_url=policy_url,
             original_content=policy_text,
@@ -179,3 +179,6 @@ class PolicyExtractService:
             table_content=table_data,
             translated_table_content=translated_table_content
         )
+
+        logger.info("Extracted main: ")
+        return response

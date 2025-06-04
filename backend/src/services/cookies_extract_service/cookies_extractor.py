@@ -1,14 +1,11 @@
 import json
-import logging
+from loguru import logger
 from typing import Optional
-from dataclasses import asdict
-
 from schemas.cookie_schema import PolicyCookie, PolicyCookieList
 from services.cookies_extract_service.gemini_service import GeminiService
 from utils.text_processing import prepare_content, extract_domain, extract_json_from_response
-from utils.cookie_classifier import CookieClassifier
 
-logger = logging.getLogger(__name__)
+# # logger = logging.getLogger(__name__)
 
 class CookieExtractorService:
     """
@@ -17,7 +14,6 @@ class CookieExtractorService:
 
     def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
         self.gemini_service = GeminiService(api_key, model)
-        self.classifier = CookieClassifier()
 
     async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookieList:
         """
@@ -33,34 +29,11 @@ class CookieExtractorService:
             # Parse and validate response
             parsed_features = self._parse_gemini_response(response)
 
-            # Classify cookie types
-            for cookie in parsed_features.cookies:
-                cookie.feature_type = self.classifier.classify_cookie_type(asdict(cookie))
-
-            logger.info(f"Extracted {len(parsed_features.cookies)} cookie features")
+            logger.info(f"Extracted {parsed_features.cookies} cookie features")
             return parsed_features
 
         except Exception as e:
             logger.error(f"Error extracting cookie features: {str(e)}")
-            return PolicyCookieList(is_specific=0, cookies=[])
-
-    async def infer_default_features(self, website_url: str) -> PolicyCookieList:
-        """
-        Infer default cookie features when no policy is available
-        """
-        try:
-            domain = extract_domain(website_url)
-            default_cookies = self.classifier.get_common_cookies(domain)
-
-            logger.info(f"Inferred {len(default_cookies)} default cookie features for {domain}")
-
-            return PolicyCookieList(
-                is_specific=0,
-                cookies=default_cookies
-            )
-
-        except Exception as e:
-            logger.error(f"Error inferring default features: {str(e)}")
             return PolicyCookieList(is_specific=0, cookies=[])
 
     def _parse_gemini_response(self, response: str) -> PolicyCookieList:

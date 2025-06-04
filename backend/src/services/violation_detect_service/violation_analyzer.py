@@ -346,7 +346,7 @@ class ViolationAnalyzer:
                     "high_issues": severity_counts["High"],
                     "undeclared_cookies": [c.name for c in actual_cookies
                                              if c.name not in {pc.cookie_name for pc in policy_cookies}],
-                    "declared_cookies": [c.name for c in policy_cookies],
+                    "declared_cookies": [c.declared_name for c in policy_cookies],
                     "third_party_cookies": [c.name for c in actual_cookies
                                               if is_third_party_domain(c.domain, main_domain)],
                     "long_term_cookies": [c.name for c in actual_cookies
