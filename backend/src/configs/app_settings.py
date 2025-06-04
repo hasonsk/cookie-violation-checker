@@ -10,6 +10,7 @@ PORT = int(os.environ.get("PORT", "8000"))
 API_TITLE = os.environ.get("API_TITLE", "Cookie Compliance Analyzer")
 API_DESCRIPTION = os.environ.get("API_DESCRIPTION")
 API_VERSION = os.environ.get("API_VERSION", "1.0.0")
+API_BASE = os.environ.get("API_BASE")
 
 # ===== DATABASE CONFIGURATION =====
 DB_NAME = os.environ.get("DB_NAME")

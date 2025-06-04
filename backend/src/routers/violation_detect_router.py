@@ -1,13 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import List
 from schemas.cookie_schema import ComplianceAnalysisResult, ComplianceRequest
 from services.violation_detect_service.violation_detector import ViolationDetectorService
 
 router = APIRouter(prefix="/violations", tags=["cookies"])
-service = ViolationDetectorService()
+
+def get_violation_detector_service() -> ViolationDetectorService:
+    return ViolationDetectorService()
 
 @router.post("/detect", response_model=ComplianceAnalysisResult)
-async def detect_violations(request: ComplianceRequest) -> ComplianceAnalysisResult:
+async def detect_violations(
+    request: ComplianceRequest,
+    service: ViolationDetectorService = Depends(get_violation_detector_service)
+) -> ComplianceAnalysisResult:
     """
     Endpoint để nhận và phân tích cookies từ browser extension
     """

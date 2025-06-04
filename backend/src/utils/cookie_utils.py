@@ -7,9 +7,7 @@ from urllib.parse import urlparse
 
 from schemas.cookie_schema import ActualCookie
 
-
 def parse_cookie(raw: dict) -> Optional[ActualCookie]:
-    """Parse cookie từ raw data với error handling tốt hơn"""
     try:
         expirationDate_str = raw.get("expirationDate")
         expirationDate = None

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-
+from loguru import logger
 from schemas.cookie_schema import ActualCookie, ComplianceIssue, ComplianceAnalysisResult
 from services.violation_detect_service.violation_analyzer import ViolationAnalyzer
 from utils.cookie_utils import extract_main_domain
@@ -13,10 +13,10 @@ class ViolationDetectorService:
 
     async def analyze_website_compliance(self, website_url: str, cookies: List[ActualCookie],
                                  policy_json: Optional[str] = None) -> ComplianceAnalysisResult:
-        """Phân tích compliance cho website"""
         main_domain = extract_main_domain(website_url)
 
         result = self.analyzer.analyze_compliance(policy_json, cookies, main_domain)
+        logger.info(result)
 
         return ComplianceAnalysisResult(
             website_url=website_url,

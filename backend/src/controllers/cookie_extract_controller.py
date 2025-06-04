@@ -5,10 +5,8 @@ from services.cookies_extract_service.cookies_extractor import CookieExtractorSe
 from schemas.cookie_schema import PolicyCookieList
 
 class CookieExtractController:
-    """Controller for cookie policy analysis operations"""
-
-    def __init__(self):
-        self.extractor_service = CookieExtractorService()
+    def __init__(self, extractor_service: CookieExtractorService):
+        self.extractor_service = extractor_service
 
     async def analyze_cookie_policy(self, policy_content: str, table_content: Optional[str] = None) -> dict:
         """

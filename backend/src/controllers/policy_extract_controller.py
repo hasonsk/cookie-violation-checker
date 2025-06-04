@@ -4,6 +4,8 @@ from schemas.policy_schema import PolicyContent
 from repositories.policy_repository import save_policy_content
 
 class PolicyExtractController:
+    def __init__(self, policy_extract_service: PolicyExtractService):
+        self.policy_extract_service = policy_extract_service
 
     async def extract_policy(
         self,
@@ -24,7 +26,7 @@ class PolicyExtractController:
         Returns:
             Formatted policy content dictionary
         """
-        async with PolicyExtractService() as extractor:
+        async with self.policy_extract_service as extractor:
             policy_content = await extractor.extract_policy_content(
                 website_url=website_url,
                 policy_url=policy_url,

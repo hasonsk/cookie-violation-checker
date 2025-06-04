@@ -1,3 +1,4 @@
+from schemas.analysis_schema import AnalysisPhase
 from fastapi import HTTPException, status
 
 # Auth-related
@@ -33,3 +34,13 @@ class FeatureExtractionError(HTTPException):
 class ComplianceCheckError(HTTPException):
     def __init__(self, status_code: int = 500):
         super().__init__(status_code=status_code, detail="Không thể kiểm tra tuân thủ cookie")
+
+class PolicyAnalysisError(Exception):
+    def __init__(self, phase: AnalysisPhase, message: str, status_code: int = 500):
+        self.phase = phase
+        self.message = message
+        self.status_code = status_code
+        super().__init__(f"[{phase.value}] {message}")
+
+class RetryableError(Exception):
+    pass
