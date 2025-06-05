@@ -24,6 +24,10 @@ async def analyze_policy(
     payload: CookieSubmissionRequest,
     service: PolicyAnalysisService = Depends(get_policy_analysis_service)
 ) -> ComplianceAnalysisResult:
+    """
+    Endpoint to receive and analyze cookies from a browser extension,
+    orchestrating the entire policy compliance analysis process.
+    """
     start_time = time.time()
     request_id = str(uuid.uuid4())
     logger.info(

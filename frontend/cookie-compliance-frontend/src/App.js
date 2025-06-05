@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Provider, useDispatch } from 'react-redux';
 import { store } from './store';
 import { useAuth } from './hooks/useAuth';
+import { setAuthErrorHandler } from './services/api';
+import { logoutUser } from './store/slices/authSlice';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -13,6 +15,7 @@ import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
+import UserManagement from './pages/users/UserManagement';
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
@@ -22,9 +25,9 @@ import './App.css';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, initialized } = useAuth();
 
-  if (loading) {
+  if (loading || !initialized) {
     return <Loading />;
   }
 
@@ -39,56 +42,66 @@ const PublicRoute = ({ children }) => {
 };
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setAuthErrorHandler(() => {
+      dispatch(logoutUser()); // Dispatch logout action to clear Redux state
+      navigate('/login'); // Redirect to login page
+    });
+  }, [dispatch, navigate]);
+
   return (
-    <Router>
-      <ErrorBoundary>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
+    <ErrorBoundary>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
 
-          {/* Protected Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="websites" element={<WebsitesList />} />
-            <Route path="websites/detail/:id" element={<WebsiteDetail />} />
-          </Route>
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="websites" element={<WebsitesList />} />
+          <Route path="websites/detail/:id" element={<WebsiteDetail />} />
+          <Route path="admin/users" element={<UserManagement />} />
+        </Route>
 
-          {/* Catch all route */}
-          {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
-        </Routes>
-      </ErrorBoundary>
-    </Router>
+        {/* Catch all route */}
+        {/* If a 404 page is desired, it should be implemented here. */}
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
 function App() {
   return (
     <Provider store={store}>
-      <AppContent />
+      <Router> {/* Router now wraps AppContent */}
+        <AppContent />
+      </Router>
     </Provider>
   );
 }

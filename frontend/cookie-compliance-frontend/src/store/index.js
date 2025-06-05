@@ -1,13 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './slices/authSlice';
 import websiteSlice from './slices/websiteSlice';
-// import uiSlice from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authSlice,
     websites: websiteSlice,
-    // ui: uiSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -16,6 +14,3 @@ export const store = configureStore({
       },
     }),
 });
-
-// export type RootState = ReturnType<typeof store.getState>;
-// export type AppDispatch = typeof store.dispatch;

@@ -1,35 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-// API calls
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+import { authAPI } from '../api/authAPI';
 
 // Async thunks
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      console.log(credentials)
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data.detail || 'Đăng nhập thất bại');
-      }
-
-      // Lưu token vào localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
+      const data = await authAPI.login(credentials);
       return data;
     } catch (error) {
-      return rejectWithValue(error.detail || 'Có lỗi xảy ra');
+      return rejectWithValue(error.response?.data?.detail || 'Đăng nhập thất bại');
     }
   }
 );
@@ -38,23 +18,10 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data.detail || 'Đăng ký thất bại');
-      }
-
+      const data = await authAPI.register(userData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.detail || 'Có lỗi xảy ra');
+      return rejectWithValue(error.response?.data?.detail || 'Đăng ký thất bại');
     }
   }
 );
@@ -63,24 +30,11 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      // Call logout API if needed
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      // Clear localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-
+      await authAPI.logout();
       return null;
     } catch (error) {
-      // Even if API fails, still clear local storage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return null;
+      // authAPI.logout already handles local storage clearing and error logging
+      return rejectWithValue(error.response?.data?.detail || 'Có lỗi xảy ra khi đăng xuất');
     }
   }
 );
@@ -97,28 +51,14 @@ export const checkAuthStatus = createAsyncThunk(
       }
 
       // Verify token with backend
-      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        return rejectWithValue('Token invalid');
-      }
-
-      const data = await response.json();
+      const data = await authAPI.verify();
       return {
-        token,
+        token, // Keep existing token, authAPI.verify doesn't return it
         user: data.user || JSON.parse(user),
       };
     } catch (error) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return rejectWithValue(error.detail);
+      // The Axios interceptor in api.js will handle clearing token and redirecting on 401
+      return rejectWithValue(error.response?.data?.detail || 'Token invalid or session expired');
     }
   }
 );

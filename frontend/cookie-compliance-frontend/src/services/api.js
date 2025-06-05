@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +8,12 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+let onAuthErrorCallback = null;
+
+export const setAuthErrorHandler = (callback) => {
+  onAuthErrorCallback = callback;
+};
 
 // Request interceptor để thêm token
 api.interceptors.request.use(
@@ -27,31 +33,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    // Handle 401 Unauthorized errors
+    if (error.response?.status === 401) {
+      // Clear local storage and trigger the auth error handler
+      localStorage.removeItem('token');
+      localStorage.removeItem('user'); // Also clear user data
+      localStorage.removeItem('refreshToken'); // Clear refresh token if it exists
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      // Try to refresh token
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await api.post('/auth/refresh', { refreshToken });
-          const newToken = response.data.token;
-          localStorage.setItem('token', newToken);
-
-          // Retry original request
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+      if (onAuthErrorCallback) {
+        onAuthErrorCallback();
       }
     }
-
     return Promise.reject(error);
   }
 );

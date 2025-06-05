@@ -1,14 +1,24 @@
 from repositories.user_repository import UserRepository
 from passlib.context import CryptContext
 from utils.jwt_handler import create_access_token, decode_access_token
-from schemas.auth_schema import RegisterSchema, LoginSchema
-from schemas.auth_schema import RegisterResponseSchema, LoginResponseSchema, UserInfo
+from schemas.auth_schema import (
+    RegisterSchema,
+    LoginSchema,
+    RegisterResponseSchema,
+    LoginResponseSchema,
+    UserInfo,
+    User,
+    UserRole,
+    RequestRoleChangeSchema,
+    ApproveAccountSchema
+)
 from exceptions.custom_exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     UnauthorizedError,
     UserNotFoundError
 )
+from typing import Optional
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,11 +32,11 @@ class AuthService:
             raise EmailAlreadyExistsError()
 
         hashed = pwd_context.hash(data.password)
-        new_user = {
-            "name": data.name,
-            "email": data.email,
-            "password": hashed
-        }
+        new_user = User(
+            name=data.name,
+            email=data.email,
+            password=hashed
+        )
         await self.user_repo.create_user(new_user)
         return RegisterResponseSchema(msg="Đăng ký thành công")
 
@@ -38,21 +48,74 @@ class AuthService:
         token = create_access_token({"sub": user["email"]})
         return LoginResponseSchema(
             token=token,
-            user={
-                "name": user["name"],
-                "email": user["email"]
-            }
+            user=UserInfo(
+                name=user["name"],
+                email=user["email"],
+                role=UserRole(user["role"]),
+                approved_by_admin=user["approved_by_admin"]
+            )
         )
 
-    async def get_current_user(self, token: str) -> UserInfo:
-        payload = decode_access_token(token)
-        if payload is None:
-            raise UnauthorizedError()
-        email = payload.get("sub")
+    async def get_current_user(self, email: str) -> UserInfo:
         user = await self.user_repo.get_user_by_email(email)
         if not user:
             raise UserNotFoundError()
         return UserInfo(
             name=user["name"],
-            email=user["email"]
+            email=user["email"],
+            role=UserRole(user["role"]),
+            approved_by_admin=user["approved_by_admin"]
         )
+
+    async def request_role_change(self, user_id: str, requested_role_data: RequestRoleChangeSchema) -> Optional[UserInfo]:
+        user = await self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundError()
+
+        updated_user = await self.user_repo.request_role_change(user_id, requested_role_data.requested_role)
+        if updated_user:
+            return UserInfo(
+                name=updated_user["name"],
+                email=updated_user["email"],
+                role=UserRole(updated_user["role"]),
+                approved_by_admin=updated_user["approved_by_admin"]
+            )
+        return None
+
+    async def approve_account(self, user_id: str, current_user: UserInfo) -> Optional[UserInfo]:
+        if current_user.role not in [UserRole.admin, UserRole.cmp_manager]:
+            raise UnauthorizedError("Only admins or CMP managers can approve accounts.")
+
+        user = await self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundError()
+
+        updated_user = await self.user_repo.approve_account(user_id)
+        if updated_user:
+            return UserInfo(
+                name=updated_user["name"],
+                email=updated_user["email"],
+                role=UserRole(updated_user["role"]),
+                approved_by_admin=updated_user["approved_by_admin"]
+            )
+        return None
+
+    async def approve_role_change(self, user_id: str, current_user: UserInfo) -> Optional[UserInfo]:
+        if current_user.role not in [UserRole.admin, UserRole.cmp_manager]:
+            raise UnauthorizedError("Only admins or CMP managers can approve role changes.")
+
+        user = await self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundError()
+        if not user.get("requested_role"):
+            raise ValueError("No role change request pending for this user.")
+
+        updated_user = await self.user_repo.approve_role_change(user_id)
+        if updated_user:
+            return UserInfo(
+                name=updated_user["name"],
+                email=updated_user["email"],
+                role=UserRole(updated_user["role"]),
+                approved_by_admin=updated_user["approved_by_admin"]
+            )
+        return None
