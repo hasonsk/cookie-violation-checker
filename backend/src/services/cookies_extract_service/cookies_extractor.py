@@ -33,13 +33,13 @@ class CookieExtractorService:
 
         except Exception as e:
             logger.error(f"Error extracting cookie features: {str(e)}")
+            logger.exception("Traceback:")
             return PolicyCookieList(is_specific=0, cookies=[])
 
     def _parse_gemini_response(self, response: str) -> PolicyCookieList:
         try:
             # Clean response - extract JSON if wrapped in text
             json_str = extract_json_from_response(response)
-            logger.info(f"JSON STR: {json_str}")
 
             # Parse JSON
             data = json.loads(json_str)

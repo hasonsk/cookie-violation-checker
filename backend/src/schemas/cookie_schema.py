@@ -64,6 +64,7 @@ class ComplianceResponse(BaseModel):
     actual_cookies_count: int
     compliance_score: float
     summary: Dict[str, Any]
+    details: Dict[str, Any]
 
 class ComplianceAnalysisResult(BaseModel):
     """Kết quả phân tích compliance để lưu vào database"""
@@ -76,6 +77,7 @@ class ComplianceAnalysisResult(BaseModel):
     summary: Dict[str, Any]
     policy_cookies_count: int
     actual_cookies_count: int
+    details: Dict[str, Any]
 
 class ComplianceAnalysisResponse(ComplianceAnalysisResult):
     policy_url: Optional[str]

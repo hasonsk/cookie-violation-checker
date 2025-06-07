@@ -10,12 +10,14 @@ from dependencies import (
     get_policy_discovery_service,
     get_policy_extract_service,
     get_cookie_extractor_service,
-    get_violation_detector_service
+    get_violation_detector_service,
+    get_violation_repository # Add this import
 )
 from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector import ViolationDetectorService
+from services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from repositories.violation_repo import ViolationRepository
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
@@ -23,13 +25,15 @@ def get_policy_analysis_service(
     discovery_service: PolicyDiscoveryService = Depends(get_policy_discovery_service),
     extract_service: PolicyExtractService = Depends(get_policy_extract_service),
     feature_service: CookieExtractorService = Depends(get_cookie_extractor_service),
-    violation_service: ViolationDetectorService = Depends(get_violation_detector_service)
+    violation_service: ViolationDetectorService = Depends(get_violation_detector_service),
+    violation_repo: ViolationRepository = Depends(get_violation_repository) # Add this dependency
 ) -> PolicyCookiesAnalysisService:
     return PolicyCookiesAnalysisService(
         discovery_service=discovery_service,
         extract_service=extract_service,
         feature_service=feature_service,
-        violation_service=violation_service
+        violation_service=violation_service,
+        violation_repo=violation_repo # Pass the repository
     )
 
 @router.post("/", response_model=ComplianceAnalysisResponse)

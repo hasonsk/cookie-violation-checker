@@ -13,7 +13,7 @@ from services.auth_service.auth_service import AuthService
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector import ViolationDetectorService
+from services.violation_detect_service.violation_detector_service import ViolationDetectorService
 from controllers.policy_extract_controller import PolicyExtractController
 from utils.jwt_handler import decode_access_token
 from schemas.auth_schema import UserInfo, UserRole

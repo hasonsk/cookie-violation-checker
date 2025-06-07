@@ -41,40 +41,41 @@ def parse_cookie(raw: dict) -> Optional[ActualCookie]:
         return None
 
 
-def parse_retention_to_days(retention_str: str) -> Optional[int]:
+def parse_retention_to_days(retention_str: str) -> Optional[float]: # Changed return type to float
     """Chuyển đổi retention string thành số ngày với nhiều format hơn"""
     if not retention_str:
         return None
 
     retention_lower = retention_str.lower().strip()
 
-    if 'session' in retention_lower or 'browser' in retention_lower:
-        return 0
+    # Handle non-fixed retention periods by returning None
+    if 'session' in retention_lower or 'browser' in retention_lower or 'local storage' in retention_lower or 'persistent' in retention_lower:
+        return None
 
     # Parse các format phổ biến với regex tốt hơn
     patterns = [
-        (r'(\d+(?:\.\d+)?)\s*year[s]?', 365),
-        (r'(\d+(?:\.\d+)?)\s*month[s]?', 30),
-        (r'(\d+(?:\.\d+)?)\s*week[s]?', 7),
-        (r'(\d+(?:\.\d+)?)\s*day[s]?', 1),
-        (r'(\d+(?:\.\d+)?)\s*hour[s]?', 1/24),
-        (r'(\d+(?:\.\d+)?)\s*minute[s]?', 1/(24*60))
+        (r'(\d+(?:\.\d+)?)\s*year[s]?', 365.25), # Use average days in a year
+        (r'(\d+(?:\.\d+)?)\s*month[s]?', 30.44), # Use average days in a month
+        (r'(\d+(?:\.\d+)?)\s*week[s]?', 7.0),
+        (r'(\d+(?:\.\d+)?)\s*day[s]?', 1.0),
+        (r'(\d+(?:\.\d+)?)\s*hour[s]?', 1.0/24.0),
+        (r'(\d+(?:\.\d+)?)\s*minute[s]?', 1.0/(24.0*60.0))
     ]
 
     for pattern, multiplier in patterns:
         match = re.search(pattern, retention_lower)
         if match:
-            return int(float(match.group(1)) * multiplier)
+            return float(match.group(1)) * multiplier # Return float
 
     # Xử lý các case đặc biệt
     if 'permanent' in retention_lower or 'forever' in retention_lower:
-        return 10000  # Số rất lớn để biểu thị permanent
+        return float('inf')  # Use infinity for permanent
 
     if 'short' in retention_lower:
-        return 7  # Assume short-term = 1 week
+        return 7.0  # Assume short-term = 1 week
 
     if 'long' in retention_lower:
-        return 365  # Assume long-term = 1 year
+        return 365.0  # Assume long-term = 1 year
 
     return None
 

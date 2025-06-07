@@ -1,58 +1,27 @@
-"""
-Module này chứa ViolationDetectorService, đóng vai trò là điểm vào (entry point)
-để điều phối quá trình phân tích tuân thủ cookie.
-"""
 from typing import List, Optional, Dict
 from datetime import datetime
 from loguru import logger
 
-# Import các schema cần thiết để định dạng dữ liệu
+from utils.cookie_utils import extract_main_domain
+from .violation_analyzer import ViolationAnalyzer
 from schemas.cookie_schema import (
     ComplianceIssue,
     ComplianceAnalysisResult,
-    PolicyCookie, # Add this import
+    PolicyCookie,
     ActualCookie,
-    PolicyCookieList # Add this import
+    PolicyCookieList
 )
 
-# Import các tiện ích
-from utils.cookie_utils import extract_main_domain
-
-# Import "Rule Engine" đã được tối ưu hóa
-from .violation_analyzer import ViolationAnalyzer
-
-
 class ViolationDetectorService:
-    """
-    Service chính điều phối việc phát hiện vi phạm.
-    Nó nhận dữ liệu thô, gọi ViolationAnalyzer để xử lý,
-    và định dạng kết quả cuối cùng.
-    """
-
     def __init__(self):
-        """
-        Khởi tạo service với một instance của ViolationAnalyzer.
-        Analyzer sẽ tự động nạp tất cả các quy tắc từ `violation_rules.py`.
-        """
         self.analyzer = ViolationAnalyzer()
 
     async def analyze_website_compliance(
         self,
         website_url: str,
         cookies: List[Dict],  # Nhận danh sách cookie thô (list of dicts) từ request
-        policy_json: Optional[PolicyCookieList] = None  # Nhận chính sách đã được phân tích (dict) từ request
+        policy_json: Optional[Dict] = None  # Nhận chính sách đã được phân tích (dict) từ request
     ) -> ComplianceAnalysisResult:
-        """
-        Hàm chính để điều phối toàn bộ quá trình phân tích tuân thủ.
-
-        Args:
-            website_url: URL của trang web đang được phân tích.
-            cookies: Danh sách các cookie thực tế được thu thập.
-            policy_json: Dữ liệu có cấu trúc của chính sách cookie.
-
-        Returns:
-            Một đối tượng ComplianceAnalysisResult chứa kết quả phân tích toàn diện.
-        """
         main_domain = extract_main_domain(website_url)
 
         # Xử lý trường hợp không tìm thấy chính sách cookie
@@ -62,11 +31,20 @@ class ViolationDetectorService:
 
         logger.info(f"Starting compliance analysis for {website_url} with {len(cookies)} actual cookies.")
 
-        # Convert raw policy_json and actual_cookies to Pydantic models
-        # Assuming policy_json["cookies"] is a list of dicts that can be converted to PolicyCookie
-        # policy_cookies_parsed = [PolicyCookie(**c) for c in policy_json.get("cookies", [])]
-        policy_cookies_parsed = [PolicyCookie(**c.dict()) for c in policy_json["cookies"]]
-        actual_cookies_parsed = [ActualCookie(**c) for c in cookies]
+        policy_cookies_parsed = [PolicyCookie(**c) for c in policy_json.get("cookies", [])]
+
+        actual_cookies_parsed = []
+        for cookie_data in cookies:
+            # Handle 'Session' or invalid expirationDate
+            if 'expirationDate' in cookie_data and cookie_data['expirationDate'] == 'Session':
+                cookie_data['expirationDate'] = None
+            elif 'expirationDate' in cookie_data and not isinstance(cookie_data['expirationDate'], (datetime, type(None))):
+                # Attempt to parse if it's a string, otherwise set to None
+                try:
+                    cookie_data['expirationDate'] = datetime.fromisoformat(cookie_data['expirationDate'].replace('Z', '+00:00'))
+                except (ValueError, TypeError):
+                    cookie_data['expirationDate'] = None
+            actual_cookies_parsed.append(ActualCookie(**cookie_data))
 
         # Gọi phương thức phân tích của "Rule Engine"
         result = self.analyzer.analyze_compliance(
@@ -89,7 +67,8 @@ class ViolationDetectorService:
                 statistics={"error": result['error']},
                 summary={"error_message": "An internal error occurred during analysis."},
                 policy_cookies_count=result.get("policy_cookies_count", 0),
-                actual_cookies_count=result.get("actual_cookies_count", 0)
+                actual_cookies_count=result.get("actual_cookies_count", 0),
+                details={} # Add details field for error case
             )
 
         logger.info(f"Analysis for {website_url} completed with {result.get('total_issues')} issues.")
@@ -105,5 +84,6 @@ class ViolationDetectorService:
             statistics=result.get("statistics", {}),
             summary=result.get("summary", {}),
             policy_cookies_count=result.get("policy_cookies_count", 0),
-            actual_cookies_count=result.get("actual_cookies_count", 0)
+            actual_cookies_count=result.get("actual_cookies_count", 0),
+            details=result.get("details", {}) # Add details field for success case
         )

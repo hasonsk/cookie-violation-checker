@@ -5,12 +5,12 @@ from schemas.policy_schema import PolicyContent, PolicyDiscoveryResult
 from typing import Dict, List, Optional, Any
 from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
 from loguru import logger
-# Import các service cần thiết
+
 from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector import ViolationDetectorService
-import httpx # Keep httpx for now, might be needed by other services or for future extensions
+from services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from repositories.violation_repo import ViolationRepository # Add this import
 
 class PolicyCookiesAnalysisService:
     def __init__(
@@ -18,12 +18,14 @@ class PolicyCookiesAnalysisService:
         discovery_service: PolicyDiscoveryService,
         extract_service: PolicyExtractService,
         feature_service: CookieExtractorService,
-        violation_service: ViolationDetectorService
+        violation_service: ViolationDetectorService,
+        violation_repo: ViolationRepository
     ):
         self.discovery_service = discovery_service
         self.extract_service = extract_service
         self.feature_service = feature_service
         self.violation_service = violation_service
+        self.violation_repo = violation_repo
 
     async def orchestrate_analysis(self, payload: CookieSubmissionRequest, request_id: str) -> ComplianceAnalysisResponse:
         """
@@ -121,9 +123,15 @@ class PolicyCookiesAnalysisService:
                 actual_cookies_count=result.actual_cookies_count,
                 statistics=result.statistics,
                 issues=result.issues,
-                summary=result.summary
+                summary=result.summary,
+                details=result.details
             )
             logger.debug(f"Type of analysis_result before return: {type(analysis_result)}")
+
+            # Save the analysis result to the database
+            await self.violation_repo.create_violation(analysis_result.dict())
+            logger.info("Analysis result saved to database", request_id=request_id)
+
             return analysis_result
 
         except Exception as e:

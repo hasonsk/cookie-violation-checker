@@ -11,7 +11,6 @@ class PolicyContentRepository(BaseRepository):
 
     async def create_policy_content(self, policy_content: Dict[str, Any]) -> str:
         """Create a new policy content record"""
-        logger.warning(policy_content)
         return await self.insert_one(policy_content)
 
     async def get_by_website_url(self, website_url: str) -> Optional[Dict[str, Any]]:

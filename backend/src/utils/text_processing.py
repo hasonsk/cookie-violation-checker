@@ -73,7 +73,7 @@ def prepare_content(policy_content: str, table_content: Optional[str] = None) ->
     if policy_content and policy_content.strip():
         content_parts.append(f"Cookie policy: {policy_content}")
 
-    if table_content and table_content.strip():
+    if isinstance(table_content, str) and table_content.strip():
         content_parts.append(f"Table: {table_content}")
 
     if not content_parts:

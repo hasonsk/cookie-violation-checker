@@ -1,6 +1,6 @@
 from typing import List
 from schemas.cookie_schema import ActualCookie, PolicyCookieList, ComplianceAnalysisResult
-from services.violation_detect_service.violation_detector import ViolationDetectorService
+from services.violation_detect_service.violation_detector_service import ViolationDetectorService
 
 class ViolationDetectorController:
 
