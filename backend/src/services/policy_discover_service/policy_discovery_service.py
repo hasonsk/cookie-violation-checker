@@ -7,9 +7,11 @@ from configs.crawler_config import USER_AGENT
 from .dom_parser_service import DOMParserService
 from .search_service import SearchService
 from repositories.discovery_repo import PolicyDiscoveryRepository
+from utils.retry_utils import retry
+import aiohttp
 
 class PolicyDiscoveryService:
-    def __init__(self, timeout: int = 30, use_playwright: bool = True, discovery_repo = PolicyDiscoveryRepository):
+    def __init__(self, discovery_repo: PolicyDiscoveryRepository, timeout: int = 30, use_playwright: bool = True):
         self.timeout = timeout
         self.session = None
         self.use_playwright = use_playwright
@@ -39,7 +41,6 @@ class PolicyDiscoveryService:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        logger.info(f"I have our {self.session}, {self.browser}, {self.playwright}")
         """Async context manager exit"""
         if self.session:
             await self.session.close()
@@ -63,6 +64,7 @@ class PolicyDiscoveryService:
             else:
                 # Fallback to Bing search if DOM parsing fails
                 result = await self._fallback_to_bing_search(result, root_url)
+                logger.info(f"Bing results: {result}")
 
             # Save the result to the repository
             await self._save_discovery_result(website_url, result)
@@ -96,11 +98,13 @@ class PolicyDiscoveryService:
             "error": result.error,
         })
 
+    @retry(max_attempts=3, initial_delay=1, exceptions=(aiohttp.ClientError, Exception))
     async def _find_policy_from_dom(self, website_url: str) -> PolicyDiscoveryResult:
         """Find policy URL by parsing the website's DOM"""
         try:
             async with self.session.get(website_url) as response:
                 if response.status != 200:
+                    logger.warning(f"DOM parsing HTTP error for {website_url}: {response.status}")
                     return PolicyDiscoveryResult(
                         website_url=website_url,
                         error=f"HTTP {response.status}"
@@ -122,6 +126,9 @@ class PolicyDiscoveryService:
 
                 return PolicyDiscoveryResult(website_url=website_url)
 
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error during DOM parsing for {website_url}: {str(e)}")
+            raise # Re-raise to trigger retry
         except Exception as e:
             logger.error(f"DOM parsing error for {website_url}: {str(e)}")
             return PolicyDiscoveryResult(

@@ -1,106 +1,36 @@
 from datetime import datetime
 import json
 import time
-from schemas.policy_schema import PolicyContent
+from schemas.policy_schema import PolicyContent, PolicyDiscoveryResult
 from typing import Dict, List, Optional, Any
 from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
 from loguru import logger
-from clients.internal_api_client import InternalAPIClient, APIConfig, AnalysisPhase, PolicyAnalysisError
-import httpx
+# Import các service cần thiết
+from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from services.policy_extract_service.policy_extract_service import PolicyExtractService
+from services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from services.violation_detect_service.violation_detector import ViolationDetectorService
+import httpx # Keep httpx for now, might be needed by other services or for future extensions
 
 class PolicyCookiesAnalysisService:
-    def __init__(self, api_client: InternalAPIClient):
-        self.api_client = api_client
-
-    async def discover_policy(self, client: httpx.AsyncClient, website_url: str, request_id: str) -> Dict[str, Any]:
-        """Phase 1: Policy Discovery"""
-        return await self.api_client.post(
-            client=client,
-            endpoint="/policy/discover",
-            payload={"website_url": website_url},
-            phase=AnalysisPhase.DISCOVERY,
-            request_id=request_id
-        )
-
-    async def extract_content(
+    def __init__(
         self,
-        client: httpx.AsyncClient,
-        website_url: str,
-        policy_url: str,
-        request_id: str
-    ) -> PolicyContent: # Changed return type
-        """Phase 2: Policy Content Extraction"""
-        result = await self.api_client.post(
-            client=client,
-            endpoint="/policy/extract",
-            payload={
-                "website_url": website_url,
-                "policy_url": policy_url
-            },
-            phase=AnalysisPhase.EXTRACTION,
-            request_id=request_id
-        )
-        return PolicyContent(**result) # Convert dict to PolicyContent
-
-    async def extract_features(
-        self,
-        client: httpx.AsyncClient,
-        policy_content: PolicyContent, # Changed parameter type
-        request_id: str
-    ) -> Dict[str, Any]:
-        """Phase 3: Feature Extraction"""
-        # Prepare content based on language detection
-        if policy_content.detected_language != "en":
-            payload = {
-                "policy_content": policy_content.translated_content,
-                "table_content": policy_content.translated_table_content
-            }
-        else:
-            payload = {
-                "policy_content": policy_content.original_content,
-                "table_content": json.dumps(policy_content.table_content) if policy_content.table_content else None
-            }
-
-        # Check for None values in payload before sending
-        if payload["policy_content"] is None:
-            raise ValueError("Policy content is missing or None for feature extraction.")
-        # table_content can be None if no tables are found, so no check needed for it.
-
-        return await self.api_client.post(
-            client=client,
-            endpoint="/cookies/extract-features",
-            payload=payload,
-            phase=AnalysisPhase.FEATURE_EXTRACTION,
-            request_id=request_id
-        )
-
-    async def check_compliance(
-        self,
-        client: httpx.AsyncClient,
-        website_url: str,
-        policy_features: Dict[str, Any],
-        cookies: List[Dict[str, Any]],
-        request_id: str
-    ) -> Dict[str, Any]:
-        """Phase 4: Compliance Check"""
-        return await self.api_client.post(
-            client=client,
-            endpoint="/violations/detect",
-            payload={
-                "website_url": website_url,
-                "policy_json": policy_features,
-                "cookies": cookies
-            },
-            phase=AnalysisPhase.COMPLIANCE_CHECK,
-            request_id=request_id
-        )
+        discovery_service: PolicyDiscoveryService,
+        extract_service: PolicyExtractService,
+        feature_service: CookieExtractorService,
+        violation_service: ViolationDetectorService
+    ):
+        self.discovery_service = discovery_service
+        self.extract_service = extract_service
+        self.feature_service = feature_service
+        self.violation_service = violation_service
 
     async def orchestrate_analysis(self, payload: CookieSubmissionRequest, request_id: str) -> ComplianceAnalysisResponse:
         """
         Optimized policy analysis with parallel processing, proper error handling,
         and comprehensive logging.
         """
-        start_time = time.time() # Keep start_time here for execution_time calculation
+        start_time = time.time()
 
         logger.info(
             "analysis_started",
@@ -109,98 +39,93 @@ class PolicyCookiesAnalysisService:
             cookies_count=len(payload.cookies)
         )
 
+        policy_url = None
         try:
-            async with self.api_client.get_client() as client:
-                # Phase 1: Policy Discovery (must be first)
-                logger.info("phase_started", phase="discovery", request_id=request_id)
-                discovery = await self.discover_policy(client, payload.website_url, request_id)
-                logger.info("phase_completed", phase="discovery", request_id=request_id)
+            # Phase 1: Policy Discovery
+            logger.info("phase_started", phase="discovery", request_id=request_id)
+            discovery_result: PolicyDiscoveryResult = await self.discovery_service.find_policy_url(payload.website_url)
+            logger.info("phase_completed", phase="discovery", request_id=request_id)
 
-                policy_features = {"is_specific": 0, "cookies": []}
+            policy_features = {"is_specific": 0, "cookies": []}
+            policy_url = discovery_result.policy_url
 
-                if discovery.get("policy_url"):
-                    logger.info("policy_url_found",
-                                 policy_url=discovery["policy_url"],
-                                 request_id=request_id)
+            if policy_url:
+                logger.info("policy_url_found",
+                             policy_url=policy_url,
+                             request_id=request_id)
 
-                    # Phase 2 & 3: Can be optimized with parallel execution in some cases
-                    # But since Phase 3 depends on Phase 2, we keep them sequential
-                    logger.info("phase_started", phase="extraction", request_id=request_id)
-
-                    policy_content = await self.extract_content(
-                        client,
-                        discovery["website_url"],
-                        discovery["policy_url"],
-                        request_id
+                # Phase 2: Policy Content Extraction
+                logger.info("phase_started", phase="extraction", request_id=request_id)
+                async with self.extract_service as extractor:
+                    policy_content = await extractor.extract_policy_content(
+                        website_url=discovery_result.website_url,
+                        policy_url=policy_url
                     )
-                    logger.info("phase_completed", phase="extraction", request_id=request_id)
-                    logger.warning(policy_content)
+                logger.info("phase_completed", phase="extraction", request_id=request_id)
+                logger.warning(policy_content) # Consider removing this warning in production
 
-                    # Phase 3: Feature Extraction
-                    logger.info("phase_started", phase="feature_extraction", request_id=request_id)
-                    policy_features = await self.extract_features(client, policy_content, request_id)
-                    logger.info("phase_completed", phase="feature_extraction", request_id=request_id)
+                # Phase 3: Feature Extraction
+                logger.info("phase_started", phase="feature_extraction", request_id=request_id)
+                if policy_content.detected_language == "en":
+                    policy_features_obj = await self.feature_service.extract_cookie_features(
+                        policy_content.original_content,
+                        policy_content.table_content,
+                    )
                 else:
-                    logger.info("no_policy_found",
-                                 website_url=payload.website_url,
-                                 request_id=request_id)
+                    policy_features_obj = await self.feature_service.extract_cookie_features(
+                        policy_content.translated_content,
+                        policy_content.translated_table_content,
+                    )
+                # Convert PolicyCookieList object to a dictionary for ViolationDetectorService
+                policy_features = {
+                    "is_specific": policy_features_obj.is_specific,
+                    "cookies": [cookie.dict() for cookie in policy_features_obj.cookies]
+                }
+                logger.info("phase_completed", phase="feature_extraction", request_id=request_id)
+            else:
+                logger.info("no_policy_found",
+                             website_url=payload.website_url,
+                             request_id=request_id)
 
-                # Phase 4: Compliance Check
-                logger.info("phase_started", phase="compliance_check", request_id=request_id)
-                result = await self.check_compliance(
-                    client,
-                    payload.website_url,
-                    policy_features,
-                    payload.cookies,
-                    request_id
-                )
-                logger.info("phase_completed", phase="compliance_check", request_id=request_id)
-
-                # Calculate execution time
-                execution_time = time.time() - start_time
-
-                # Log comprehensive results
-                logger.info(
-                    "analysis_completed",
-                    request_id=request_id,
-                    total_issues=result['total_issues'],
-                    compliance_score=result['compliance_score'],
-                    execution_time=execution_time,
-                    policy_cookies_count=result['policy_cookies_count'],
-                    actual_cookies_count=result['actual_cookies_count']
-                )
-
-                # Create structured result
-                # Validate required fields in the result
-                required_fields = ['total_issues', 'compliance_score', 'policy_cookies_count', 'actual_cookies_count', 'statistics', 'issues', 'summary']
-                for field in required_fields:
-                    if result.get(field) is None:
-                        raise ValueError(f"Missing required field in the result: {field}")
-
-                analysis_result = ComplianceAnalysisResponse(
-                    website_url=payload.website_url,
-                    policy_url=discovery.get("policy_url"),
-                    analysis_date=datetime.now(),
-                    total_issues=result['total_issues'],
-                    compliance_score=result['compliance_score'],
-                    policy_cookies_count=result['policy_cookies_count'],
-                    actual_cookies_count=result['actual_cookies_count'],
-                    statistics=result['statistics'],
-                    issues=result['issues'],
-                    summary=result['summary']
-                )
-                return analysis_result
-
-        except PolicyAnalysisError as e:
-            logger.error(
-                "analysis_failed",
-                request_id=request_id,
-                phase=e.phase.value,
-                error=e.message,
-                status_code=e.status_code,
-                execution_time=time.time() - start_time
+            # Phase 4: Compliance Check
+            logger.info("phase_started", phase="compliance_check", request_id=request_id)
+            result = await self.violation_service.analyze_website_compliance(
+                payload.website_url,
+                payload.cookies,
+                policy_features,
             )
-            raise e
+            logger.info("phase_completed", phase="compliance_check", request_id=request_id)
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Log comprehensive results
+            logger.info(
+                "analysis_completed",
+                request_id=request_id,
+                total_issues=result.total_issues,
+                compliance_score=result.compliance_score,
+                execution_time=execution_time,
+                policy_cookies_count=result.policy_cookies_count,
+                actual_cookies_count=result.actual_cookies_count
+            )
+
+            # Create structured result
+            analysis_result = ComplianceAnalysisResponse(
+                website_url=payload.website_url,
+                policy_url=policy_url,
+                analysis_date=datetime.now(),
+                total_issues=result.total_issues,
+                compliance_score=result.compliance_score,
+                policy_cookies_count=result.policy_cookies_count,
+                actual_cookies_count=result.actual_cookies_count,
+                statistics=result.statistics,
+                issues=result.issues,
+                summary=result.summary
+            )
+            logger.debug(f"Type of analysis_result before return: {type(analysis_result)}")
+            return analysis_result
+
         except Exception as e:
             logger.error(
                 "analysis_unexpected_error",

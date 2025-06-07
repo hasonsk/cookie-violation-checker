@@ -1,23 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
-from services.analyze_service.policy_cookies_analysis_service import PolicyCookiesAnalysisService, PolicyAnalysisError
-from clients.internal_api_client import InternalAPIClient, APIConfig
+from services.analyze_service.policy_cookies_analysis_service import PolicyCookiesAnalysisService
+from exceptions.custom_exceptions import PolicyAnalysisError
 from loguru import logger
-from configs.app_settings import API_BASE
 from fastapi import APIRouter, Depends, HTTPException
 import time
 import uuid
+from dependencies import (
+    get_policy_discovery_service,
+    get_policy_extract_service,
+    get_cookie_extractor_service,
+    get_violation_detector_service
+)
+from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from services.policy_extract_service.policy_extract_service import PolicyExtractService
+from services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from services.violation_detect_service.violation_detector import ViolationDetectorService
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
-def get_api_config() -> APIConfig:
-    return APIConfig(api_base=API_BASE)
-
-def get_internal_api_client(config: APIConfig = Depends(get_api_config)) -> InternalAPIClient:
-    return InternalAPIClient(config=config)
-
-def get_policy_analysis_service(api_client: InternalAPIClient = Depends(get_internal_api_client)) -> PolicyCookiesAnalysisService:
-    return PolicyCookiesAnalysisService(api_client=api_client)
+def get_policy_analysis_service(
+    discovery_service: PolicyDiscoveryService = Depends(get_policy_discovery_service),
+    extract_service: PolicyExtractService = Depends(get_policy_extract_service),
+    feature_service: CookieExtractorService = Depends(get_cookie_extractor_service),
+    violation_service: ViolationDetectorService = Depends(get_violation_detector_service)
+) -> PolicyCookiesAnalysisService:
+    return PolicyCookiesAnalysisService(
+        discovery_service=discovery_service,
+        extract_service=extract_service,
+        feature_service=feature_service,
+        violation_service=violation_service
+    )
 
 @router.post("/", response_model=ComplianceAnalysisResponse)
 async def analyze_policy(

@@ -11,6 +11,9 @@ from repositories.violation_repo import ViolationRepository
 
 from services.auth_service.auth_service import AuthService
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
+from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from services.violation_detect_service.violation_detector import ViolationDetectorService
 from controllers.policy_extract_controller import PolicyExtractController
 from utils.jwt_handler import decode_access_token
 from schemas.auth_schema import UserInfo, UserRole
@@ -36,10 +39,24 @@ def get_cookie_feature_repository() -> CookieFeatureRepository:
 def get_violation_repository() -> ViolationRepository:
     return ViolationRepository()
 
+async def get_policy_discovery_service(
+    policy_discovery_repo: PolicyDiscoveryRepository = Depends(get_policy_discovery_repository)
+) -> PolicyDiscoveryService:
+    async with PolicyDiscoveryService(policy_discovery_repo) as service:
+        yield service
+
 def get_policy_extract_service(
     policy_repository: PolicyContentRepository = Depends(get_policy_content_repository)
 ) -> PolicyExtractService:
     return PolicyExtractService(policy_repository)
+
+def get_cookie_extractor_service() -> CookieExtractorService:
+    return CookieExtractorService()
+
+def get_violation_detector_service(
+    violation_repo: ViolationRepository = Depends(get_violation_repository)
+) -> ViolationDetectorService:
+    return ViolationDetectorService()
 
 def get_policy_extract_controller(
     policy_extract_service: PolicyExtractService = Depends(get_policy_extract_service)

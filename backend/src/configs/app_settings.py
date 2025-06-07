@@ -25,25 +25,28 @@ VIOLATIONS_COLLECTION = os.environ.get("VIOLATIONS_COLLECTION", "cookie_violatio
 MONGODB_PWD = os.environ.get("MONGODB_PWD")
 MONGODB_USER = os.environ.get("MONGODB_USER", "username")
 MONGODB_CLUSTER = os.environ.get("MONGODB_CLUSTER", "cluster.mongodb.net")
+MONGODB_CONNECT_TIMEOUT_MS = int(os.environ.get("MONGODB_CONNECT_TIMEOUT_MS", "10000"))
+MONGODB_SOCKET_TIMEOUT_MS = int(os.environ.get("MONGODB_SOCKET_TIMEOUT_MS", "10000"))
 
 # ===== EXTERNAL SERVICES =====
 HF_TOKEN = os.environ.get("HF_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-NGROK_AUTHTOKEN = os.environ.get("NGROK_AUTHTOKEN")
 
 # ===== HELPER FUNCTIONS =====
 def get_mongodb_uri() -> str:
     """Generate MongoDB connection URI"""
     if not all([MONGODB_PWD, DB_NAME, MONGODB_USER]):
         raise ValueError("Missing required MongoDB environment variables")
-    return f"mongodb+srv://{MONGODB_USER}:{MONGODB_PWD}@{MONGODB_CLUSTER}/{DB_NAME}"
+    # Add connectTimeoutMS and socketTimeoutMS to the URI
+    return f"mongodb+srv://{MONGODB_USER}:{MONGODB_PWD}@{MONGODB_CLUSTER}/{DB_NAME}?connectTimeoutMS={MONGODB_CONNECT_TIMEOUT_MS}&socketTimeoutMS={MONGODB_SOCKET_TIMEOUT_MS}"
 
 def validate_required_configs():
     """Validate required environment variables"""
     required_vars = {
         'DB_NAME': DB_NAME,
         'MONGODB_PWD': MONGODB_PWD,
-        'MONGODB_CLUSTER': MONGODB_CLUSTER
+        'MONGODB_CLUSTER': MONGODB_CLUSTER,
+        'MONGODB_CONNECT_TIMEOUT_MS': MONGODB_CONNECT_TIMEOUT_MS,
+        'MONGODB_SOCKET_TIMEOUT_MS': MONGODB_SOCKET_TIMEOUT_MS
     }
 
     missing = [name for name, value in required_vars.items() if not value]

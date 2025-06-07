@@ -24,11 +24,11 @@ class CookieExtractorService:
 
             # Generate content using Gemini
             response = await self.gemini_service.generate_content(content)
+            logger.warning(f"Response: {response}")
 
             # Parse and validate response
             parsed_features = self._parse_gemini_response(response)
 
-            logger.info(f"Extracted {parsed_features.cookies} cookie features")
             return parsed_features
 
         except Exception as e:
