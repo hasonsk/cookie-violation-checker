@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router, analyze_router
 from configs.app_settings import HOST, PORT, API_TITLE, API_DESCRIPTION, API_VERSION, APP_DEBUG
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -33,7 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Đăng ký routers
 app.include_router(policy_discovery_router.router, tags=["policy discovery"])
 app.include_router(policy_extract_router.router, tags=["policy extraction"])
 app.include_router(cookie_extract_router.router, tags=["cookies extraction"])

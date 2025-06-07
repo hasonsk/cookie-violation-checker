@@ -4,7 +4,6 @@ from loguru import logger
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from playwright.async_api import async_playwright, Browser, BrowserContext
-
 from configs.crawler_config import (
     USER_AGENT, CRAWLER_TIMEOUT, BROWSER_CONFIG,
     BROWSER_CONTEXT_CONFIG, THREAD_POOL_MAX_WORKERS
@@ -14,11 +13,10 @@ from utils.text_processing import TextProcessor
 from utils.translation_utils import TranslationManager
 from utils.table_extractor import TableExtractor
 from utils.cache_utils import CacheManager
+from repositories.policy_content_repository import PolicyContentRepository
 
 class PolicyExtractService:
-    """Service class for extracting and processing policy content"""
-
-    def __init__(self):
+    def __init__(self, policy_repository: PolicyContentRepository):
         self.user_agent = USER_AGENT
         self.timeout = CRAWLER_TIMEOUT
 
@@ -31,6 +29,7 @@ class PolicyExtractService:
         self.translation_manager = TranslationManager(self._executor)
         self.table_extractor = TableExtractor()
         self.cache_manager = CacheManager()
+        self.policy_repository = policy_repository
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -73,7 +72,7 @@ class PolicyExtractService:
                 if cached_result:
                     logger.info(f"Cache hit for URL: {website_url}")
                     return cached_result
-
+            logger.info("START to extract policy content")
             # Initialize browser if not already done
             if not self._browser:
                 await self._initialize_browser()
@@ -90,7 +89,6 @@ class PolicyExtractService:
                     error="Cookie policy URL not found"
                 )
 
-            # Extract content from policy page
             page_content = await self._extract_page_content(policy_url)
 
             # Process extracted content
@@ -102,13 +100,18 @@ class PolicyExtractService:
             )
 
             # Cache the result
-            await self.cache_manager.cache_content(website_url, policy_content)
+            # await self.cache_manager.cache_content(website_url, policy_content)
+
+            # Save to database
+            await self.policy_repository.create_policy_content(policy_content.dict())
+            logger.info(f"Policy content for {website_url} saved to database.")
 
             return policy_content
 
         except Exception as e:
             logger.error(f"Error extracting policy content from {website_url}: {e}")
-            return PolicyContent(
+            # Even if an error occurs, attempt to save the error state to the database
+            error_policy_content = PolicyContent(
                 website_url=website_url,
                 policy_url=policy_url,
                 original_content="",
@@ -118,6 +121,8 @@ class PolicyExtractService:
                 translated_table_content=None,
                 error=str(e)
             )
+            await self.policy_repository.create_policy_content(error_policy_content)
+            return error_policy_content
 
     async def _extract_page_content(self, policy_url: str) -> str:
         """Extract HTML content from policy page with retry logic"""

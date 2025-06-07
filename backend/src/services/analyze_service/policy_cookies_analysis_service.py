@@ -1,14 +1,14 @@
 from datetime import datetime
+import json
 import time
-import uuid
+from schemas.policy_schema import PolicyContent
 from typing import Dict, List, Optional, Any
-from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResult
+from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
 from loguru import logger
 from clients.internal_api_client import InternalAPIClient, APIConfig, AnalysisPhase, PolicyAnalysisError
-import httpx # Keep httpx for type hinting in methods
+import httpx
 
-# Service Layer
-class PolicyAnalysisService:
+class PolicyCookiesAnalysisService:
     def __init__(self, api_client: InternalAPIClient):
         self.api_client = api_client
 
@@ -28,9 +28,9 @@ class PolicyAnalysisService:
         website_url: str,
         policy_url: str,
         request_id: str
-    ) -> Dict[str, Any]:
+    ) -> PolicyContent: # Changed return type
         """Phase 2: Policy Content Extraction"""
-        return await self.api_client.post(
+        result = await self.api_client.post(
             client=client,
             endpoint="/policy/extract",
             payload={
@@ -40,25 +40,31 @@ class PolicyAnalysisService:
             phase=AnalysisPhase.EXTRACTION,
             request_id=request_id
         )
+        return PolicyContent(**result) # Convert dict to PolicyContent
 
     async def extract_features(
         self,
         client: httpx.AsyncClient,
-        policy_content: Dict[str, Any],
+        policy_content: PolicyContent, # Changed parameter type
         request_id: str
     ) -> Dict[str, Any]:
         """Phase 3: Feature Extraction"""
         # Prepare content based on language detection
-        if policy_content.get("detected_language") != "en":
+        if policy_content.detected_language != "en":
             payload = {
-                "policy_content": policy_content["translated_content"],
-                "table_content": policy_content["translated_table_content"]
+                "policy_content": policy_content.translated_content,
+                "table_content": policy_content.translated_table_content
             }
         else:
             payload = {
-                "policy_content": policy_content["original_content"],
-                "table_content": str(policy_content["table_content"])
+                "policy_content": policy_content.original_content,
+                "table_content": json.dumps(policy_content.table_content) if policy_content.table_content else None
             }
+
+        # Check for None values in payload before sending
+        if payload["policy_content"] is None:
+            raise ValueError("Policy content is missing or None for feature extraction.")
+        # table_content can be None if no tables are found, so no check needed for it.
 
         return await self.api_client.post(
             client=client,
@@ -89,7 +95,7 @@ class PolicyAnalysisService:
             request_id=request_id
         )
 
-    async def orchestrate_analysis(self, payload: CookieSubmissionRequest, request_id: str) -> ComplianceAnalysisResult:
+    async def orchestrate_analysis(self, payload: CookieSubmissionRequest, request_id: str) -> ComplianceAnalysisResponse:
         """
         Optimized policy analysis with parallel processing, proper error handling,
         and comprehensive logging.
@@ -128,6 +134,7 @@ class PolicyAnalysisService:
                         request_id
                     )
                     logger.info("phase_completed", phase="extraction", request_id=request_id)
+                    logger.warning(policy_content)
 
                     # Phase 3: Feature Extraction
                     logger.info("phase_started", phase="feature_extraction", request_id=request_id)
@@ -164,8 +171,15 @@ class PolicyAnalysisService:
                 )
 
                 # Create structured result
-                analysis_result = ComplianceAnalysisResult(
+                # Validate required fields in the result
+                required_fields = ['total_issues', 'compliance_score', 'policy_cookies_count', 'actual_cookies_count', 'statistics', 'issues', 'summary']
+                for field in required_fields:
+                    if result.get(field) is None:
+                        raise ValueError(f"Missing required field in the result: {field}")
+
+                analysis_result = ComplianceAnalysisResponse(
                     website_url=payload.website_url,
+                    policy_url=discovery.get("policy_url"),
                     analysis_date=datetime.now(),
                     total_issues=result['total_issues'],
                     compliance_score=result['compliance_score'],
@@ -175,7 +189,6 @@ class PolicyAnalysisService:
                     issues=result['issues'],
                     summary=result['summary']
                 )
-
                 return analysis_result
 
         except PolicyAnalysisError as e:
@@ -187,7 +200,7 @@ class PolicyAnalysisService:
                 status_code=e.status_code,
                 execution_time=time.time() - start_time
             )
-            raise e # Re-raise the custom exception
+            raise e
         except Exception as e:
             logger.error(
                 "analysis_unexpected_error",
@@ -195,4 +208,4 @@ class PolicyAnalysisService:
                 error=str(e),
                 execution_time=time.time() - start_time
             )
-            raise e # Re-raise the exception
+            raise e

@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 USER_AGENT = os.environ.get("USER_AGENT")
-CRAWLER_TIMEOUT = os.environ.get("CRAWLER_TIMEOUT")
+CRAWLER_TIMEOUT = int(os.environ.get("CRAWLER_TIMEOUT"))
 THREAD_POOL_MAX_WORKERS = int(os.environ.get("THREAD_POOL_MAX_WORKERS"))
 
 BROWSER_CONFIG = {

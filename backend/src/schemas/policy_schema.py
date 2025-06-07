@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
+from bson import ObjectId
 
 class DiscoveryMethod(Enum):
     LINK_TAG = "link_tag"

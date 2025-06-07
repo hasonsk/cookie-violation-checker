@@ -12,9 +12,9 @@ class PolicyCookie(BaseModel):
     """Cấu trúc cookie được khai báo trong policy"""
     cookie_name: str
     declared_purpose: Optional[str]
-    declared_retention: str
+    declared_retention: Optional[str]
     declared_third_parties: List[str]
-    declared_description: str
+    declared_description: Optional[str]
 
 class PolicyCookieList(BaseModel):
     """Cấu trúc danh sách cookie trong policy"""
@@ -65,7 +65,6 @@ class ComplianceResponse(BaseModel):
     compliance_score: float
     summary: Dict[str, Any]
 
-
 class ComplianceAnalysisResult(BaseModel):
     """Kết quả phân tích compliance để lưu vào database"""
     website_url: str
@@ -77,3 +76,6 @@ class ComplianceAnalysisResult(BaseModel):
     summary: Dict[str, Any]
     policy_cookies_count: int
     actual_cookies_count: int
+
+class ComplianceAnalysisResponse(ComplianceAnalysisResult):
+    policy_url: Optional[str]

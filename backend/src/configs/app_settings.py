@@ -14,8 +14,14 @@ API_BASE = os.environ.get("API_BASE")
 
 # ===== DATABASE CONFIGURATION =====
 DB_NAME = os.environ.get("DB_NAME")
-USERS_COLLECTION = os.environ.get("USERS_COLLECTION")
-PRIVACY_POLICY_COLLECTION = os.environ.get("PRIVACY_POLICY_COLLECTION")
+USERS_COLLECTION = os.environ.get("USERS_COLLECTION", "users")
+ROLE_CHANGE_REQUESTS_COLLECTION = os.environ.get("ROLE_CHANGE_REQUESTS_COLLECTION", "role_change_requests")
+
+POLICY_DISCOVERY_COLLECTION = os.environ.get("POLICY_DISCOVERY_COLLECTION", "policy_discoveries")
+POLICY_CONTENTS_COLLECTION = os.environ.get("POLICY_CONTENTS_COLLECTION", "policy_contents")
+COOKIE_FEATURES_COLLECTION = os.environ.get("COOKIE_FEATURES_COLLECTION", "cookie_features")
+VIOLATIONS_COLLECTION = os.environ.get("VIOLATIONS_COLLECTION", "cookie_violations")
+
 MONGODB_PWD = os.environ.get("MONGODB_PWD")
 MONGODB_USER = os.environ.get("MONGODB_USER", "username")
 MONGODB_CLUSTER = os.environ.get("MONGODB_CLUSTER", "cluster.mongodb.net")

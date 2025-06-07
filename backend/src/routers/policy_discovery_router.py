@@ -5,13 +5,16 @@ from schemas.policy_schema import PolicyRequest, BulkPolicyRequest
 
 from controllers.policy_discovery_controller import PolicyDiscoveryController
 from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from dependencies import get_policy_discovery_repository
 
 router = APIRouter(prefix="/policy", tags=["policy"])
 
-def get_policy_discovery_service() -> PolicyDiscoveryService:
-    return PolicyDiscoveryService()
+async def get_policy_discovery_service() -> PolicyDiscoveryService:
+    discovery_repo = get_policy_discovery_repository()
+    async with PolicyDiscoveryService(discovery_repo=discovery_repo) as service:
+        yield service
 
-def get_policy_discovery_controller(
+async def get_policy_discovery_controller(
     policy_service: PolicyDiscoveryService = Depends(get_policy_discovery_service)
 ) -> PolicyDiscoveryController:
     return PolicyDiscoveryController(policy_service)

@@ -6,6 +6,10 @@ def normalize_url(url: str) -> str:
         url = 'https://' + url
     return url.rstrip('/')
 
+def get_base_url(full_url: str) -> str:
+    _url = urlparse(full_url)
+    return f"{_url.scheme}://{_url.netloc}"
+
 def is_absolute_url(url: str) -> bool:
     """Check if URL is absolute"""
     return url.startswith(('http://', 'https://'))

@@ -1,7 +1,6 @@
 aiohttp
 beautifulsoup4
 black
-celery
 deep_translator
 fastapi
 flake8

@@ -23,6 +23,7 @@ class SearchService:
             r'about\s*cookie[s]?',
             r'cookie[s]?\s*consent',
             r'cookie[s]?\s*management',
+            r'privacy?\s*policy',
             # Vietnamese
             r'chính\s*sách\s*cookie[s]?',
             r'thông\s*báo\s*cookie[s]?',
@@ -43,12 +44,12 @@ class SearchService:
 
         # URL path patterns that indicate cookie policy pages
         self.cookie_url_patterns = [
+            r'cookie[s]',
             r'cookie[s]?[-_]?policy',
             r'cookie[s]?[-_]?notice',
             r'cookie[s]?[-_]?statement',
             r'cookie[s]?[-_]?information',
             r'cookie[s]?[-_]?settings',
-            r'cookie[s]?[-_]?consent',
             r'cookie[s]?[-_]?preference[s]?',
             r'use[-_]?of[-_]?cookie[s]?',
             r'about[-_]?cookie[s]?',
@@ -108,6 +109,7 @@ class SearchService:
                 f'site:{domain} "cookie policy"',
                 f'site:{domain} cookies',
                 f'site:{domain} "use of cookies"',
+                f'site:{domain} "manage cookies"',
             ]
 
             # Try each search query

@@ -2,42 +2,26 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from loguru import logger
 
-from . import BaseRepository
-from ..connection import MongoDBConnection
-from ..schemas import PolicyContentSchema
+from repositories.base_repository import BaseRepository
+from configs.app_settings import POLICY_CONTENTS_COLLECTION
 
 class PolicyContentRepository(BaseRepository):
-    """Repository for policy content operations"""
+    def __init__(self):
+        super().__init__(POLICY_CONTENTS_COLLECTION)
 
-    def __init__(self, db_connection: MongoDBConnection):
-        super().__init__(db_connection, PolicyContentSchema.collection_name)
-
-    async def create_policy_content(self, website_url: str, policy_url: Optional[str] = None,
-                                  original_content: Optional[str] = None,
-                                  translated_content: Optional[str] = None,
-                                  table_content: Optional[List[Dict[str, Any]]] = None,
-                                  translated_table_content: Optional[str] = None,
-                                  error: Optional[str] = None) -> Dict[str, Any]:
+    async def create_policy_content(self, policy_content: Dict[str, Any]) -> str:
         """Create a new policy content record"""
-        document = PolicyContentSchema.create_document(
-            website_url=website_url,
-            policy_url=policy_url,
-            original_content=original_content,
-            translated_content=translated_content,
-            table_content=table_content,
-            translated_table_content=translated_table_content,
-            error=error
-        )
-        return await self.create(document)
+        logger.warning(policy_content)
+        return await self.insert_one(policy_content)
 
     async def get_by_website_url(self, website_url: str) -> Optional[Dict[str, Any]]:
         """Get policy content by website URL"""
-        return await self.get_by_filter({"website_url": website_url})
+        return await self.find_one({"website_url": website_url})
 
     async def get_latest_by_website_url(self, website_url: str) -> Optional[Dict[str, Any]]:
         """Get latest policy content for a website"""
-        results = await self.get_many(
-            filter_dict={"website_url": website_url},
+        results = await self.find_many(
+            query={"website_url": website_url},
             limit=1,
             sort=[("created_at", -1)]
         )
@@ -45,12 +29,12 @@ class PolicyContentRepository(BaseRepository):
 
     async def get_by_policy_url(self, policy_url: str) -> Optional[Dict[str, Any]]:
         """Get policy content by policy URL"""
-        return await self.get_by_filter({"policy_url": policy_url})
+        return await self.find_one({"policy_url": policy_url})
 
-    async def get_policies_with_content(self, limit: int = None) -> List[Dict[str, Any]]:
+    async def get_policies_with_content(self, limit: int = 0) -> List[Dict[str, Any]]:
         """Get policies that have content extracted"""
-        return await self.get_many(
-            filter_dict={"$or": [
+        results = await self.find_many(
+            query={"$or": [
                 {"original_content": {"$ne": None}},
                 {"translated_content": {"$ne": None}},
                 {"table_content": {"$ne": None}}
@@ -58,29 +42,32 @@ class PolicyContentRepository(BaseRepository):
             limit=limit,
             sort=[("created_at", -1)]
         )
+        return results
 
-    async def get_policies_with_errors(self, limit: int = None) -> List[Dict[str, Any]]:
+    async def get_policies_with_errors(self, limit: int = 0) -> List[Dict[str, Any]]:
         """Get policies that had extraction errors"""
-        return await self.get_many(
-            filter_dict={"error": {"$ne": None}},
+        results = await self.find_many(
+            query={"error": {"$ne": None}},
             limit=limit,
             sort=[("created_at", -1)]
         )
+        return results
 
-    async def get_policies_with_tables(self, limit: int = None) -> List[Dict[str, Any]]:
+    async def get_policies_with_tables(self, limit: int = 0) -> List[Dict[str, Any]]:
         """Get policies that have table content"""
-        return await self.get_many(
-            filter_dict={"table_content": {"$ne": None, "$exists": True}},
+        results = await self.find_many(
+            query={"table_content": {"$ne": None, "$exists": True}},
             limit=limit,
             sort=[("created_at", -1)]
         )
+        return results
 
     async def update_policy_content(self, website_url: str,
                                   original_content: Optional[str] = None,
                                   translated_content: Optional[str] = None,
                                   table_content: Optional[List[Dict[str, Any]]] = None,
                                   translated_table_content: Optional[str] = None,
-                                  error: Optional[str] = None) -> Optional[Dict[str, Any]]:
+                                  error: Optional[str] = None) -> int:
         """Update policy content"""
         update_data = {}
         if original_content is not None:
@@ -94,7 +81,7 @@ class PolicyContentRepository(BaseRepository):
         if error is not None:
             update_data["error"] = error
 
-        return await self.update({"website_url": website_url}, update_data)
+        return await self.update_one({"website_url": website_url}, update_data)
 
     async def search_content(self, search_term: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Search in policy content"""
@@ -111,15 +98,15 @@ class PolicyContentRepository(BaseRepository):
             {"$sort": {"created_at": -1}}
         ]
 
-        return await self.crud.aggregate(pipeline)
+        return await self.aggregate(pipeline)
 
     async def get_content_stats(self) -> Dict[str, Any]:
         """Get statistics about policy content"""
-        total_count = await self.count()
-        with_original = await self.count({"original_content": {"$ne": None}})
-        with_translated = await self.count({"translated_content": {"$ne": None}})
-        with_tables = await self.count({"table_content": {"$ne": None}})
-        with_errors = await self.count({"error": {"$ne": None}})
+        total_count = await self.count_documents()
+        with_original = await self.count_documents({"original_content": {"$ne": None}})
+        with_translated = await self.count_documents({"translated_content": {"$ne": None}})
+        with_tables = await self.count_documents({"table_content": {"$ne": None}})
+        with_errors = await self.count_documents({"error": {"$ne": None}})
 
         return {
             "total_policies": total_count,

@@ -1,7 +1,6 @@
 from typing import Optional
 from services.policy_extract_service.policy_extract_service import PolicyExtractService
 from schemas.policy_schema import PolicyContent
-from repositories.policy_repository import save_policy_content
 
 class PolicyExtractController:
     def __init__(self, policy_extract_service: PolicyExtractService):
@@ -12,7 +11,7 @@ class PolicyExtractController:
         website_url: str,
         policy_url: Optional[str] = None,
         translate_to_english: bool = True,
-        force_refresh: bool = False
+        force_refresh: bool = True
     ) -> PolicyContent:
         """
         Extract policy content and return formatted response
@@ -33,8 +32,6 @@ class PolicyExtractController:
                 translate_to_english=translate_to_english,
                 force_refresh=force_refresh
             )
-            print("Save to database policies")
-            await save_policy_content(policy_content)
 
             # Convert to required output format
             return policy_content

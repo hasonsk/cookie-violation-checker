@@ -39,9 +39,11 @@ class CookieExtractorService:
         try:
             # Clean response - extract JSON if wrapped in text
             json_str = extract_json_from_response(response)
+            logger.info(f"JSON STR: {json_str}")
 
             # Parse JSON
             data = json.loads(json_str)
+
 
             # Validate structure
             if not isinstance(data, dict) or 'is_specific' not in data or 'cookies' not in data:

@@ -1,25 +1,56 @@
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pymongo.collection import Collection
+from pymongo.collection import Collection # Keep this if other dependencies still need it, otherwise remove
+
 from repositories.user_repository import UserRepository
+from repositories.role_change_request_repository import RoleChangeRequestRepository
+from repositories.policy_content_repository import PolicyContentRepository
+from repositories.discovery_repo import PolicyDiscoveryRepository
+from repositories.cookie_repo import CookieFeatureRepository
+from repositories.violation_repo import ViolationRepository
+
 from services.auth_service.auth_service import AuthService
-from configs.database import get_collection
-from configs.app_settings import USERS_COLLECTION
+from services.policy_extract_service.policy_extract_service import PolicyExtractService
+from controllers.policy_extract_controller import PolicyExtractController
 from utils.jwt_handler import decode_access_token
 from schemas.auth_schema import UserInfo, UserRole
 from exceptions.custom_exceptions import UnauthorizedError, UserNotFoundError
 
 oauth2_scheme = HTTPBearer()
 
-def get_user_repository(
-    users_collection: Collection = Depends(lambda: get_collection(USERS_COLLECTION))
-) -> UserRepository:
-    return UserRepository(users_collection)
+def get_user_repository() -> UserRepository:
+    return UserRepository()
+
+def get_role_change_request_repository() -> RoleChangeRequestRepository:
+    return RoleChangeRequestRepository()
+
+def get_policy_discovery_repository() -> PolicyDiscoveryRepository:
+    return PolicyDiscoveryRepository()
+
+def get_policy_content_repository() -> PolicyContentRepository:
+    return PolicyContentRepository()
+
+def get_cookie_feature_repository() -> CookieFeatureRepository:
+    return CookieFeatureRepository()
+
+def get_violation_repository() -> ViolationRepository:
+    return ViolationRepository()
+
+def get_policy_extract_service(
+    policy_repository: PolicyContentRepository = Depends(get_policy_content_repository)
+) -> PolicyExtractService:
+    return PolicyExtractService(policy_repository)
+
+def get_policy_extract_controller(
+    policy_extract_service: PolicyExtractService = Depends(get_policy_extract_service)
+) -> PolicyExtractController:
+    return PolicyExtractController(policy_extract_service)
 
 def get_auth_service(
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
+    role_change_request_repo: RoleChangeRequestRepository = Depends(get_role_change_request_repository)
 ) -> AuthService:
-    return AuthService(user_repo)
+    return AuthService(user_repo, role_change_request_repo)
 
 async def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
@@ -29,10 +60,10 @@ async def get_current_user(
         payload = decode_access_token(token.credentials)
         if payload is None:
             raise UnauthorizedError("Invalid token")
-        email = payload.get("sub")
-        if email is None:
+        user_id = payload.get("sub")
+        if user_id is None:
             raise UnauthorizedError("Invalid token payload")
-        user = await auth_service.get_current_user(email)
+        user = await auth_service.get_current_user(user_id)
         if not user:
             raise UserNotFoundError("User not found")
         return user
