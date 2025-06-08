@@ -5,15 +5,15 @@ hoặc `None` nếu không.
 """
 from typing import Optional, Dict, Any, List
 
-from schemas.cookie_schema import ComplianceIssue, PolicyCookie, ActualCookie
-from utils.cookie_utils import (
+from src.schemas.cookie_schema import ComplianceIssue, PolicyCookie, ActualCookie
+from src.utils.cookie_utils import (
     calculate_actual_retention_days,
     parse_retention_to_days,
     is_third_party_domain,
     calculate_semantic_similarity,
     analyze_cookie_data_collection
 )
-from configs.violation_config import (
+from src.configs.violation_config import (
     RETENTION_THRESHOLD_PERCENTAGE,
     LONG_TERM_RETENTION_DAYS,
     SESSION_THRESHOLD_HOURS,

@@ -2,22 +2,22 @@ from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pymongo.collection import Collection # Keep this if other dependencies still need it, otherwise remove
 
-from repositories.user_repository import UserRepository
-from repositories.role_change_request_repository import RoleChangeRequestRepository
-from repositories.policy_content_repository import PolicyContentRepository
-from repositories.discovery_repo import PolicyDiscoveryRepository
-from repositories.cookie_repo import CookieFeatureRepository
-from repositories.violation_repo import ViolationRepository
+from src.repositories.user_repository import UserRepository
+from src.repositories.role_change_request_repository import RoleChangeRequestRepository
+from src.repositories.policy_content_repository import PolicyContentRepository
+from src.repositories.discovery_repo import PolicyDiscoveryRepository
+from src.repositories.cookie_repo import CookieFeatureRepository
+from src.repositories.violation_repo import ViolationRepository
 
-from services.auth_service.auth_service import AuthService
-from services.policy_extract_service.policy_extract_service import PolicyExtractService
-from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
-from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector_service import ViolationDetectorService
-from controllers.policy_extract_controller import PolicyExtractController
-from utils.jwt_handler import decode_access_token
-from schemas.auth_schema import UserInfo, UserRole
-from exceptions.custom_exceptions import UnauthorizedError, UserNotFoundError
+from src.services.auth_service.auth_service import AuthService
+from src.services.policy_extract_service.policy_extract_service import PolicyExtractService
+from src.services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from src.services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from src.services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from src.controllers.policy_extract_controller import PolicyExtractController
+from src.utils.jwt_handler import decode_access_token
+from src.schemas.auth_schema import UserInfo, UserRole
+from src.exceptions.custom_exceptions import UnauthorizedError, UserNotFoundError
 
 oauth2_scheme = HTTPBearer()
 

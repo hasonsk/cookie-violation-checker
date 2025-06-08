@@ -1,8 +1,8 @@
 from loguru import logger
 from typing import Optional
 
-from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from schemas.cookie_schema import PolicyCookieList
+from src.services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from src.schemas.cookie_schema import PolicyCookieList
 
 class CookieExtractController:
     def __init__(self, extractor_service: CookieExtractorService):

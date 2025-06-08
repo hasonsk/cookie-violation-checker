@@ -4,16 +4,17 @@ from loguru import logger
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from playwright.async_api import async_playwright, Browser, BrowserContext
-from configs.crawler_config import (
+
+from src.configs.crawler_config import (
     USER_AGENT, CRAWLER_TIMEOUT, BROWSER_CONFIG,
     BROWSER_CONTEXT_CONFIG, THREAD_POOL_MAX_WORKERS
 )
-from schemas.policy_schema import PolicyContent
-from utils.text_processing import TextProcessor
-from utils.translation_utils import TranslationManager
-from utils.table_extractor import TableExtractor
-from utils.cache_utils import CacheManager
-from repositories.policy_content_repository import PolicyContentRepository
+from src.schemas.policy_schema import PolicyContent
+from src.utils.text_processing import TextProcessor
+from src.utils.translation_utils import TranslationManager
+from src.utils.table_extractor import TableExtractor
+from src.utils.cache_utils import CacheManager
+from src.repositories.policy_content_repository import PolicyContentRepository
 
 class PolicyExtractService:
     def __init__(self, policy_repository: PolicyContentRepository):

@@ -1,6 +1,6 @@
 from typing import List
 
-from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from src.services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
 
 class PolicyDiscoveryController:
     def __init__(self, policy_service: PolicyDiscoveryService):

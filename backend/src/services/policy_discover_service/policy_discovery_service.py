@@ -1,13 +1,13 @@
 from loguru import logger
 import aiohttp
 from playwright.async_api import async_playwright
-from utils.url_utils import normalize_url, get_base_url
-from schemas.policy_schema import PolicyDiscoveryResult, DiscoveryMethod
-from configs.crawler_config import USER_AGENT
-from .dom_parser_service import DOMParserService
-from .search_service import SearchService
-from repositories.discovery_repo import PolicyDiscoveryRepository
-from utils.retry_utils import retry
+from src.utils.url_utils import normalize_url, get_base_url
+from src.schemas.policy_schema import PolicyDiscoveryResult, DiscoveryMethod
+from src.configs.crawler_config import USER_AGENT
+from src.services.policy_discover_service.dom_parser_service import DOMParserService
+from src.services.policy_discover_service.search_service import SearchService
+from src.repositories.discovery_repo import PolicyDiscoveryRepository
+from src.utils.retry_utils import retry
 import aiohttp
 
 class PolicyDiscoveryService:

@@ -2,8 +2,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from loguru import logger
 
-from repositories.base_repository import BaseRepository
-from configs.app_settings import VIOLATIONS_COLLECTION
+from src.repositories.base_repository import BaseRepository
+from src.configs.app_settings import VIOLATIONS_COLLECTION
 
 class ViolationRepository(BaseRepository):
     """Repository for violation operations"""

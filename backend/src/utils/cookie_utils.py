@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse
 
-from schemas.cookie_schema import ActualCookie
+from src.schemas.cookie_schema import ActualCookie
 
 def parse_cookie(raw: dict) -> Optional[ActualCookie]:
     try:

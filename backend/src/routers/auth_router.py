@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Header, Depends, Path
-from schemas.auth_schema import (
+from src.schemas.auth_schema import (
     RegisterSchema,
     LoginSchema,
     LoginResponseSchema,
@@ -12,8 +12,8 @@ from schemas.auth_schema import (
     UserWithRoleRequests
 )
 from typing import List
-from services.auth_service.auth_service import AuthService
-from dependencies import get_auth_service, get_current_user, get_current_admin_or_manager
+from src.services.auth_service.auth_service import AuthService
+from src.dependencies import get_auth_service, get_current_user, get_current_admin_or_manager
 
 router = APIRouter(prefix="/api", tags=["Users"])
 

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from pydantic import BaseModel
-from schemas.policy_schema import PolicyRequest, BulkPolicyRequest
+from src.schemas.policy_schema import PolicyRequest, BulkPolicyRequest
 
-from controllers.policy_discovery_controller import PolicyDiscoveryController
-from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
-from dependencies import get_policy_discovery_repository
+from src.controllers.policy_discovery_controller import PolicyDiscoveryController
+from src.services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from src.dependencies import get_policy_discovery_repository
 
 router = APIRouter(prefix="/policy", tags=["policy"])
 

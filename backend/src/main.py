@@ -2,11 +2,9 @@ from fastapi import HTTPException
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router, analyze_router
-from configs.app_settings import HOST, PORT, API_TITLE, API_DESCRIPTION, API_VERSION, APP_DEBUG
+from src.routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router, analyze_router
+from src.configs.app_settings import HOST, PORT, API_TITLE, API_DESCRIPTION, API_VERSION, APP_DEBUG
 import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 

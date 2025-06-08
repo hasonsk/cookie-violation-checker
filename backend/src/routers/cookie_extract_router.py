@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
-from schemas.policy_schema import PolicyAnalysisRequest
+from src.schemas.policy_schema import PolicyAnalysisRequest
 
-from controllers.cookie_extract_controller import CookieExtractController
-from services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from src.controllers.cookie_extract_controller import CookieExtractController
+from src.services.cookies_extract_service.cookies_extractor import CookieExtractorService
 
 router = APIRouter(prefix="/cookies", tags=["cookies"])
 

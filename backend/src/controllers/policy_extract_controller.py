@@ -1,6 +1,7 @@
 from typing import Optional
-from services.policy_extract_service.policy_extract_service import PolicyExtractService
-from schemas.policy_schema import PolicyContent
+
+from src.services.policy_extract_service.policy_extract_service import PolicyExtractService
+from src.schemas.policy_schema import PolicyContent
 
 class PolicyExtractController:
     def __init__(self, policy_extract_service: PolicyExtractService):

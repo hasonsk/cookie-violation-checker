@@ -3,8 +3,9 @@ from loguru import logger
 from typing import List, Dict, Any
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from configs.policy_discovery_conf import COOKIE_POLICY_PATTERNS, URL_PATTERNS, FOOTER_SELECTORS, NAV_SELECTORS
-from schemas.policy_schema import DiscoveryMethod
+
+from src.configs.policy_discovery_conf import COOKIE_POLICY_PATTERNS, URL_PATTERNS, FOOTER_SELECTORS, NAV_SELECTORS
+from src.schemas.policy_schema import DiscoveryMethod
 
 class DOMParserService:
     """Service for parsing HTML DOM to find cookie policy links"""

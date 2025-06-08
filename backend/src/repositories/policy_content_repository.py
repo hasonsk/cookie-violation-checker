@@ -1,9 +1,8 @@
 from typing import Dict, Any, List, Optional
-from datetime import datetime
 from loguru import logger
 
-from repositories.base_repository import BaseRepository
-from configs.app_settings import POLICY_CONTENTS_COLLECTION
+from src.repositories.base_repository import BaseRepository
+from src.configs.app_settings import POLICY_CONTENTS_COLLECTION
 
 class PolicyContentRepository(BaseRepository):
     def __init__(self):

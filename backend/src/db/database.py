@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from configs.app_settings import get_mongodb_uri, validate_required_configs, DB_NAME
+from src.configs.app_settings import get_mongodb_uri, validate_required_configs, DB_NAME
 
 validate_required_configs()
 

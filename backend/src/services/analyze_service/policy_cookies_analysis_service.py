@@ -1,16 +1,17 @@
 from datetime import datetime
 import json
 import time
-from schemas.policy_schema import PolicyContent, PolicyDiscoveryResult
 from typing import Dict, List, Optional, Any
-from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
 from loguru import logger
 
-from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
-from services.policy_extract_service.policy_extract_service import PolicyExtractService
-from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector_service import ViolationDetectorService
-from repositories.violation_repo import ViolationRepository # Add this import
+from src.schemas.policy_schema import PolicyContent, PolicyDiscoveryResult
+from src.schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
+
+from src.services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from src.services.policy_extract_service.policy_extract_service import PolicyExtractService
+from src.services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from src.services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from src.repositories.violation_repo import ViolationRepository # Add this import
 
 class PolicyCookiesAnalysisService:
     def __init__(

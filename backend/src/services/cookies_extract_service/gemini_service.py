@@ -2,7 +2,7 @@ from typing import Optional
 from loguru import logger
 from google import genai
 from google.genai import types
-from configs.cookie_extract_conf import SYSTEM_PROMPT, GEMINI_TEMPERATURE, GEMINI_MAX_OUTPUT_TOKENS
+from src.configs.cookie_extract_conf import SYSTEM_PROMPT, GEMINI_TEMPERATURE, GEMINI_MAX_OUTPUT_TOKENS
 
 class GeminiService:
     def __init__(self, api_key:  Optional[str] = None, model:  Optional[str] = None):

@@ -1,10 +1,8 @@
-from repositories.user_repository import UserRepository
 from passlib.context import CryptContext
-from utils.jwt_handler import create_access_token, decode_access_token
-from repositories.role_change_request_repository import RoleChangeRequestRepository
 from typing import Any, Dict, Optional, List
 from pydantic import EmailStr
-from schemas.auth_schema import (
+
+from src.schemas.auth_schema import (
     RegisterSchema,
     LoginSchema,
     RegisterResponseSchema,
@@ -12,18 +10,21 @@ from schemas.auth_schema import (
     UserInfo,
     User,
     UserRole,
-    RequestRoleChangeSchema, # This might be removed or renamed later if not used
-    ApproveAccountSchema,
     RequestRoleChangePayloadSchema,
     RoleChangeRequestInDB,
     UserWithRoleRequests
 )
-from exceptions.custom_exceptions import (
+from src.utils.jwt_handler import create_access_token, decode_access_token
+
+from src.exceptions.custom_exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     UnauthorizedError,
     UserNotFoundError
 )
+from src.repositories.user_repository import UserRepository
+from src.repositories.role_change_request_repository import RoleChangeRequestRepository
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

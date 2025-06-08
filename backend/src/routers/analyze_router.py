@@ -1,23 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
-from services.analyze_service.policy_cookies_analysis_service import PolicyCookiesAnalysisService
-from exceptions.custom_exceptions import PolicyAnalysisError
+from src.schemas.cookie_schema import CookieSubmissionRequest, ComplianceAnalysisResponse
+from src.services.analyze_service.policy_cookies_analysis_service import PolicyCookiesAnalysisService
+from src.exceptions.custom_exceptions import PolicyAnalysisError
 from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException
 import time
 import uuid
-from dependencies import (
+from src.dependencies import (
     get_policy_discovery_service,
     get_policy_extract_service,
     get_cookie_extractor_service,
     get_violation_detector_service,
     get_violation_repository # Add this import
 )
-from services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
-from services.policy_extract_service.policy_extract_service import PolicyExtractService
-from services.cookies_extract_service.cookies_extractor import CookieExtractorService
-from services.violation_detect_service.violation_detector_service import ViolationDetectorService
-from repositories.violation_repo import ViolationRepository
+from src.services.policy_discover_service.policy_discovery_service import PolicyDiscoveryService
+from src.services.policy_extract_service.policy_extract_service import PolicyExtractService
+from src.services.cookies_extract_service.cookies_extractor import CookieExtractorService
+from src.services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from src.repositories.violation_repo import ViolationRepository
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 

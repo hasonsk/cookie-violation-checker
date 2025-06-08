@@ -2,9 +2,9 @@ from typing import Dict, List, Any, Callable
 from collections import Counter
 from loguru import logger
 
-from utils.cookie_utils import calculate_actual_retention_days, is_third_party_domain, parse_retention_to_days
-from schemas.cookie_schema import PolicyCookie, ActualCookie, ComplianceIssue
-from .violation_rules import cookie_rules
+from src.utils.cookie_utils import calculate_actual_retention_days, is_third_party_domain, parse_retention_to_days
+from src.schemas.cookie_schema import PolicyCookie, ActualCookie, ComplianceIssue
+from src.services.violation_detect_service.violation_rules import cookie_rules
 
 class ViolationAnalyzer:
     """

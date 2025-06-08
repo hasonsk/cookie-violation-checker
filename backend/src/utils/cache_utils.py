@@ -1,6 +1,7 @@
 from typing import Optional
-from schemas.policy_schema import PolicyContent
-from configs.redis_cache import get_cache, set_cache
+
+from src.schemas.policy_schema import PolicyContent
+from src.configs.redis_cache import get_cache, set_cache
 
 class CacheManager:
     """Cache manager cho policy content"""

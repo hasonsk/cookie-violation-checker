@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List
-from schemas.cookie_schema import ComplianceAnalysisResult, ComplianceRequest
-from services.violation_detect_service.violation_detector_service import ViolationDetectorService
+from src.schemas.cookie_schema import ComplianceAnalysisResult, ComplianceRequest
+from src.services.violation_detect_service.violation_detector_service import ViolationDetectorService
 
 router = APIRouter(prefix="/violations", tags=["cookies"])
 

@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from bson import ObjectId
 
-from repositories.base_repository import BaseRepository
-from configs.app_settings import ROLE_CHANGE_REQUESTS_COLLECTION
+from src.repositories.base_repository import BaseRepository
+from src.configs.app_settings import ROLE_CHANGE_REQUESTS_COLLECTION
 
 class RoleChangeRequestRepository(BaseRepository):
     def __init__(self):

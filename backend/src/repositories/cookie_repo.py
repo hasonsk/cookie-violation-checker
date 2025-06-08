@@ -2,8 +2,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from loguru import logger
 
-from repositories.base_repository import BaseRepository
-from configs.app_settings import COOKIE_FEATURES_COLLECTION
+from src.repositories.base_repository import BaseRepository
+from src.configs.app_settings import COOKIE_FEATURES_COLLECTION
 
 class CookieFeatureRepository(BaseRepository):
     """Repository for cookie feature operations"""

@@ -1,10 +1,11 @@
 import json
 from loguru import logger
 from typing import Optional
-from schemas.cookie_schema import PolicyCookie, PolicyCookieList
-from services.cookies_extract_service.gemini_service import GeminiService
-from utils.text_processing import prepare_content, extract_domain, extract_json_from_response
-from configs.cookie_extract_conf import GEMINI_API_KEY, GEMINI_MODEL
+
+from src.schemas.cookie_schema import PolicyCookie, PolicyCookieList
+from src.services.cookies_extract_service.gemini_service import GeminiService
+from src.utils.text_processing import prepare_content, extract_domain, extract_json_from_response
+from src.configs.cookie_extract_conf import GEMINI_API_KEY, GEMINI_MODEL
 
 class CookieExtractorService:
     """

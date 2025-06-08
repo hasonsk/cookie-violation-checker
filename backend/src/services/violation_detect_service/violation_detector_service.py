@@ -2,9 +2,9 @@ from typing import List, Optional, Dict
 from datetime import datetime
 from loguru import logger
 
-from utils.cookie_utils import extract_main_domain
-from .violation_analyzer import ViolationAnalyzer
-from schemas.cookie_schema import (
+from src.utils.cookie_utils import extract_main_domain
+from src.services.violation_detect_service.violation_analyzer import ViolationAnalyzer
+from src.schemas.cookie_schema import (
     ComplianceIssue,
     ComplianceAnalysisResult,
     PolicyCookie,

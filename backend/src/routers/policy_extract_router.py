@@ -1,8 +1,8 @@
 from typing import Optional
-from controllers.policy_extract_controller import PolicyExtractController
-from schemas.policy_schema import PolicyExtractResponse, PolicyExtractRequest
+from src.controllers.policy_extract_controller import PolicyExtractController
+from src.schemas.policy_schema import PolicyExtractResponse, PolicyExtractRequest
 from fastapi import APIRouter, Depends
-from dependencies import get_policy_extract_controller
+from src.dependencies import get_policy_extract_controller
 
 router = APIRouter(prefix="/policy", tags=["policy"])
 
