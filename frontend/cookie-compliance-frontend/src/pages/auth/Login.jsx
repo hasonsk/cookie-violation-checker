@@ -70,7 +70,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
@@ -82,7 +81,6 @@ const Login = () => {
         // Login successful - useEffect will handle redirect
         console.log('Login successful');
       } else {
-        // Login failed - error is handled by Redux
         console.log('Login failed:', result.payload);
       }
     } catch (error) {
@@ -107,7 +105,7 @@ const Login = () => {
 
           {error && (
             <div className="error-alert">
-              {error}
+              Lỗi đăng nhập: {error}
             </div>
           )}
 

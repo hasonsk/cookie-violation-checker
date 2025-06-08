@@ -3,11 +3,11 @@ from typing import Optional, Dict, Any
 from bson import ObjectId
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import ROLE_CHANGE_REQUESTS_COLLECTION
+from src.configs.settings import settings
 
 class RoleChangeRequestRepository(BaseRepository):
     def __init__(self):
-        super().__init__(ROLE_CHANGE_REQUESTS_COLLECTION)
+        super().__init__(settings.db.ROLE_CHANGE_REQUESTS_COLLECTION)
 
     async def create_role_change_request(self, request_data: Dict[str, Any]) -> str:
         return await self.insert_one(request_data)

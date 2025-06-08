@@ -10,10 +10,12 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { Globe, BarChart3, Settings, Info } from 'lucide-react';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { Globe, BarChart3, Settings, Info, Users } from 'lucide-react'; // Added Users icon
 
 const Sidebar = () => {
   const location = useLocation(); // 👈 Lấy path hiện tại
+  const currentUser = useSelector(state => state.auth.user); // Get current user from Redux state
 
   const menuItems = [
     {
@@ -28,12 +30,12 @@ const Sidebar = () => {
       path: '/websites',
       section: 'DETAILS',
     },
-    {
-      label: 'Tools',
-      icon: <Settings size={20} />,
-      path: '/tools',
-      section: 'DETAILS',
-    },
+    // {
+    //   label: 'Tools',
+    //   icon: <Settings size={20} />,
+    //   path: '/tools',
+    //   section: 'DETAILS',
+    // },
     {
       label: 'About',
       icon: <Info size={20} />,
@@ -41,6 +43,16 @@ const Sidebar = () => {
       section: 'ABOUT',
     },
   ];
+
+  // Add User Management only if user is admin
+  if (currentUser && currentUser.role === 'admin') {
+    menuItems.push({
+      label: 'User Management',
+      icon: <Users size={20} />,
+      path: '/admin/users',
+      section: 'GENERAL',
+    });
+  }
 
   // Nhóm các item theo section
   const groupedItems = menuItems.reduce((acc, item) => {

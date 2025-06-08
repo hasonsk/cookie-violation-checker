@@ -3,11 +3,11 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import USERS_COLLECTION
+from src.configs.settings import settings
 
 class UserRepository(BaseRepository):
     def __init__(self):
-        super().__init__(USERS_COLLECTION)
+        super().__init__(settings.db.USERS_COLLECTION)
 
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         return await self.find_one({"email": email})

@@ -30,4 +30,9 @@ export const websiteAPI = {
     const response = await api.get(`/websites/${id}/analytics`, { params });
     return response.data;
   },
+
+  analyzeWebsite: async (payload) => {
+    const response = await api.post('/analyze/', payload);
+    return response.data;
+  },
 };

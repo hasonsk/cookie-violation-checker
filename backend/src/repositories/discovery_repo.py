@@ -3,11 +3,11 @@ from datetime import datetime
 from loguru import logger
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import POLICY_DISCOVERY_COLLECTION
+from src.configs.settings import settings
 
 class PolicyDiscoveryRepository(BaseRepository):
     def __init__(self):
-        super().__init__(POLICY_DISCOVERY_COLLECTION)
+        super().__init__(settings.db.POLICY_DISCOVERY_COLLECTION)
 
     async def create_discovery_result(self, document: Dict[str, Any]) -> str:
         """Create a new policy discovery result"""
@@ -85,5 +85,5 @@ class PolicyDiscoveryRepository(BaseRepository):
             "total_discoveries": total_count,
             "successful_discoveries": successful_count,
             "failed_discoveries": failed_count,
-            "by_method": {stat["_id"]: stat["count"] for stat in stats}
+            "by_method": {str(stat["_id"]): stat["count"] for stat in stats}
         }

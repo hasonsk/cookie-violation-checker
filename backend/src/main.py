@@ -3,19 +3,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router, analyze_router
-from src.configs.app_settings import HOST, PORT, API_TITLE, API_DESCRIPTION, API_VERSION, APP_DEBUG
+from src.configs.settings import settings
 import uvicorn
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
 
 # Tạo FastAPI app
 app = FastAPI(
-    title=API_TITLE,
-    description=API_DESCRIPTION,
-    version=API_VERSION,
-    debug=APP_DEBUG
+    title=settings.app.API_TITLE,
+    description=settings.app.API_DESCRIPTION,
+    version=settings.app.API_VERSION,
+    debug=settings.app.APP_DEBUG
 )
 
 origins = [
@@ -56,7 +52,7 @@ async def health_check():
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=HOST,
-        port=PORT,
-        reload=APP_DEBUG
+        host=settings.app.HOST,
+        port=settings.app.PORT,
+        reload=settings.app.APP_DEBUG
     )

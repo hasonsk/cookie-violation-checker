@@ -2,11 +2,11 @@ from typing import Dict, Any, List, Optional
 from loguru import logger
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import POLICY_CONTENTS_COLLECTION
+from src.configs.settings import settings
 
 class PolicyContentRepository(BaseRepository):
     def __init__(self):
-        super().__init__(POLICY_CONTENTS_COLLECTION)
+        super().__init__(settings.db.POLICY_CONTENTS_COLLECTION)
 
     async def create_policy_content(self, policy_content: Dict[str, Any]) -> str:
         """Create a new policy content record"""

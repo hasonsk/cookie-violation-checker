@@ -22,6 +22,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Loading from './components/Loading';
 
 import './App.css';
+import RoleRequestStatus from './pages/users/RoleRequestStatus'; // Keep import for now, will clarify its use later
+import UserRoleRequestForm from './pages/users/UserRoleRequestForm'; // Import the new user form
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -44,13 +46,18 @@ const PublicRoute = ({ children }) => {
 function AppContent() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isAuthenticated, loading: authLoading, initialized } = useAuth();
 
   useEffect(() => {
     setAuthErrorHandler(() => {
-      dispatch(logoutUser()); // Dispatch logout action to clear Redux state
-      navigate('/login'); // Redirect to login page
+      // dispatch(logoutUser()); // Dispatch logout action to clear Redux state
+      // navigate('/login'); // Redirect to login page
     });
   }, [dispatch, navigate]);
+
+  if (authLoading || !initialized) {
+    return <Loading />;
+  }
 
   return (
     <ErrorBoundary>
@@ -87,9 +94,14 @@ function AppContent() {
           <Route path="websites" element={<WebsitesList />} />
           <Route path="websites/detail/:id" element={<WebsiteDetail />} />
           <Route path="admin/users" element={<UserManagement />} />
+          {/* New route for user's editable role request form */}
+          <Route path="my-request" element={<UserRoleRequestForm />} />
+          {/* If RoleRequestStatus is for admin, it should be under an admin path */}
+          {/* For now, I'll leave it imported but not routed, assuming its previous /* route was incorrect */}
+          {/* If it's meant to be a general status page for all users, it needs a specific route */}
         </Route>
 
-        {/* Catch all route */}
+        {/* Catch all route - might need adjustment based on the conditional rendering */}
         {/* If a 404 page is desired, it should be implemented here. */}
       </Routes>
     </ErrorBoundary>
@@ -99,7 +111,7 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <Router> {/* Router now wraps AppContent */}
+      <Router>
         <AppContent />
       </Router>
     </Provider>

@@ -1,7 +1,6 @@
 import { Avatar, IconButton, Menu, MenuItem, Divider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-
 const UserMenu = ({ userName, anchorEl, setAnchorEl, onLogout }) => {
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
@@ -26,7 +25,7 @@ const UserMenu = ({ userName, anchorEl, setAnchorEl, onLogout }) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>My Profile</MenuItem>
+        <MenuItem onClick={() => { handleClose(); navigate('/my-request'); }}>My Request</MenuItem>
         <MenuItem onClick={() => { handleClose(); navigate('/settings'); }}>Settings</MenuItem>
         <Divider />
         <MenuItem onClick={() => { handleClose(); onLogout(); }}>Logout</MenuItem>

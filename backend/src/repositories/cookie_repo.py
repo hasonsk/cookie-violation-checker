@@ -3,13 +3,13 @@ from datetime import datetime, timedelta
 from loguru import logger
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import COOKIE_FEATURES_COLLECTION
+from src.configs.settings import settings
 
 class CookieFeatureRepository(BaseRepository):
     """Repository for cookie feature operations"""
 
     def __init__(self):
-        super().__init__(COOKIE_FEATURES_COLLECTION)
+        super().__init__(settings.db.COOKIE_FEATURES_COLLECTION)
 
     async def create_cookie_feature(self, document: Dict[str, Any]) -> str:
         """Create a new cookie feature record"""

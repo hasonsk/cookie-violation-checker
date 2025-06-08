@@ -3,15 +3,14 @@ import aiohttp
 from playwright.async_api import async_playwright
 from src.utils.url_utils import normalize_url, get_base_url
 from src.schemas.policy_schema import PolicyDiscoveryResult, DiscoveryMethod
-from src.configs.crawler_config import USER_AGENT
 from src.services.policy_discover_service.dom_parser_service import DOMParserService
 from src.services.policy_discover_service.search_service import SearchService
 from src.repositories.discovery_repo import PolicyDiscoveryRepository
 from src.utils.retry_utils import retry
-import aiohttp
+from src.configs.settings import settings
 
 class PolicyDiscoveryService:
-    def __init__(self, discovery_repo: PolicyDiscoveryRepository, timeout: int = 30, use_playwright: bool = True):
+    def __init__(self, discovery_repo: PolicyDiscoveryRepository, timeout: int = settings.crawler.CRAWLER_TIMEOUT, use_playwright: bool = True):
         self.timeout = timeout
         self.session = None
         self.use_playwright = use_playwright
@@ -26,15 +25,15 @@ class PolicyDiscoveryService:
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=self.timeout),
             headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': settings.crawler.USER_AGENT
             }
         )
 
         if self.use_playwright:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch(
-                headless=True,
-                args=['--no-sandbox', '--disable-setuid-sandbox']
+                headless=settings.crawler.BROWSER_HEADLESS,
+                args=settings.crawler.BROWSER_ARGS
             )
             self.search_service = SearchService(self.browser)
 

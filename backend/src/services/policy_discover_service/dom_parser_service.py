@@ -4,17 +4,17 @@ from typing import List, Dict, Any
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-from src.configs.policy_discovery_conf import COOKIE_POLICY_PATTERNS, URL_PATTERNS, FOOTER_SELECTORS, NAV_SELECTORS
 from src.schemas.policy_schema import DiscoveryMethod
+from src.configs.settings import settings
 
 class DOMParserService:
     """Service for parsing HTML DOM to find cookie policy links"""
 
     def __init__(self):
-        self.cookie_policy_patterns =COOKIE_POLICY_PATTERNS
-        self.url_patterns = URL_PATTERNS
-        self.FOOTER_SELECTORS = FOOTER_SELECTORS
-        self.NAV_SELECTORS = NAV_SELECTORS
+        self.cookie_policy_patterns = settings.policy_discovery.COOKIE_POLICY_PATTERNS
+        self.url_patterns = settings.policy_discovery.URL_PATTERNS
+        self.FOOTER_SELECTORS = settings.policy_discovery.FOOTER_SELECTORS
+        self.NAV_SELECTORS = settings.policy_discovery.NAV_SELECTORS
 
     def parse_policy_links_from_dom(self, html_content: str) -> List[Dict[str, Any]]:
         try:

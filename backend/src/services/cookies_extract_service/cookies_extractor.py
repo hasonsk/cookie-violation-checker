@@ -5,15 +5,18 @@ from typing import Optional
 from src.schemas.cookie_schema import PolicyCookie, PolicyCookieList
 from src.services.cookies_extract_service.gemini_service import GeminiService
 from src.utils.text_processing import prepare_content, extract_domain, extract_json_from_response
-from src.configs.cookie_extract_conf import GEMINI_API_KEY, GEMINI_MODEL
+from src.configs.settings import settings
 
 class CookieExtractorService:
     """
     Service for analyzing cookie policies and extracting structured features
     """
 
-    def __init__(self, api_key: Optional[str] = GEMINI_API_KEY, model: str = GEMINI_MODEL):
-        self.gemini_service = GeminiService(api_key, model)
+    def __init__(self, api_key: Optional[str] = None, model: str = None):
+        self.gemini_service = GeminiService(
+            api_key if api_key else settings.external.GEMINI_API_KEY,
+            model if model else settings.external.GEMINI_MODEL
+        )
 
     async def extract_cookie_features(self, policy_content: str, table_content: Optional[str] = None) -> PolicyCookieList:
         """

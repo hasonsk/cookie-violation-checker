@@ -9,14 +9,11 @@ To set up and run the server locally, follow these steps:
     ```bash
     uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     ```
-    (The `--reload` flag is useful for development as it restarts the server on code changes.)
-
     *Note: Ensure you have a `.env` file in your project root with necessary environment variables (e.g., `PORT`, `DB_NAME`, `MONGODB_PWD`). You can refer to `.env.example` for required variables.*
 
 **2. Local Development (with Ngrok for public access)**
 
 If you want to expose your local server to the internet (e.g., for testing webhooks or sharing with others), you can use Ngrok.
-
 *   **Ensure Ngrok is installed and authenticated:**
     If you haven't already, install Ngrok (e.g., `sudo snap install ngrok` on Ubuntu) and add your authtoken:
     ```bash

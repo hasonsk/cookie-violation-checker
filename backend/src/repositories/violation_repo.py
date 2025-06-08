@@ -1,15 +1,14 @@
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-from loguru import logger
 
 from src.repositories.base_repository import BaseRepository
-from src.configs.app_settings import VIOLATIONS_COLLECTION
+from src.configs.settings import settings
 
 class ViolationRepository(BaseRepository):
     """Repository for violation operations"""
 
     def __init__(self):
-        super().__init__(VIOLATIONS_COLLECTION) # Assuming "violations" is the collection name
+        super().__init__(settings.db.VIOLATIONS_COLLECTION) # Assuming "violations" is the collection name
 
     async def create_violation(self, document: Dict[str, Any]) -> str:
         """Create a new violation record"""
