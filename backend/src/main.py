@@ -1,12 +1,12 @@
 from fastapi import HTTPException
 from fastapi import FastAPI
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routers import violation_detect_router, cookie_extract_router, policy_extract_router, policy_discovery_router, auth_router, analyze_router
+from src.routes import auth, policies, users, violations #, websites, reports
 from src.configs.settings import settings
 import uvicorn
 
-# Tạo FastAPI app
 app = FastAPI(
     title=settings.app.API_TITLE,
     description=settings.app.API_DESCRIPTION,
@@ -28,19 +28,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(policy_discovery_router.router, tags=["policy discovery"])
-app.include_router(policy_extract_router.router, tags=["policy extraction"])
-app.include_router(cookie_extract_router.router, tags=["cookies extraction"])
-app.include_router(violation_detect_router.router)
-app.include_router(auth_router.router)
-app.include_router(analyze_router.router)
+try:
+    app.include_router(auth.router, tags=["Authentication"])
+    app.include_router(users.router, tags=["Users"])
+    # app.include_router(websites.router, tags=["Websites"])
+    app.include_router(policies.router, tags=["Policies"])
+    app.include_router(violations.router, tags=["Violations"])
+    # app.include_router(reports.router, tags=["Reports"])
+except Exception:
+    traceback.print_exc()
+    print("Lỗi khi include router")
+    raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.get("/")
 async def root():
     """Health check endpoint"""
     return {
         "message": "Cookie Compliance Analyzer API",
-        "version": API_VERSION,
+        "version": settings.app.API_VERSION,
         "status": "running"
     }
 
@@ -48,6 +53,8 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
 
 if __name__ == "__main__":
     uvicorn.run(

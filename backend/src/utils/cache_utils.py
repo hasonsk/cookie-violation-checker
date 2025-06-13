@@ -3,7 +3,7 @@ import json
 import redis.asyncio as redis
 from loguru import logger
 
-from src.schemas.policy_schema import PolicyContent
+from src.schemas.policy import PolicyContent
 from src.configs.settings import settings
 
 redis_client = redis.from_url(settings.redis.REDIS_URL, decode_responses=True)

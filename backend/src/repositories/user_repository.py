@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Optional
 from bson.objectid import ObjectId
 from datetime import datetime
 
-from src.repositories.base_repository import BaseRepository
+from src.repositories.base import BaseRepository
 from src.configs.settings import settings
 
 class UserRepository(BaseRepository):

@@ -1,4 +1,4 @@
-from src.schemas.analysis_schema import AnalysisPhase
+from src.schemas.violation import AnalysisPhase
 from fastapi import HTTPException, status
 
 # Auth-related
