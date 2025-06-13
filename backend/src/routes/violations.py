@@ -6,31 +6,9 @@ from src.exceptions.custom_exceptions import PolicyAnalysisError
 from loguru import logger
 import time
 import uuid
-from src.dependencies.dependencies import (
-    get_policy_crawler_service,
-    get_policy_extractor_service,
-    get_comparator_service,
-    get_violation_repository
-)
-from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
-from src.services.llm_services.policy_extractor_service import PolicyExtractorService
-from src.services.comparator_service.comparator_service import ComparatorService
-from src.repositories.violation_repository import ViolationRepository
+from src.dependencies.dependencies import get_violation_analyzer_service
 
 router = APIRouter(prefix="/violations", tags=["Violations"])
-
-def get_violation_analyzer_service(
-    policy_crawler_service: PolicyCrawlerService = Depends(get_policy_crawler_service),
-    policy_extractor_service: PolicyExtractorService = Depends(get_policy_extractor_service),
-    comparator_service: ComparatorService = Depends(get_comparator_service),
-    violation_repository: ViolationRepository = Depends(get_violation_repository)
-) -> ViolationAnalyzerService:
-    return ViolationAnalyzerService(
-        policy_crawler_service=policy_crawler_service,
-        policy_extractor_service=policy_extractor_service,
-        comparator_service=comparator_service,
-        violation_repository=violation_repository
-    )
 
 @router.post("/analyze", response_model=ComplianceAnalysisResponse)
 async def analyze_policy(

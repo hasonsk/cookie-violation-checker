@@ -135,7 +135,7 @@ class GeminiService:
             logger.error(f"Gemini API error: {str(e)}")
             return '{"is_specific": 0, "cookies": []}'
 
-class PolicyExtractorService:
+class PolicyLLMService:
     def __init__(self, gemini_service: GeminiService):
         self.gemini_service = gemini_service
 

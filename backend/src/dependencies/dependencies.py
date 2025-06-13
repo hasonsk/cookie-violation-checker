@@ -1,16 +1,27 @@
+from concurrent.futures import ThreadPoolExecutor
+from playwright.async_api import async_playwright
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from src.utils.cache_utils import CacheManager
+from src.utils.dom_parser_utils import DOMParserService
+from src.utils.table_extractor import TableExtractor
+from src.utils.text_processing import TextProcessor
+from src.utils.translation_utils import TranslationManager
 from src.repositories.user_repository import UserRepository
-from repositories.domain_request_repository import DomainRequestRepository
+from src.repositories.domain_request_repository import DomainRequestRepository
 from src.repositories.policy_content_repository import PolicyContentRepository
-from src.repositories.policy_discovery_repository import PolicyDiscoveryRepository
 from src.repositories.cookie_feature_repository import CookieFeatureRepository
 from src.repositories.violation_repository import ViolationRepository
 # from src.repositories.website_repository import WebsiteRepository
 
+from src.configs.settings import settings
+
 from src.services.auth_service.auth_service import AuthService
-from src.services.llm_services.policy_extractor_service import PolicyExtractorService, GeminiService # Import GeminiService
+from src.services.llm_services.policy_llm_service import PolicyLLMService, GeminiService # Import GeminiService
+from src.repositories.policy_content_repository import PolicyContentRepository
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
+from src.services.policy_crawler_service.crawler_factory import CrawlerFactory
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.services.violation_analyzer_service.violation_analyzer_service import ViolationAnalyzerService
 # from src.services.website_management_service.website_management_service import WebsiteManagementService
@@ -28,9 +39,6 @@ def get_user_repository() -> UserRepository:
 def get_role_change_request_repository() -> DomainRequestRepository:
     return DomainRequestRepository()
 
-def get_policy_discovery_repository() -> PolicyDiscoveryRepository:
-    return PolicyDiscoveryRepository()
-
 def get_policy_content_repository() -> PolicyContentRepository:
     return PolicyContentRepository()
 
@@ -43,16 +51,31 @@ def get_violation_repository() -> ViolationRepository:
 def get_gemini_service() -> GeminiService:
     return GeminiService()
 
-async def get_policy_crawler_service(
-    policy_content_repo: PolicyContentRepository = Depends(get_policy_content_repository)
-) -> PolicyCrawlerService:
-    async with PolicyCrawlerService(policy_content_repo) as service:
-        yield service
-
 def get_policy_extractor_service(
     gemini_service: GeminiService = Depends(get_gemini_service)
-) -> PolicyExtractorService:
-    return PolicyExtractorService(gemini_service)
+) -> PolicyLLMService:
+    return PolicyLLMService(gemini_service)
+
+async def create_playwright_bing_extractor(
+    policy_content_repo: PolicyContentRepository = Depends(get_policy_content_repository)
+) -> PolicyCrawlerService:
+    """
+    Provides a PolicyCrawlerService instance with a Playwright-based content extractor.
+    Manages the Playwright browser and context lifecycle.
+    """
+    p = await async_playwright().start()
+    browser = await p.chromium.launch(headless=True)
+    context = await browser.new_context()
+    try:
+        yield CrawlerFactory.create_playwright_bing_extractor(
+            policy_content_repo=policy_content_repo,
+            browser_context=context,
+            timeout=30
+        )
+    finally:
+        await context.close()
+        await browser.close()
+        await p.stop()
 
 def get_comparator_service(
     violation_repository: ViolationRepository = Depends(get_violation_repository)
@@ -60,13 +83,13 @@ def get_comparator_service(
     return ComparatorService(violation_repository)
 
 def get_violation_analyzer_service(
-    policy_crawler_service: PolicyCrawlerService = Depends(get_policy_crawler_service),
-    policy_extractor_service: PolicyExtractorService = Depends(get_policy_extractor_service),
+    policy_crawler: PolicyCrawlerService = Depends(create_playwright_bing_extractor),
+    policy_extractor_service: PolicyLLMService = Depends(get_policy_extractor_service), # Keep this for LLM extraction
     comparator_service: ComparatorService = Depends(get_comparator_service),
     violation_repository: ViolationRepository = Depends(get_violation_repository)
 ) -> ViolationAnalyzerService:
     return ViolationAnalyzerService(
-        policy_crawler_service=policy_crawler_service,
+        policy_crawler=policy_crawler,
         policy_extractor_service=policy_extractor_service,
         comparator_service=comparator_service,
         violation_repository=violation_repository

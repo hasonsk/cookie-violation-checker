@@ -12,9 +12,8 @@ class DiscoveryMethod(str, Enum):
 
 class PolicyContent(BaseMongoDBModel):
     """Data structure for policy content"""
-    website_id: PyObjectId
+    website_url: str
     policy_url: Optional[str]
-    # discovery_method: DiscoveryMethod
     detected_language: Optional[str]
     original_content: str
     translated_content: Optional[str]

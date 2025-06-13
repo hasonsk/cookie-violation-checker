@@ -3,7 +3,7 @@ from loguru import logger
 
 from src.repositories.base import BaseRepository
 from src.configs.settings import settings
-from src.schemas.policy import PolicyContent
+from src.models.policy import PolicyContent
 
 class PolicyContentRepository(BaseRepository):
     def __init__(self):

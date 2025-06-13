@@ -9,19 +9,19 @@ from src.schemas.cookie import CookieSubmissionRequest
 from src.schemas.violation import ComplianceAnalysisResponse
 
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
-from src.services.llm_services.policy_extractor_service import PolicyExtractorService
+from src.services.llm_services.policy_llm_service import PolicyLLMService
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.repositories.violation_repository import ViolationRepository
 
 class ViolationAnalyzerService:
     def __init__(
         self,
-        policy_crawler_service: PolicyCrawlerService,
-        policy_extractor_service: PolicyExtractorService,
+        policy_crawler: PolicyCrawlerService,
+        policy_extractor_service: PolicyLLMService,
         comparator_service: ComparatorService,
         violation_repository: ViolationRepository
     ):
-        self.policy_crawler_service = policy_crawler_service
+        self.policy_crawler = policy_crawler
         self.policy_extractor_service = policy_extractor_service
         self.comparator_service = comparator_service
         self.violation_repository = violation_repository
@@ -43,8 +43,8 @@ class ViolationAnalyzerService:
         policy_url: Optional[str] = None # Initialize policy_url here
         try:
             # Phase 1: Policy Discovery and Content Extraction
-            logger.info("phase_started", phase="policy_crawling", request_id=request_id)
-            policy_content: Optional[PolicyContent] = await self.policy_crawler_service.find_and_extract_policy(payload.website_url)
+            logger.info("phase_started", phase="policy_extraction", request_id=request_id)
+            policy_content: Optional[PolicyContent] = await self.policy_crawler.extract_policy(payload.website_url)
 
             if policy_content and policy_content.original_content:
                 logger.info("policy_content_extracted", website_url=payload.website_url, request_id=request_id)

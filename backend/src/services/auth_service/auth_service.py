@@ -22,7 +22,7 @@ from src.exceptions.custom_exceptions import (
     UserNotFoundError
 )
 from src.repositories.user_repository import UserRepository
-from repositories.domain_request_repository import DomainRequestRepository
+from src.repositories.domain_request_repository import DomainRequestRepository
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

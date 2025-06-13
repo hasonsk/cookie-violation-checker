@@ -270,7 +270,7 @@ def check_rule_11_undeclared_purpose(context: Dict[str, Any]) -> Optional[Compli
 
 def check_rule_12_silent_deployment(context: Dict[str, Any]) -> Optional[ComplianceIssue]:
     """Quy tắc 12: Cookie được triển khai âm thầm (Không thể kiểm tra hoàn toàn ở backend)."""
-    # Ghi chú: Quy tắc này liên quan đến sự đồng ý (consent), khó xác định ở backend.
+    # Ghi chú: Quy tắc này liên quan đến sự đồng ý (consent), khó xác định ở
     # Chúng ta có thể đánh dấu nó như một rủi ro tiềm tàng nếu cookie không được khai báo.
     if context["is_declared"]: return None
 
