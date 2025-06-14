@@ -4,14 +4,17 @@ import time
 from typing import Dict, List, Optional, Any
 from loguru import logger
 
-from src.schemas.policy import PolicyContent, PolicyDiscoveryResult
-from src.schemas.cookie import CookieSubmissionRequest
+from src.utils.url_utils import get_base_url
+from src.schemas.policy import PolicyContent
+from src.schemas.cookie import CookieSubmissionRequest, PolicyCookieList
 from src.schemas.violation import ComplianceAnalysisResponse
+from src.models.website import Website # Giả sử model Website của bạn ở đây
 
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
 from src.services.cookie_extractor_service.policy_cookie_extractor_service import CookieExtractorService
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.repositories.violation_repository import ViolationRepository
+from src.repositories.website_repository import WebsiteRepository # Bổ sung repository
 
 class ViolationAnalyzerService:
     def __init__(
@@ -19,108 +22,113 @@ class ViolationAnalyzerService:
         policy_crawler: PolicyCrawlerService,
         policy_cookie_extractor_service: CookieExtractorService,
         comparator_service: ComparatorService,
-        violation_repository: ViolationRepository
+        violation_repository: ViolationRepository,
+        website_repository: WebsiteRepository # Inject WebsiteRepository
     ):
         self.policy_crawler = policy_crawler
         self.policy_cookie_extractor_service = policy_cookie_extractor_service
         self.comparator_service = comparator_service
         self.violation_repository = violation_repository
+        self.website_repository = website_repository # Gán vào service
 
     async def orchestrate_analysis(self, payload: CookieSubmissionRequest, request_id: str) -> ComplianceAnalysisResponse:
         """
-        Optimized policy analysis with parallel processing, proper error handling,
-        and comprehensive logging.
+        Orchestrates the analysis process, starting with a database check to avoid re-crawling.
         """
         start_time = time.time()
-
         logger.info(
             "analysis_started",
             request_id=request_id,
             website_url=payload.website_url,
-            cookies_count=len(payload.cookies)
         )
 
-        policy_url: Optional[str] = None # Initialize policy_url here
+        root_url = get_base_url(payload.website_url)
+        policy_url: Optional[str] = None
+        policy_features: Dict[str, Any] = {"is_specific": 0, "cookies": []}
+
         try:
-            # Phase 1: Policy Discovery and Content Extraction
-            logger.info("phase_started", phase="policy_extraction", request_id=request_id)
-            policy_content: Optional[PolicyContent] = await self.policy_crawler.extract_policy(payload.website_url)
+            # === BƯỚC KIỂM TRA DATABASE ĐẦU TIÊN ===
+            found_website: Optional[Website] = await self.website_repository.get_website_by_root_url(root_url)
 
-            if policy_content and policy_content.original_content:
-                logger.info("policy_content_extracted", website_url=payload.website_url, request_id=request_id)
-                policy_url = policy_content.policy_url # Get policy_url from the extracted object
+            if found_website:
+                # CACHE HIT: Website đã có trong DB
+                logger.info("website_found_in_db", website_url=root_url, request_id=request_id)
+
+                # Lấy thông tin đã lưu, bỏ qua crawling và feature extraction
+                policy_url = found_website.policy_url
+                policy_features = {
+                    "is_specific": found_website.is_specific,
+                    "cookies": [cookie.dict() for cookie in found_website.policy_cookies]
+                }
+
+                # Cập nhật thời gian quét
+                await self.website_repository.update_website(found_website.id, {"last_scanned_at": datetime.utcnow()})
+                logger.info("phase_skipped", phases=["policy_extraction", "feature_extraction"], request_id=request_id)
+
             else:
-                logger.info("no_policy_found", website_url=payload.website_url, request_id=request_id)
-                policy_url = None # Ensure policy_url is None if no content
-            logger.info("phase_completed", phase="policy_crawling", request_id=request_id)
+                # CACHE MISS: Website mới, thực hiện quy trình đầy đủ
+                logger.info("website_not_found_in_db", website_url=root_url, request_id=request_id)
 
-            policy_features = {"is_specific": 0, "cookies": []}
+                # Phase 1: Policy Discovery and Content Extraction
+                logger.info("phase_started", phase="policy_extraction", request_id=request_id)
+                policy_content: Optional[PolicyContent] = await self.policy_crawler.extract_policy(payload.website_url)
+                if policy_content:
+                    policy_url = policy_content.policy_url
 
-            # Phase 2: Feature Extraction (if policy content exists)
-            if policy_content:
-                logger.info("phase_started", phase="feature_extraction", request_id=request_id)
-                if policy_content.detected_language == "en":
-                    table_content_str = json.dumps(policy_content.table_content, ensure_ascii=False) if policy_content.table_content else None
+                # Phase 2: Feature Extraction
+                policy_features_obj = None
+                if policy_content and policy_content.original_content:
+                    logger.info("phase_started", phase="feature_extraction", request_id=request_id)
+                    # (logic trích xuất feature của bạn ở đây)
                     policy_features_obj = await self.policy_cookie_extractor_service.extract_cookie_features(
                         policy_content.original_content,
-                        table_content_str,
+                        json.dumps(policy_content.table_content, ensure_ascii=False) if policy_content.table_content else None,
                     )
-                else:
-                    policy_features_obj = await self.policy_cookie_extractor_service.extract_cookie_features(
-                        policy_content.translated_content,
-                        policy_content.translated_table_content,
-                    )
-                # Convert PolicyCookieList object to a dictionary for ComparatorService
-                policy_features = {
-                    "is_specific": policy_features_obj.is_specific,
-                    "cookies": [cookie.dict() for cookie in policy_features_obj.cookies]
-                }
-                logger.info("phase_completed", phase="feature_extraction", request_id=request_id)
+                    policy_features = {
+                        "is_specific": policy_features_obj.is_specific,
+                        "cookies": [cookie.dict() for cookie in policy_features_obj.cookies]
+                    }
 
-            # Phase 3: Compliance Check using ComparatorService
+                # === FIX: Chuyển đổi list object thành list dictionary ===
+                policy_cookies_for_db = []
+                if policy_features_obj and policy_features_obj.cookies:
+                    policy_cookies_for_db = [cookie.model_dump() for cookie in policy_features_obj.cookies]
+                # =======================================================
+
+                # Lưu website mới vào DB để tái sử dụng lần sau
+                new_website_data = {
+                    "domain": root_url,
+                    "provider_id": None, # Hoặc provider_id nếu có
+                    "last_scanned_at": datetime.utcnow(),
+                    "policy_url": policy_url,
+                    "detected_language": policy_content.detected_language if policy_content else None,
+                    "original_content": policy_content.original_content if policy_content else "",
+                    "translated_content": policy_content.translated_content if policy_content else None,
+                    "table_content": policy_content.table_content if policy_content else [],
+                    "translated_table_content": policy_content.translated_table_content if policy_content else None,
+                    "is_specific": policy_features_obj.is_specific if policy_features_obj else 0,
+                    "policy_cookies": policy_cookies_for_db # <-- SỬ DỤNG LIST DICTIONARY Ở ĐÂY
+                }
+                await self.website_repository.create_website(new_website_data)
+                logger.info("new_website_saved_to_db", website_url=root_url, request_id=request_id)
+
+            # === BƯỚC PHÂN TÍCH VÀ LƯU TRỮ (DÙNG CHUNG CHO CẢ 2 LUỒNG) ===
             logger.info("phase_started", phase="compliance_check", request_id=request_id)
             result = await self.comparator_service.analyze_website_compliance(
                 payload.website_url,
                 payload.cookies,
                 policy_features,
             )
-            logger.info("phase_completed", phase="compliance_check", request_id=request_id)
 
-            # Calculate execution time
-            execution_time = time.time() - start_time
-
-            # Log comprehensive results
-            logger.info(
-                "analysis_completed",
-                request_id=request_id,
-                total_issues=result.total_issues,
-                compliance_score=result.compliance_score,
-                execution_time=execution_time,
-                policy_cookies_count=result.policy_cookies_count,
-                actual_cookies_count=result.actual_cookies_count
-            )
-
-            # Create structured result
-            analysis_result = ComplianceAnalysisResponse(
-                website_url=result.website_url,
-                policy_url=policy_url,
-                analysis_date=result.analysis_date,
-                total_issues=result.total_issues,
-                compliance_score=result.compliance_score,
-                policy_cookies_count=result.policy_cookies_count,
-                actual_cookies_count=result.actual_cookies_count,
-                statistics=result.statistics,
-                issues=result.issues,
-                summary=result.summary,
-                details=result.details
-            )
-            logger.debug(f"Type of analysis_result before return: {type(analysis_result)}")
+            # (Phần còn lại của hàm giữ nguyên)
+            # ...
 
             # Save the analysis result to the database
-            await self.violation_repository.create_violation(analysis_result.dict())
+            await self.violation_repository.create_violation(result.model_dump())
             logger.info("Analysis result saved to database", request_id=request_id)
 
-            return analysis_result
+            # Return response
+            return ComplianceAnalysisResponse(**result.model_dump(), policy_url=policy_url)
 
         except Exception as e:
             logger.error(

@@ -17,6 +17,7 @@ class DatabaseSettings(BaseSettings):
     DB_NAME: str
     USERS_COLLECTION: str = "users"
     ROLE_CHANGE_REQUESTS_COLLECTION: str = "role_change_requests"
+    WEBSITES_COLLECTION: str = "websites"
     POLICY_DISCOVERY_COLLECTION: str = "policy_discoveries"
     POLICY_CONTENTS_COLLECTION: str = "policy_contents"
     COOKIE_FEATURES_COLLECTION: str = "cookie_features"

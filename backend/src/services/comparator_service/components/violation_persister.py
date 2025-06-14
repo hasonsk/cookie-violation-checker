@@ -11,7 +11,6 @@ class ViolationPersister(IViolationPersister):
         self._violation_repository = violation_repository
 
     async def save_violation(self, result: ComplianceAnalysisResult) -> bool:
-        """Chỉ làm 1 việc: lưu violation result"""
         try:
             # Convert Pydantic models to dict for MongoDB
             violation_data = result.model_dump()

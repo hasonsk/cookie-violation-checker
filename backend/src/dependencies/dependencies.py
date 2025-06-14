@@ -24,13 +24,14 @@ from src.services.cookie_extractor_service.factories.cookie_extractor_factory im
 from src.services.cookie_extractor_service.processors.content_analyzer import ContentAnalyzer
 from src.services.cookie_extractor_service.processors.prompt_builder import PromptBuilder
 from src.services.cookie_extractor_service.processors.response_processor import LLMResponseProcessor
-from src.repositories.policy_content_repository import PolicyContentRepository
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
 from src.services.policy_crawler_service.crawler_factory import CrawlerFactory
 from src.services.comparator_service.comparator_factory import ComparatorFactory
 from src.services.comparator_service.components.compliance_comparator import ComplianceComparator
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.services.violation_analyzer_service.violation_analyzer_service import ViolationAnalyzerService
+from src.repositories.policy_content_repository import PolicyContentRepository
+from src.repositories.website_repository import WebsiteRepository
 # from src.services.website_management_service.website_management_service import WebsiteManagementService
 # from src.services.reporter_service.reporter_service import ReporterService
 
@@ -118,17 +119,22 @@ def get_comparator_service(
 ) -> ComparatorService:
     return ComparatorFactory.create_comparator(violation_repository, compliance_analyzer)
 
+def get_website_repository() -> WebsiteRepository:
+    return WebsiteRepository()
+
 def get_violation_analyzer_service(
     policy_crawler: PolicyCrawlerService = Depends(create_playwright_bing_extractor),
     policy_cookie_extractor_service: CookieExtractorService = Depends(get_policy_cookie_extractor_service), # Use CookieExtractorService
     comparator_service: ComparatorService = Depends(get_comparator_service),
-    violation_repository: ViolationRepository = Depends(get_violation_repository)
+    violation_repository: ViolationRepository = Depends(get_violation_repository),
+    website_repository: WebsiteRepository = Depends(get_website_repository)
 ) -> ViolationAnalyzerService:
     return ViolationAnalyzerService(
         policy_crawler=policy_crawler,
         policy_cookie_extractor_service=policy_cookie_extractor_service,
         comparator_service=comparator_service,
-        violation_repository=violation_repository
+        violation_repository=violation_repository,
+        website_repository=website_repository
     )
 
 # def get_website_management_service(
