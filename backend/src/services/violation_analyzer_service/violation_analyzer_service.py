@@ -9,7 +9,7 @@ from src.schemas.cookie import CookieSubmissionRequest
 from src.schemas.violation import ComplianceAnalysisResponse
 
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
-from src.services.llm_services.policy_llm_service import PolicyLLMService
+from src.services.cookie_extractor_service.policy_cookie_extractor_service import CookieExtractorService
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.repositories.violation_repository import ViolationRepository
 
@@ -17,12 +17,12 @@ class ViolationAnalyzerService:
     def __init__(
         self,
         policy_crawler: PolicyCrawlerService,
-        policy_extractor_service: PolicyLLMService,
+        policy_cookie_extractor_service: CookieExtractorService,
         comparator_service: ComparatorService,
         violation_repository: ViolationRepository
     ):
         self.policy_crawler = policy_crawler
-        self.policy_extractor_service = policy_extractor_service
+        self.policy_cookie_extractor_service = policy_cookie_extractor_service
         self.comparator_service = comparator_service
         self.violation_repository = violation_repository
 
@@ -61,12 +61,12 @@ class ViolationAnalyzerService:
                 logger.info("phase_started", phase="feature_extraction", request_id=request_id)
                 if policy_content.detected_language == "en":
                     table_content_str = json.dumps(policy_content.table_content, ensure_ascii=False) if policy_content.table_content else None
-                    policy_features_obj = await self.policy_extractor_service.extract_cookie_features(
+                    policy_features_obj = await self.policy_cookie_extractor_service.extract_cookie_features(
                         policy_content.original_content,
                         table_content_str,
                     )
                 else:
-                    policy_features_obj = await self.policy_extractor_service.extract_cookie_features(
+                    policy_features_obj = await self.policy_cookie_extractor_service.extract_cookie_features(
                         policy_content.translated_content,
                         policy_content.translated_table_content,
                     )
