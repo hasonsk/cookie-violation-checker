@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, Any
 
-from src.services.cookie_extractor_service.interfaces.llm_provider import LLMProvider
+from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 from src.services.cookie_extractor_service.providers.gemini_provider import GeminiLLMProvider
 from src.services.cookie_extractor_service.providers.llama_provider import LlamaLLMProvider
 
@@ -18,7 +18,7 @@ class CookieExtractorFactory:
     """
 
     @staticmethod
-    def create_provider(provider_type: LLMProviderType, **config) -> LLMProvider:
+    def create_provider(provider_type: LLMProviderType, **config) -> ILLMProvider:
         """
         Create LLM provider based on type and configuration
 

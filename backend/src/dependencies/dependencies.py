@@ -19,7 +19,7 @@ from src.configs.settings import settings
 
 from src.services.auth_service.auth_service import AuthService
 from src.services.cookie_extractor_service.policy_cookie_extractor_service import CookieExtractorService # CookieExtractorService
-from src.services.cookie_extractor_service.interfaces.llm_provider import LLMProvider
+from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 from src.services.cookie_extractor_service.factories.cookie_extractor_factory import CookieExtractorFactory, LLMProviderType
 from src.services.cookie_extractor_service.processors.content_analyzer import ContentAnalyzer
 from src.services.cookie_extractor_service.processors.prompt_builder import PromptBuilder
@@ -27,6 +27,8 @@ from src.services.cookie_extractor_service.processors.response_processor import 
 from src.repositories.policy_content_repository import PolicyContentRepository
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
 from src.services.policy_crawler_service.crawler_factory import CrawlerFactory
+from src.services.comparator_service.comparator_factory import ComparatorFactory
+from src.services.comparator_service.components.compliance_comparator import ComplianceComparator
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.services.violation_analyzer_service.violation_analyzer_service import ViolationAnalyzerService
 # from src.services.website_management_service.website_management_service import WebsiteManagementService
@@ -53,7 +55,7 @@ def get_cookie_feature_repository() -> CookieFeatureRepository:
 def get_violation_repository() -> ViolationRepository:
     return ViolationRepository()
 
-def get_llm_provider() -> LLMProvider:
+def get_llm_provider() -> ILLMProvider:
     return CookieExtractorFactory.create_provider(
         provider_type=LLMProviderType.GEMINI,
         api_key=settings.external.GEMINI_API_KEY,
@@ -72,16 +74,18 @@ def get_response_processor() -> LLMResponseProcessor:
     return LLMResponseProcessor()
 
 def get_policy_cookie_extractor_service(
-    llm_provider: LLMProvider = Depends(get_llm_provider),
+    llm_provider: ILLMProvider = Depends(get_llm_provider),
     content_analyzer: ContentAnalyzer = Depends(get_content_analyzer),
     prompt_builder: PromptBuilder = Depends(get_prompt_builder),
-    response_processor: LLMResponseProcessor = Depends(get_response_processor)
+    response_processor: LLMResponseProcessor = Depends(get_response_processor),
+    cookie_feature_repository: CookieFeatureRepository = Depends(get_cookie_feature_repository)
 ) -> CookieExtractorService:
     return CookieExtractorService(
         llm_provider=llm_provider,
         content_analyzer=content_analyzer,
         prompt_builder=prompt_builder,
-        response_processor=response_processor
+        response_processor=response_processor,
+        cookie_feature_repository=cookie_feature_repository
     )
 
 async def create_playwright_bing_extractor(
@@ -105,10 +109,14 @@ async def create_playwright_bing_extractor(
         await browser.close()
         await p.stop()
 
+def get_compliance_comparator() -> ComplianceComparator:
+    return ComplianceComparator()
+
 def get_comparator_service(
-    violation_repository: ViolationRepository = Depends(get_violation_repository)
+    violation_repository: ViolationRepository = Depends(get_violation_repository),
+    compliance_analyzer: ComplianceComparator = Depends(get_compliance_comparator),
 ) -> ComparatorService:
-    return ComparatorService(violation_repository)
+    return ComparatorFactory.create_comparator(violation_repository, compliance_analyzer)
 
 def get_violation_analyzer_service(
     policy_crawler: PolicyCrawlerService = Depends(create_playwright_bing_extractor),

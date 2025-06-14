@@ -5,9 +5,9 @@ from loguru import logger
 from src.utils.cookie_utils import calculate_actual_retention_days, is_third_party_domain, parse_retention_to_days
 from src.schemas.violation import ComplianceIssue
 from src.schemas.cookie import PolicyCookie, ActualCookie
-from src.services.violation_analyzer_service.violation_rules import cookie_rules
+from src.utils.violation_rules import cookie_rules
 
-class ViolationAnalyzer:
+class ComplianceComparator:
     """
     Một "Rule Engine" để phân tích sự tuân thủ cookie bằng cách áp dụng
     một tập hợp các quy tắc có thể mở rộng.

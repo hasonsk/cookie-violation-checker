@@ -2,12 +2,12 @@ import logging
 import aiohttp
 from typing import Dict, Any, Optional
 
-from src.services.cookie_extractor_service.interfaces.llm_provider import LLMProvider
+from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 
 logger = logging.getLogger(__name__)
 
 
-class LlamaLLMProvider(LLMProvider):
+class LlamaLLMProvider(ILLMProvider):
     """
     Llama LLM Provider - Functional Cohesion
     Single responsibility: Handle communication with Llama API

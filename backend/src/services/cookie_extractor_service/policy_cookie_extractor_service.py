@@ -2,7 +2,8 @@ from typing import Optional
 from loguru import logger
 
 from src.schemas.cookie import PolicyCookieList
-from src.services.cookie_extractor_service.interfaces.llm_provider import LLMProvider
+from src.repositories.cookie_feature_repository import CookieFeatureRepository
+from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 from src.services.cookie_extractor_service.processors.content_analyzer import ContentAnalyzer
 from src.services.cookie_extractor_service.processors.prompt_builder import PromptBuilder
 from src.services.cookie_extractor_service.processors.response_processor import LLMResponseProcessor
@@ -10,15 +11,17 @@ from src.services.cookie_extractor_service.processors.response_processor import 
 class CookieExtractorService:
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_provider: ILLMProvider,
         content_analyzer: ContentAnalyzer,
         prompt_builder: PromptBuilder,
-        response_processor: LLMResponseProcessor
+        response_processor: LLMResponseProcessor,
+        cookie_feature_repository: CookieFeatureRepository
     ):
         self.llm_provider = llm_provider
         self.content_analyzer = content_analyzer
         self.prompt_builder = prompt_builder
         self.response_processor = response_processor
+        self.cookie_feature_repository = cookie_feature_repository
 
     async def extract_cookie_features(
         self,
@@ -52,6 +55,12 @@ class CookieExtractorService:
             # Step 5: Convert to model
             policy_cookie_list = PolicyCookieList(**response_dict)
             logger.info(f"Successfully extracted cookie features using {self.llm_provider.get_provider_name()}")
+
+            # Step 6: Save extracted cookies to the database
+            if policy_cookie_list.cookies:
+                cookies_to_save = [cookie.model_dump() for cookie in policy_cookie_list.cookies]
+                await self.cookie_feature_repository.insert_many(cookies_to_save)
+                logger.info(f"Saved {len(cookies_to_save)} cookies to the database.")
 
             return policy_cookie_list
 

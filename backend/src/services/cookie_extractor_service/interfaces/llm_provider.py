@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class LLMProvider(ABC):
+class ILLMProvider(ABC):
     """Abstract base class cho các LLM providers"""
 
     @abstractmethod

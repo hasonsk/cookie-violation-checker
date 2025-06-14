@@ -77,7 +77,7 @@ class ViolationAnalyzerService:
                 }
                 logger.info("phase_completed", phase="feature_extraction", request_id=request_id)
 
-            # Phase 3: Compliance Check
+            # Phase 3: Compliance Check using ComparatorService
             logger.info("phase_started", phase="compliance_check", request_id=request_id)
             result = await self.comparator_service.analyze_website_compliance(
                 payload.website_url,
@@ -102,9 +102,9 @@ class ViolationAnalyzerService:
 
             # Create structured result
             analysis_result = ComplianceAnalysisResponse(
-                website_url=payload.website_url,
+                website_url=result.website_url,
                 policy_url=policy_url,
-                analysis_date=datetime.now(),
+                analysis_date=result.analysis_date,
                 total_issues=result.total_issues,
                 compliance_score=result.compliance_score,
                 policy_cookies_count=result.policy_cookies_count,

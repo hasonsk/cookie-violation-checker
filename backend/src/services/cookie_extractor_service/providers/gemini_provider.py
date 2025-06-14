@@ -1,12 +1,12 @@
 import logging
 from typing import Dict, Any, Optional
 
-from src.services.cookie_extractor_service.interfaces.llm_provider import LLMProvider
+from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 
 logger = logging.getLogger(__name__)
 
 
-class GeminiLLMProvider(LLMProvider):
+class GeminiLLMProvider(ILLMProvider):
     """
     Gemini LLM Provider - Functional Cohesion
     Single responsibility: Handle communication with Gemini API
