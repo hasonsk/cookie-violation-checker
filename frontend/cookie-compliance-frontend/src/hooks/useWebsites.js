@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react'; // Import useRef
 import {
   fetchWebsites,
   fetchWebsiteById,
@@ -8,6 +8,8 @@ import {
   deleteWebsite,
   setCurrentPage,
 } from '../store/slices/websiteSlice';
+
+const CACHE_DURATION = 5000; // 5 seconds
 
 export const useWebsites = () => {
   const dispatch = useDispatch();
@@ -19,11 +21,22 @@ export const useWebsites = () => {
     totalCount,
     currentPage,
     pageSize,
+    lastFetchParams, // Get lastFetchParams from state
+    lastFetchTimestamp, // Get lastFetchTimestamp from state
   } = useSelector(state => state.websites);
 
   const getWebsites = useCallback(
-    (params) => dispatch(fetchWebsites(params)),
-    [dispatch]
+    (params) => {
+      const now = new Date().getTime();
+      const isCached = lastFetchParams &&
+                       JSON.stringify(lastFetchParams) === JSON.stringify(params) &&
+                       (now - lastFetchTimestamp < CACHE_DURATION);
+
+      if (!isCached || websites.length === 0) { // Always refetch if no data is present
+        dispatch(fetchWebsites(params));
+      }
+    },
+    [dispatch, lastFetchParams, lastFetchTimestamp, websites.length]
   );
 
   const getWebsiteById = useCallback(

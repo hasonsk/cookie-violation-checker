@@ -1,35 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Typography } from '@mui/material';
+import {
+  TextField,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
+  Typography,
+} from '@mui/material';
 import WebsiteItem from './WebsiteItem';
-import DomainRequestForm from './DomainRequestForm'; // Import the new form
-import { useAuth } from '../../hooks/useAuth'; // Import useAuth
-import { useWebsites } from '../../hooks/useWebsites'; // Import useWebsites
+import DomainRequestForm from './DomainRequestForm';
+import { useAuth } from '../../hooks/useAuth';
+import { useWebsites } from '../../hooks/useWebsites';
 
 const WebsiteList = () => {
-  const { user, isProvider, isApproved, loading: authLoading, userId, isAdmin } = useAuth(); // Get userId and isAdmin
-  const { websites, loading: websitesLoading, getWebsites, totalCount } = useWebsites(); // Destructure totalCount
+  const { user, isProvider, loading: authLoading, userId } = useAuth();
+  const { websites, loading: websitesLoading, getWebsites } = useWebsites();
 
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [filteredWebsites, setFilteredWebsites] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
-    if (!authLoading && userId) { // Ensure user ID is available
-      // Pass userId, role, search, skip, and limit to fetchWebsites
+    if (!authLoading && userId) {
       getWebsites({
-        userId: userId,
+        userId,
         role: user?.role,
-        search: search,
-        skip: page * rowsPerPage,
-        limit: rowsPerPage,
+        skip: 0,
+        limit: 1000, // Tải tất cả nếu dữ liệu nhỏ
       });
     }
-  }, [authLoading, userId, user?.role, getWebsites, search, page, rowsPerPage]); // Add search, page, rowsPerPage to dependencies
+  }, [authLoading, userId, user?.role, getWebsites]);
 
-  console.log(websites)
-  // The filtering will now be done on the backend, so we don't need client-side filtering here.
-  // The `websites` array will already contain the filtered and paginated data.
-  const displayedData = websites; // `websites` now comes from Redux store, already paginated and filtered
+  // 🔎 Filter client-side mỗi khi người dùng gõ
+  useEffect(() => {
+    if (searchInput.trim() === '') {
+      setFilteredWebsites(websites);
+    } else {
+      const lowerSearch = searchInput.toLowerCase();
+      const filtered = websites.filter(w =>
+        w.domain.toLowerCase().includes(lowerSearch)
+      );
+      setFilteredWebsites(filtered);
+    }
+    setPage(0); // Reset page khi lọc mới
+  }, [searchInput, websites]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -37,15 +57,17 @@ const WebsiteList = () => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset page to 0 when rows per page changes
+    setPage(0);
   };
 
-  // Show loading state if either auth or websites are loading
   if (authLoading || websitesLoading) {
-    return <Box sx={{ p: 3 }}><Typography>Đang tải...</Typography></Box>;
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography>Đang tải...</Typography>
+      </Box>
+    );
   }
 
-  // Conditional rendering for Provider role
   if (isProvider) {
     return (
       <Box sx={{ p: 3 }}>
@@ -54,7 +76,12 @@ const WebsiteList = () => {
     );
   }
 
-  // Render website list for other roles or providers with websites
+  // Dữ liệu hiển thị theo page
+  const paginatedData = filteredWebsites.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ mb: 3 }}>
@@ -62,8 +89,8 @@ const WebsiteList = () => {
           label="Tìm kiếm website..."
           variant="outlined"
           fullWidth
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           sx={{ maxWidth: 400 }}
         />
       </Box>
@@ -74,7 +101,6 @@ const WebsiteList = () => {
             <TableHead>
               <TableRow sx={{ backgroundColor: 'grey.50' }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Domain</TableCell>
-                {/* <TableCell sx={{ fontWeight: 'bold' }}>Công ty</TableCell> */}
                 <TableCell sx={{ fontWeight: 'bold' }}>Chính sách cookie</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Vi phạm trung bình</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Lần kiểm tra cuối</TableCell>
@@ -82,7 +108,7 @@ const WebsiteList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedData.map((row) => (
+              {paginatedData.map((row) => (
                 <WebsiteItem key={row.id} website={row} />
               ))}
             </TableBody>
@@ -91,7 +117,7 @@ const WebsiteList = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={totalCount}
+          count={filteredWebsites.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
