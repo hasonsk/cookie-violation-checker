@@ -1,27 +1,35 @@
-import React, { useState } from 'react';
-import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { TextField, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Typography } from '@mui/material';
 import WebsiteItem from './WebsiteItem';
-
-const initialData = [
-  { id: 1, name: 'google.com', company: 'Google Inc', city: 'Mountain View', progress: 95, created: 'Oct 25, 2021' },
-  { id: 2, name: 'facebook.com', company: 'Meta', city: 'Menlo Park', progress: 88, created: 'Oct 20, 2021' },
-  { id: 3, name: 'amazon.com', company: 'Amazon', city: 'Seattle', progress: 92, created: 'Oct 18, 2021' },
-  { id: 4, name: 'microsoft.com', company: 'Microsoft', city: 'Redmond', progress: 90, created: 'Oct 15, 2021' },
-  { id: 5, name: 'apple.com', company: 'Apple Inc', city: 'Cupertino', progress: 96, created: 'Oct 12, 2021' },
-  { id: 6, name: 'abc.com', company: 'ABC Company', city: 'New York', progress: 80, created: 'Oct 10, 2021' },
-  { id: 7, name: 'netflix.com', company: 'Netflix', city: 'Los Gatos', progress: 85, created: 'Oct 8, 2021' },
-  { id: 8, name: 'spotify.com', company: 'Spotify', city: 'Stockholm', progress: 87, created: 'Oct 5, 2021' },
-];
+import DomainRequestForm from './DomainRequestForm'; // Import the new form
+import { useAuth } from '../../hooks/useAuth'; // Import useAuth
+import { useWebsites } from '../../hooks/useWebsites'; // Import useWebsites
 
 const WebsiteList = () => {
+  const { user, isProvider, isApproved, loading: authLoading, userId, isAdmin } = useAuth(); // Get userId and isAdmin
+  const { websites, loading: websitesLoading, getWebsites, totalCount } = useWebsites(); // Destructure totalCount
+
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const filteredData = initialData.filter(website =>
-    website.name.toLowerCase().includes(search.toLowerCase()) ||
-    website.company.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    if (!authLoading && userId) { // Ensure user ID is available
+      // Pass userId, role, search, skip, and limit to fetchWebsites
+      getWebsites({
+        userId: userId,
+        role: user?.role,
+        search: search,
+        skip: page * rowsPerPage,
+        limit: rowsPerPage,
+      });
+    }
+  }, [authLoading, userId, user?.role, getWebsites, search, page, rowsPerPage]); // Add search, page, rowsPerPage to dependencies
+
+  console.log(websites)
+  // The filtering will now be done on the backend, so we don't need client-side filtering here.
+  // The `websites` array will already contain the filtered and paginated data.
+  const displayedData = websites; // `websites` now comes from Redux store, already paginated and filtered
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -29,9 +37,24 @@ const WebsiteList = () => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(0); // Reset page to 0 when rows per page changes
   };
 
+  // Show loading state if either auth or websites are loading
+  if (authLoading || websitesLoading) {
+    return <Box sx={{ p: 3 }}><Typography>Đang tải...</Typography></Box>;
+  }
+
+  // Conditional rendering for Provider role
+  if (isProvider) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <DomainRequestForm />
+      </Box>
+    );
+  }
+
+  // Render website list for other roles or providers with websites
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ mb: 3 }}>
@@ -51,26 +74,24 @@ const WebsiteList = () => {
             <TableHead>
               <TableRow sx={{ backgroundColor: 'grey.50' }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Domain</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Công ty</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Thành phố</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Tuân thủ</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Ngày tạo</TableCell>
+                {/* <TableCell sx={{ fontWeight: 'bold' }}>Công ty</TableCell> */}
+                <TableCell sx={{ fontWeight: 'bold' }}>Chính sách cookie</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Vi phạm trung bình</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Lần kiểm tra cuối</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredData
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
-                  <WebsiteItem key={row.id} website={row} />
-                ))}
+              {displayedData.map((row) => (
+                <WebsiteItem key={row.id} website={row} />
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={filteredData.length}
+          count={totalCount}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

@@ -1,3 +1,5 @@
+import React from 'react'; // Import React
+import PropTypes from 'prop-types'; // Import PropTypes
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 
 const LogoutDialog = ({ open, onClose, onConfirm }) => (
@@ -12,5 +14,11 @@ const LogoutDialog = ({ open, onClose, onConfirm }) => (
     </DialogActions>
   </Dialog>
 );
+
+LogoutDialog.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+};
 
 export default LogoutDialog;

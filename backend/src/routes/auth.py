@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, Depends, Path
 from src.schemas.auth import RegisterSchema, RegisterResponseSchema, LoginSchema, LoginResponseSchema
-from src.schemas.user import UserInfo
+from src.schemas.user import User
 from typing import List
 from src.models.domain_request import DomainRequest
 from src.services.auth_service.auth_service import AuthService
@@ -22,24 +22,24 @@ async def login(
 ):
     return await auth_service.login_user(data)
 
-@router.get("/auth/verify", response_model=UserInfo)
+@router.get("/auth/verify", response_model=User)
 async def verify(
-    current_user: UserInfo = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return current_user
 
-@router.patch("/users/{user_id}/approve", response_model=UserInfo)
+@router.patch("/users/{user_id}/approve", response_model=User)
 async def approve_account(
     user_id: str = Path(...),
-    current_user: UserInfo = Depends(get_current_admin_or_manager),
+    current_user: User = Depends(get_current_admin_or_manager),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     return await auth_service.approve_account(user_id, current_user)
 
-@router.patch("/users/{user_id}/approve-role", response_model=UserInfo)
+@router.patch("/users/{user_id}/approve-role", response_model=User)
 async def approve_role_change(
     user_id: str = Path(...),
-    current_user: UserInfo = Depends(get_current_admin_or_manager),
+    current_user: User = Depends(get_current_admin_or_manager),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     return await auth_service.approve_role_change(user_id, current_user)

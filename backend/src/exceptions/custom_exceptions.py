@@ -44,3 +44,39 @@ class PolicyAnalysisError(Exception):
 
 class RetryableError(Exception):
     pass
+
+class DomainRequestNotFoundError(Exception):
+    pass
+
+class DomainAlreadyExistsError(Exception):
+    def __init__(self, message: str = "Domain đã tồn tại trong hệ thống"):
+        super().__init__(message)
+class DomainRequestAlreadyExistsError(Exception):
+    def __init__(self, message: str = "Yêu cầu đăng ký domain đã tồn tại"):
+        super().__init__(message)
+class DomainRequestRejectedError(Exception):
+    def __init__(self, message: str = "Yêu cầu đăng ký domain đã bị từ chối"):
+        super().__init__(message)
+class DomainRequestPendingError(Exception):
+    def __init__(self, message: str = "Yêu cầu đăng ký domain đang chờ phê duyệt"):
+        super().__init__(message)
+class DomainRequestApprovalError(Exception):
+    def __init__(self, message: str = "Lỗi khi phê duyệt yêu cầu đăng ký domain"):
+        super().__init__(message)
+class DomainRequestRejectionError(Exception):
+    def __init__(self, message: str = "Lỗi khi từ chối yêu cầu đăng ký domain"):
+        super().__init__(message)
+class DomainRequestNotAuthorizedError(Exception):
+    def __init__(self, message: str = "Người dùng không có quyền thực hiện hành động này"):
+        super().__init__(message)
+class InvalidDomainError(Exception):
+    def __init__(self, message: str = "Domain không hợp lệ"):
+        super().__init__(message)
+
+class NotFoundException(Exception):
+    def __init__(self, message: str = "Resource not found"):
+        super().__init__(message)
+
+class BadRequestException(Exception):
+    def __init__(self, message: str = "Bad request"):
+        super().__init__(message)

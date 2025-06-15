@@ -55,6 +55,14 @@ class WebsiteRepository(BaseRepository):
             return Website(**updated_website_data)
         return None
 
+    async def get_all_websites(self, filters: Optional[Dict] = None, skip: int = 0, limit: int = 100) -> List[Website]:
+        """
+        Retrieves a list of all websites, with optional filtering, skipping, and limiting.
+        """
+        query = filters if filters is not None else {}
+        websites_data = await self.collection.find(query).skip(skip).limit(limit).to_list(length=limit)
+        return [Website(**data) for data in websites_data]
+
     async def get_website_by_id(self, website_id: str) -> Optional[Website]:
         """
         Retrieves a website by its ID.

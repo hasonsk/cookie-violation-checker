@@ -1,20 +1,22 @@
-from pyparsing import Enum
+from enum import Enum
 from pydantic import Field
 from typing import Optional, List
 from datetime import datetime
 
 from src.models.base import BaseMongoDBModel, PyObjectId
 
-class RequestStatus(str, Enum):
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
+class DomainRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 class DomainRequest(BaseMongoDBModel):
-    requester_id: PyObjectId = Field(..., description="ID of the user making the request")
-    domains: List[str] = Field(default_factory=list)
-    reason: str
-    status: RequestStatus = Field(default=RequestStatus.PENDING)
-    processed_at: Optional[datetime] = Field(default=None, description="Time when the request was processed")
-    processed_by: Optional[PyObjectId] = Field(default=None, description="ID of the admin processing the request")
-    feedback: Optional[str] = None
+    user_id: PyObjectId = Field(..., description="ID of the user making the request")
+    company_name: str = Field(..., description="Name of the company/organization")
+    domains: List[str] = Field(default_factory=list, description="List of domains to register")
+    purpose: str = Field(..., description="Purpose and reason for domain registration")
+    status: DomainRequestStatus = Field(default=DomainRequestStatus.PENDING, description="Current status of the request")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when the request was created")
+    approved_by: Optional[PyObjectId] = Field(default=None, description="ID of the admin who approved the request")
+    approved_at: Optional[datetime] = Field(default=None, description="Timestamp when the request was approved")
+    feedback: Optional[str] = Field(default=None, description="Feedback from the admin if the request was rejected")

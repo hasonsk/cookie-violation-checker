@@ -13,12 +13,12 @@ from src.repositories.domain_request_repository import DomainRequestRepository
 from src.repositories.policy_content_repository import PolicyContentRepository
 from src.repositories.cookie_feature_repository import CookieFeatureRepository
 from src.repositories.violation_repository import ViolationRepository
-# from src.repositories.website_repository import WebsiteRepository
+from src.repositories.website_repository import WebsiteRepository
 
 from src.configs.settings import settings
 
 from src.services.auth_service.auth_service import AuthService
-from src.services.cookie_extractor_service.policy_cookie_extractor_service import CookieExtractorService # CookieExtractorService
+from src.services.cookie_extractor_service.policy_cookie_extractor_service import CookieExtractorService
 from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 from src.services.cookie_extractor_service.factories.cookie_extractor_factory import CookieExtractorFactory, LLMProviderType
 from src.services.cookie_extractor_service.processors.content_analyzer import ContentAnalyzer
@@ -30,13 +30,12 @@ from src.services.comparator_service.comparator_factory import ComparatorFactory
 from src.services.comparator_service.components.compliance_comparator import ComplianceComparator
 from src.services.comparator_service.comparator_service import ComparatorService
 from src.services.violation_analyzer_service.violation_analyzer_service import ViolationAnalyzerService
-from src.repositories.policy_content_repository import PolicyContentRepository
-from src.repositories.website_repository import WebsiteRepository
-# from src.services.website_management_service.website_management_service import WebsiteManagementService
+from src.services.domain_request_service import DomainRequestService
+from src.services.website_management_service.website_management_service import WebsiteManagementService
 # from src.services.reporter_service.reporter_service import ReporterService
 
 from src.utils.jwt_handler import decode_access_token
-from src.schemas.user import UserInfo, UserRole
+from src.schemas.user import User, UserRole
 from src.exceptions.custom_exceptions import UnauthorizedError, UserNotFoundError
 
 oauth2_scheme = HTTPBearer()
@@ -122,9 +121,18 @@ def get_comparator_service(
 def get_website_repository() -> WebsiteRepository:
     return WebsiteRepository()
 
+def get_domain_request_repository() -> DomainRequestRepository:
+    return DomainRequestRepository()
+
+def get_domain_request_service(
+    domain_request_repo: DomainRequestRepository = Depends(get_domain_request_repository),
+    website_repo: WebsiteRepository = Depends(get_website_repository)
+) -> DomainRequestService:
+    return DomainRequestService(domain_request_repo, website_repo)
+
 def get_violation_analyzer_service(
     policy_crawler: PolicyCrawlerService = Depends(create_playwright_bing_extractor),
-    policy_cookie_extractor_service: CookieExtractorService = Depends(get_policy_cookie_extractor_service), # Use CookieExtractorService
+    policy_cookie_extractor_service: CookieExtractorService = Depends(get_policy_cookie_extractor_service),
     comparator_service: ComparatorService = Depends(get_comparator_service),
     violation_repository: ViolationRepository = Depends(get_violation_repository),
     website_repository: WebsiteRepository = Depends(get_website_repository)
@@ -137,10 +145,11 @@ def get_violation_analyzer_service(
         website_repository=website_repository
     )
 
-# def get_website_management_service(
-#     website_repo: WebsiteRepository = Depends(get_website_repository)
-# ) -> WebsiteManagementService:
-#     return WebsiteManagementService(website_repo)
+def get_website_management_service(
+    website_repo: WebsiteRepository = Depends(get_website_repository),
+    violation_repo: ViolationRepository = Depends(get_violation_repository)
+) -> WebsiteManagementService:
+    return WebsiteManagementService(website_repo, violation_repo)
 
 # def get_reporter_service(
 #     violation_repo: ViolationRepository = Depends(get_violation_repository)
@@ -156,7 +165,7 @@ def get_auth_service(
 async def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
     auth_service: AuthService = Depends(get_auth_service)
-) -> UserInfo:
+) -> User:
     try:
         payload = decode_access_token(token.credentials)
         if payload is None:
@@ -164,10 +173,10 @@ async def get_current_user(
         user_id = payload.get("sub")
         if user_id is None:
             raise UnauthorizedError("Invalid token payload")
-        user = await auth_service.get_current_user(user_id)
-        if not user:
-            raise UserNotFoundError("User not found")
-        return user
+        user_data = await auth_service.get_current_user(user_id)
+        if not user_data:
+            raise UserNotFoundError()
+        return User(**user_data.model_dump()) # Convert to dict then to User
     except (UnauthorizedError, UserNotFoundError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -175,8 +184,16 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-async def get_current_admin_or_manager(current_user: UserInfo = Depends(get_current_user)) -> UserInfo:
-    if current_user.role not in [UserRole.ADMIN, UserRole.cmp_manager]:
+async def get_current_admin_or_manager(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    return current_user
+
+async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"

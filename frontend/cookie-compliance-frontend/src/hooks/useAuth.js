@@ -40,7 +40,10 @@ export const useAuth = () => {
 
     // User info helpers
     isAdmin: user?.role === 'admin',
-    userId: user?.id,
+    isManager: user?.role === 'manager',
+    isProvider: user?.role === 'provider',
+    isApproved: user?.approved_by_admin, // Add this
+    userId: user?._id,
     userName: user?.name || user?.fullName,
     userEmail: user?.email,
   };

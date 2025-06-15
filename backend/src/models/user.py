@@ -15,3 +15,4 @@ class User(BaseMongoDBModel):
     password: str
     company_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.PROVIDER)
+    approved_by_admin: bool = Field(default=False)

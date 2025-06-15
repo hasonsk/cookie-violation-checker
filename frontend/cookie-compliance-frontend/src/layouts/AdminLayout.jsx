@@ -1,19 +1,30 @@
+import React from 'react';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/topbars/TopBar';
 import { Outlet } from 'react-router-dom';
-import Footer from '../components/footer/Footer'
+import Footer from '../components/footer/Footer';
+import { Box } from '@mui/material'; // Import Box
 
-export default function AdminLayout() {
+const AdminLayout = () => {
   return (
-    <div className="flex bg-gray-50 min-h-screen" style={{ marginLeft: '300px' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        backgroundColor: 'rgb(249 250 251)', // Equivalent to bg-gray-50
+        minHeight: '100vh',
+        marginLeft: '15px', // Corresponds to Sidebar width
+      }}
+    >
       <Sidebar />
-      <div className="flex-1">
+      <Box sx={{ flexGrow: 1 }}> {/* Equivalent to flex-1 */}
         <Topbar />
-        <main className="p-6">
+        <Box component="main" sx={{ p: 3 }}>
           <Outlet />
           <Footer />
-        </main>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
-}
+};
+
+export default AdminLayout;

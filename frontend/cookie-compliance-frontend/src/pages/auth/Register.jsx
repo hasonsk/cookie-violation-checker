@@ -1,89 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { registerUser, clearError } from '../../store/slices/authSlice';
 import { useAuth } from '../../hooks/useAuth';
+import useFormValidation from '../../hooks/useFormValidation';
+import { AuthAlert, FormGroup, TermsAndPrivacyCheckbox } from '../../components/common/AuthComponents';
+import { Box, Button, Typography, Link } from '@mui/material'; // Import Material UI components
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    agreeToTerms: false
-  });
-  const [errors, setErrors] = useState({});
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error, isAuthenticated } = useAuth();
 
-  // Clear error when component mounts or unmounts
+  const validationRules = {
+    fullName: {
+      required: 'Họ tên là bắt buộc',
+      minLength: {
+        value: 2,
+        message: 'Họ tên phải có ít nhất 2 ký tự',
+      },
+    },
+    email: {
+      required: 'Email là bắt buộc',
+      pattern: {
+        value: /\S+@\S+\.\S+/,
+        message: 'Email không hợp lệ',
+      },
+    },
+    password: {
+      required: 'Mật khẩu là bắt buộc',
+      minLength: {
+        value: 6,
+        message: 'Mật khẩu phải có ít nhất 6 ký tự',
+      },
+      pattern: {
+        value: /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        message: 'Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số',
+      },
+    },
+    confirmPassword: {
+      required: 'Xác nhận mật khẩu là bắt buộc',
+      custom: (value, formData) =>
+        value === formData.password ? '' : 'Mật khẩu xác nhận không khớp',
+    },
+    role: {
+      required: 'Vai trò là bắt buộc',
+    },
+    agreeToTerms: {
+      required: 'Bạn phải đồng ý với điều khoản sử dụng',
+    },
+  };
+
+  const { formData, errors, handleChange, validateForm } = useFormValidation(
+    {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: '',
+      agreeToTerms: false,
+    },
+    validationRules
+  );
+
   useEffect(() => {
     return () => {
       dispatch(clearError());
     };
   }, [dispatch]);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.fullName) {
-      newErrors.fullName = 'Họ tên là bắt buộc';
-    } else if (formData.fullName.length < 2) {
-      newErrors.fullName = 'Họ tên phải có ít nhất 2 ký tự';
-    }
-
-    if (!formData.email) {
-      newErrors.email = 'Email là bắt buộc';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
-    }
-
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'Bạn phải đồng ý với điều khoản sử dụng';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,6 +87,7 @@ const Register = () => {
         name: formData.fullName,
         email: formData.email,
         password: formData.password,
+        role: formData.role,
       }));
 
       if (registerUser.fulfilled.match(result)) {
@@ -104,7 +95,6 @@ const Register = () => {
           state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
         });
       } else {
-        // Error is handled by Redux
         console.log('Register failed:', result.payload);
       }
     } catch (error) {
@@ -113,303 +103,149 @@ const Register = () => {
   };
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h1>Đăng ký</h1>
-          <p>Tạo tài khoản mới để bắt đầu</p>
-        </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+        padding: '20px',
+      }}
+    >
+      <Box
+        sx={{
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+          padding: '40px',
+          width: '100%',
+          maxWidth: '450px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
+      >
+        <Box sx={{ textAlign: 'center', marginBottom: '30px' }}>
+          <Typography variant="h4" component="h1" sx={{ color: '#333', fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+            Đăng ký
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#666', fontSize: '16px', margin: 0 }}>
+            Tạo tài khoản mới để bắt đầu
+          </Typography>
+        </Box>
 
-        <form onSubmit={handleSubmit} className="register-form">
-          {error && (
-            <div className="error-alert">
-              {error}
-            </div>
-          )}
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <AuthAlert type="error" message={error} />
 
-          <div className="form-group">
-            <label htmlFor="fullName">Họ và tên</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              className={errors.fullName ? 'error' : ''}
-              placeholder="Nhập họ và tên của bạn"
-              disabled={loading}
-            />
-            {errors.fullName && <span className="error-text">{errors.fullName}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={errors.email ? 'error' : ''}
-              placeholder="Nhập email của bạn"
-              disabled={loading}
-            />
-            {errors.email && <span className="error-text">{errors.email}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Mật khẩu</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={errors.password ? 'error' : ''}
-              placeholder="Nhập mật khẩu của bạn"
-              disabled={loading}
-            />
-            {errors.password && <span className="error-text">{errors.password}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={errors.confirmPassword ? 'error' : ''}
-              placeholder="Nhập lại mật khẩu của bạn"
-              disabled={loading}
-            />
-            {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
-          </div>
-
-          <div className="checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="agreeToTerms"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-                disabled={loading}
-              />
-              <span className="checkmark"></span>
-              Tôi đồng ý với{' '}
-              <Link to="/terms" className="terms-link">
-                Điều khoản sử dụng
-              </Link>{' '}
-              và{' '}
-              <Link to="/privacy" className="terms-link">
-                Chính sách bảo mật
-              </Link>
-            </label>
-            {errors.agreeToTerms && <span className="error-text">{errors.agreeToTerms}</span>}
-          </div>
-
-          <button
-            type="submit"
-            className="register-button"
+          <FormGroup
+            label="Họ và tên"
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            error={errors.fullName}
+            placeholder="Nhập họ và tên của bạn"
             disabled={loading}
+          />
+
+          <FormGroup
+            label="Email"
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+            placeholder="Nhập email của bạn"
+            disabled={loading}
+          />
+
+          <FormGroup
+            label="Mật khẩu"
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+            placeholder="Nhập mật khẩu của bạn"
+            disabled={loading}
+          />
+
+          <FormGroup
+            label="Xác nhận mật khẩu"
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
+            placeholder="Nhập lại mật khẩu của bạn"
+            disabled={loading}
+          />
+
+          <FormGroup
+            label="Vai trò mong muốn"
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            error={errors.role}
+            disabled={loading}
+            isSelect={true}
+          >
+            <option value="">Chọn vai trò</option>
+            <option value="manager">Quản lý (Manager)</option>
+            <option value="provider">Nhà cung cấp (Provider)</option>
+          </FormGroup>
+
+          <TermsAndPrivacyCheckbox
+            checked={formData.agreeToTerms}
+            onChange={handleChange}
+            error={errors.agreeToTerms}
+            disabled={loading}
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            sx={{
+              background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '14px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover:not(:disabled)': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(118, 75, 162, 0.3)',
+              },
+              '&:disabled': {
+                opacity: 0.6,
+                cursor: 'not-allowed',
+                transform: 'none',
+              },
+            }}
           >
             {loading ? 'Đang đăng ký...' : 'Đăng ký'}
-          </button>
-        </form>
+          </Button>
+        </Box>
 
-        <div className="register-footer">
-          <p>
+        <Box sx={{ textAlign: 'center', marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+          <Typography variant="body2" sx={{ color: '#666', fontSize: '14px', margin: 0 }}>
             Đã có tài khoản?{' '}
-            <Link to="/login" className="login-link">
+            <Link component={RouterLink} to="/login" sx={{ color: '#764ba2', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
               Đăng nhập ngay
             </Link>
-          </p>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .register-container {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-          padding: 20px;
-        }
-
-        .register-card {
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          padding: 40px;
-          width: 100%;
-          max-width: 450px;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        .register-header {
-          text-align: center;
-          margin-bottom: 30px;
-        }
-
-        .register-header h1 {
-          color: #333;
-          font-size: 28px;
-          font-weight: 700;
-          margin-bottom: 8px;
-        }
-
-        .register-header p {
-          color: #666;
-          font-size: 16px;
-          margin: 0;
-        }
-
-        .register-form {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .error-alert {
-          background-color: #fee;
-          color: #c53030;
-          padding: 12px;
-          border-radius: 6px;
-          border: 1px solid #feb2b2;
-          font-size: 14px;
-          text-align: center;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .form-group label {
-          font-weight: 600;
-          color: #333;
-          font-size: 14px;
-        }
-
-        .form-group input {
-          padding: 12px 16px;
-          border: 2px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 16px;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .form-group input:focus {
-          outline: none;
-          border-color: #764ba2;
-          box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-        }
-
-        .form-group input.error {
-          border-color: #e53e3e;
-        }
-
-        .form-group input:disabled {
-          background-color: #f7fafc;
-          cursor: not-allowed;
-        }
-
-        .error-text {
-          color: #e53e3e;
-          font-size: 14px;
-        }
-
-        .checkbox-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .checkbox-label {
-          display: flex;
-          align-items: flex-start;
-          cursor: pointer;
-          font-size: 14px;
-          color: #666;
-          line-height: 1.4;
-        }
-
-        .checkbox-label input {
-          margin-right: 8px;
-          margin-top: 2px;
-        }
-
-        .terms-link {
-          color: #764ba2;
-          text-decoration: none;
-        }
-
-        .terms-link:hover {
-          text-decoration: underline;
-        }
-
-        .register-button {
-          background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-          color: white;
-          border: none;
-          padding: 14px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .register-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(118, 75, 162, 0.3);
-        }
-
-        .register-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .register-footer {
-          text-align: center;
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid #e2e8f0;
-        }
-
-        .register-footer p {
-          color: #666;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .login-link {
-          color: #764ba2;
-          text-decoration: none;
-          font-weight: 600;
-        }
-
-        .login-link:hover {
-          text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
-          .register-card {
-            padding: 30px 20px;
-            max-width: 100%;
-          }
-
-          .register-header h1 {
-            font-size: 24px;
-          }
-        }
-      `}</style>
-    </div>
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

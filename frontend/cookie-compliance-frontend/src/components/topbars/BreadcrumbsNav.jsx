@@ -1,3 +1,5 @@
+import React from 'react'; // Import React
+import PropTypes from 'prop-types'; // Import PropTypes
 import { Breadcrumbs, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +30,16 @@ const BreadcrumbsNav = ({ items }) => {
       )}
     </Breadcrumbs>
   );
+};
+
+BreadcrumbsNav.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      href: PropTypes.string,
+      active: PropTypes.bool,
+    })
+  ).isRequired,
 };
 
 export default BreadcrumbsNav;

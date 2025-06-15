@@ -10,56 +10,80 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { useSelector } from 'react-redux'; // Import useSelector
-import { Globe, BarChart3, Settings, Info, Users } from 'lucide-react'; // Added Users icon
+import { useSelector, useDispatch } from 'react-redux'; // Import useSelector and useDispatch
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { logoutUser } from '../store/slices/authSlice'; // Import logoutUser action
+import { Globe, BarChart3, Settings, Info, Users, LogOut } from 'lucide-react';
+import { USER_ROLES } from '../constants/roles'; // Import USER_ROLES
+
+// Define menu items outside the component to prevent re-creation on every render
+const baseMenuItems = [
+  {
+    label: 'Dashboard',
+    icon: <BarChart3 size={20} />,
+    path: '/dashboard',
+    section: 'GENERAL',
+  },
+  {
+    label: 'Websites',
+    icon: <Globe size={20} />,
+    path: '/websites',
+    section: 'DETAILS',
+  },
+  // {
+  //   label: 'Tools',
+  //   icon: <Settings size={20} />,
+  //   path: '/tools',
+  //   section: 'DETAILS',
+  // },
+  {
+    label: 'About',
+    icon: <Info size={20} />,
+    path: '/about',
+    section: 'ABOUT',
+  },
+];
 
 const Sidebar = () => {
-  const location = useLocation(); // 👈 Lấy path hiện tại
-  const currentUser = useSelector(state => state.auth.user); // Get current user from Redux state
+  const location = useLocation();
+  const currentUser = useSelector(state => state.auth.user);
 
-  const menuItems = [
-    {
-      label: 'Dashboard',
-      icon: <BarChart3 size={20} />,
-      path: '/dashboard',
-      section: 'GENERAL',
-    },
-    {
-      label: 'Websites',
-      icon: <Globe size={20} />,
-      path: '/websites',
-      section: 'DETAILS',
-    },
-    // {
-    //   label: 'Tools',
-    //   icon: <Settings size={20} />,
-    //   path: '/tools',
-    //   section: 'DETAILS',
-    // },
-    {
-      label: 'About',
-      icon: <Info size={20} />,
-      path: '/about',
-      section: 'ABOUT',
-    },
-  ];
+  // Create a mutable copy of menuItems to add admin-specific items
+  const menuItems = [...baseMenuItems];
 
   // Add User Management only if user is admin
-  if (currentUser && currentUser.role === 'admin') {
+  if (currentUser && currentUser.role === USER_ROLES.ADMIN) {
     menuItems.push({
       label: 'User Management',
       icon: <Users size={20} />,
       path: '/admin/users',
       section: 'GENERAL',
     });
+    // Also add Domain Request Management for admin
+    menuItems.push({
+      label: 'Domain Requests',
+      icon: <Settings size={20} />,
+      path: '/admin/domain-requests',
+      section: 'GENERAL',
+    });
   }
 
-  // Nhóm các item theo section
+  // Group items by section
   const groupedItems = menuItems.reduce((acc, item) => {
     if (!acc[item.section]) acc[item.section] = [];
     acc[item.section].push(item);
     return acc;
   }, {});
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      dispatch(logoutUser());
+      navigate('/login');
+    }
+  };
 
   return (
     <Drawer
@@ -112,6 +136,19 @@ const Sidebar = () => {
             ))}
           </List>
         ))}
+        <List>
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{
+              '&:hover': { backgroundColor: '#334155' },
+            }}
+          >
+            <ListItemIcon sx={{ color: 'white', minWidth: 30 }}>
+              <LogOut size={20} />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItemButton>
+        </List>
       </Box>
     </Drawer>
   );

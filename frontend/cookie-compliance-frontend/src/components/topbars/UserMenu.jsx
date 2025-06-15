@@ -1,3 +1,5 @@
+import React from 'react'; // Import React
+import PropTypes from 'prop-types'; // Import PropTypes
 import { Avatar, IconButton, Menu, MenuItem, Divider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,7 +14,7 @@ const UserMenu = ({ userName, anchorEl, setAnchorEl, onLogout }) => {
       <Typography variant="body2" color="text.secondary">
         {userName}
       </Typography>
-      <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
+      <IconButton size="small" onClick={({ currentTarget }) => setAnchorEl(currentTarget)}>
         <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300', color: 'text.primary', fontSize: 14 }}>
           {userName?.[0]?.toUpperCase() || 'J'}
         </Avatar>
@@ -32,6 +34,13 @@ const UserMenu = ({ userName, anchorEl, setAnchorEl, onLogout }) => {
       </Menu>
     </>
   );
+};
+
+UserMenu.propTypes = {
+  userName: PropTypes.string.isRequired,
+  anchorEl: PropTypes.object, // Can be null
+  setAnchorEl: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default UserMenu;

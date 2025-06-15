@@ -31,9 +31,6 @@ class UserRepository(BaseRepository):
         """Request a role change for a user."""
         return await self.update_user(user_id, {"requested_role": requested_role})
 
-    async def approve_account(self, user_id: str) -> int:
-        """Approve a user account."""
-        return await self.update_user(user_id, {"approved_by_admin": True})
 
     async def approve_role_change(self, user_id: str) -> int:
         """Approve a user's role change request."""

@@ -4,7 +4,6 @@ import { Provider, useDispatch } from 'react-redux';
 import { store } from './store';
 import { useAuth } from './hooks/useAuth';
 import { setAuthErrorHandler } from './services/api';
-import { logoutUser } from './store/slices/authSlice';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -16,14 +15,18 @@ import Dashboard from './pages/dashboard/Dashboard';
 import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
 import UserManagement from './pages/users/UserManagement';
+import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement'; // Import DomainRequestManagement
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Loading from './components/Loading';
+import PropTypes from 'prop-types'; // Import PropTypes
 
 import './App.css';
-import RoleRequestStatus from './pages/users/RoleRequestStatus'; // Keep import for now, will clarify its use later
 import UserRoleRequestForm from './pages/users/UserRoleRequestForm'; // Import the new user form
+// import logo from './logo.svg'; // Remove old logo import if it exists and is not used
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -33,7 +36,13 @@ const ProtectedRoute = ({ children }) => {
     return <Loading />;
   }
 
+  // If authenticated but not approved, redirect to a specific pending page or show overlay
+  // For now, we'll let the ApprovalPending component handle the overlay
   return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 // Public Route Component (redirect if authenticated)
@@ -43,10 +52,14 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
 };
 
+PublicRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 function AppContent() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated, loading: authLoading, initialized } = useAuth();
+  const { loading: authLoading, initialized } = useAuth();
 
   useEffect(() => {
     setAuthErrorHandler(() => {
@@ -61,6 +74,7 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
+      <ToastContainer />
       <Routes>
         {/* Public Routes */}
         <Route
@@ -94,6 +108,7 @@ function AppContent() {
           <Route path="websites" element={<WebsitesList />} />
           <Route path="websites/detail/:id" element={<WebsiteDetail />} />
           <Route path="admin/users" element={<UserManagement />} />
+          <Route path="admin/domain-requests" element={<DomainRequestManagement />} /> {/* New route for domain request management */}
           {/* New route for user's editable role request form */}
           <Route path="my-request" element={<UserRoleRequestForm />} />
           {/* If RoleRequestStatus is for admin, it should be under an admin path */}
@@ -104,6 +119,7 @@ function AppContent() {
         {/* Catch all route - might need adjustment based on the conditional rendering */}
         {/* If a 404 page is desired, it should be implemented here. */}
       </Routes>
+      {/* {isAuthenticated && !isApproved && <ApprovalPending />} */}
     </ErrorBoundary>
   );
 }

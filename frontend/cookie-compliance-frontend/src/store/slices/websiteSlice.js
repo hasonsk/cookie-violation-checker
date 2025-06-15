@@ -4,9 +4,9 @@ import { websiteAPI } from '../api/websiteAPI';
 // Async thunks
 export const fetchWebsites = createAsyncThunk(
   'websites/fetchWebsites',
-  async (_, { rejectWithValue }) => {
+  async ({ userId = null, role = null, search = '', skip = 0, limit = 100 } = {}, { rejectWithValue }) => {
     try {
-      const response = await websiteAPI.getAll();
+      const response = await websiteAPI.getAll({ userId, role, search, skip, limit });
       return response;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -95,6 +95,9 @@ const websiteSlice = createSlice({
         state.loading = false;
         state.items = action.payload.data || action.payload;
         state.totalCount = action.payload.total || action.payload.length;
+        // Update last fetch parameters and timestamp
+        state.lastFetchParams = action.meta.arg;
+        state.lastFetchTimestamp = new Date().getTime();
       })
       .addCase(fetchWebsites.rejected, (state, action) => {
         state.loading = false;

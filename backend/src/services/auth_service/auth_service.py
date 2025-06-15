@@ -9,9 +9,9 @@ from src.schemas.auth import (
 from src.schemas.auth import (
     LoginSchema,
     LoginResponseSchema,
-    UserInfo
 )
-from src.models.user import User, UserRole
+from src.schemas.user import User # Import User
+from src.models.user import User as UserModel, UserRole # Alias User from models to avoid conflict
 from src.models.domain_request import DomainRequest
 from src.utils.jwt_handler import create_access_token, decode_access_token
 
@@ -41,38 +41,42 @@ class AuthService:
         new_user = User(
             name=data.name,
             email=data.email,
-            password=hashed
+            password=hashed,
+            role=data.role, # Lưu vai trò người dùng chọn
+            approved_by_admin=False # Luôn đặt là False khi đăng ký
         )
-        await self.user_repo.create_user(new_user)
-        return RegisterResponseSchema(msg="Đăng ký thành công")
+        # Sửa lại user.dict() thành new_user.model_dump() theo Pydantic v2
+        await self.user_repo.create_user(new_user.model_dump())
+        return RegisterResponseSchema(msg="Đăng ký thành công. Vui lòng chờ quản trị viên phê duyệt.")
 
     async def login_user(self, data: LoginSchema) -> LoginResponseSchema:
         user_data = await self.user_repo.get_user_by_email(data.email)
         if not user_data or not pwd_context.verify(data.password, user_data["password"]):
             raise InvalidCredentialsError()
 
-        user = User.parse_obj(user_data)
+        user = UserModel.parse_obj(user_data)
         token = create_access_token({"sub": str(user.id)})
         return LoginResponseSchema(
             token=token,
-            user=UserInfo(
+            user=User(
                 id=str(user.id),
                 name=user.name,
                 email=user.email,
                 role=user.role,
-                approved_by_admin=user.approved_by_admin
+                approved_by_admin=user.approved_by_admin,
+                company_name=user.company_name # Ensure company_name is included
             )
         )
 
-    async def get_current_user(self, user_id: str) -> UserInfo:
+    async def get_current_user(self, user_id: str) -> User:
         user_data = await self.user_repo.get_user_by_id(user_id)
         if not user_data:
             raise UserNotFoundError()
-        user = User.parse_obj(user_data)
-        return UserInfo.parse_obj(user)
+        user = User(**user_data) # Directly create User from user_data
+        return user
 
-    async def approve_account(self, user_id: str, current_user: UserInfo) -> Optional[UserInfo]:
-        if current_user.role not in [UserRole.ADMIN, UserRole.cmp_manager]:
+    async def approve_account(self, user_id: str, current_user: User) -> Optional[User]:
+        if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
             raise UnauthorizedError("Only admins or CMP managers can approve accounts.")
 
         user_data = await self.user_repo.get_user_by_id(user_id)
@@ -81,35 +85,23 @@ class AuthService:
 
         updated_user_data = await self.user_repo.approve_account(user_id)
         if updated_user_data:
-            updated_user = User.parse_obj(updated_user_data)
-            return UserInfo(
-                id=str(updated_user.id),
-                name=updated_user.name,
-                email=updated_user.email,
-                role=updated_user.role,
-                approved_by_admin=updated_user.approved_by_admin
-            )
+            updated_user = User(**updated_user_data) # Directly create User from updated_user_data
+            return updated_user
         return None
 
-    async def approve_role_change(self, user_id: str, current_user: UserInfo) -> Optional[UserInfo]:
-        if current_user.role not in [UserRole.ADMIN, UserRole.cmp_manager]:
+    async def approve_role_change(self, user_id: str, current_user: User) -> Optional[User]:
+        if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
             raise UnauthorizedError("Only admins or CMP managers can approve role changes.")
 
         user_data = await self.user_repo.get_user_by_id(user_id)
         if not user_data:
             raise UserNotFoundError()
-        user = User.parse_obj(user_data)
+        user = UserModel.parse_obj(user_data)
         if not user.requested_role:
             raise ValueError("No role change request pending for this user.")
 
         updated_user_data = await self.user_repo.approve_role_change(user_id)
         if updated_user_data:
-            updated_user = User.parse_obj(updated_user_data)
-            return UserInfo(
-                id=str(updated_user.id),
-                name=updated_user.name,
-                email=updated_user.email,
-                role=updated_user.role,
-                approved_by_admin=updated_user.approved_by_admin
-            )
+            updated_user = User(**updated_user_data) # Directly create User from updated_user_data
+            return updated_user
         return None

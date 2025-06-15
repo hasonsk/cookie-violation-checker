@@ -84,17 +84,17 @@ const UserRoleRequestForm = () => {
     );
   }
 
-  // Only allow unregistered users to see this form
-  if (currentUser?.role !== 'unregistered') {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="warning">
-          You do not have permission to access this page or your role is not 'unregistered'.
-        </Alert>
-        <Typography sx={{ mt: 2 }}>Your current role is: {currentUser?.role}</Typography>
-      </Box>
-    );
-  }
+  // // Only allow unregistered users to see this form
+  // if (currentUser?.role !== 'unregistered') {
+  //   return (
+  //     <Box sx={{ p: 3 }}>
+  //       <Alert severity="warning">
+  //         You do not have permission to access this page or your role is not 'unregistered'.
+  //       </Alert>
+  //       <Typography sx={{ mt: 2 }}>Your current role is: {currentUser?.role}</Typography>
+  //     </Box>
+  //   );
+  // }
 
   return (
     <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>

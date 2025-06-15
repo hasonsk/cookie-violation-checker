@@ -1,46 +1,33 @@
 import React from 'react';
-import { TableCell, TableRow, LinearProgress, Button, Typography, Box } from '@mui/material';
+import { TableCell, TableRow, Button, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux'; // Import useDispatch
+import { deleteWebsite, updateWebsite } from '../../store/slices/websiteSlice'; // Import async thunks
 
 const WebsiteItem = ({ website }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Initialize useDispatch
 
   const handleViewDetail = () => {
     // Navigate to detail page with website data
-    navigate(`/websites/detail/${website.id || website.name}`, {
+    navigate(`/websites/detail/${website._id}`, { // Use website.id
       state: {
         websiteData: website,
-        websiteName: website.name
       }
     });
   };
 
-  const handleEdit = () => {
-    // Handle edit functionality
-    console.log('Edit website:', website);
-  };
-
-  const handleDelete = () => {
-    // Handle delete functionality
-    console.log('Delete website:', website);
-  };
-
   return (
     <TableRow>
-      <TableCell>{website.name}</TableCell>
-      <TableCell>{website.company}</TableCell>
-      <TableCell>{website.city}</TableCell>
+      <TableCell>{website.domain}</TableCell>
+      {/* <TableCell>{website.company_name}</TableCell> */}
       <TableCell>
-        <LinearProgress
-          variant="determinate"
-          value={website.progress}
-          sx={{ minWidth: 100 }}
-        />
-        <Typography variant="caption" sx={{ ml: 1 }}>
-          {website.progress}%
-        </Typography>
+        {website.policy_url ? <div>Có</div> : (
+          <div>Không</div>
+        )}
       </TableCell>
-      <TableCell>{website.created}</TableCell>
+      <TableCell>{website.avg_violations.toFixed(2)}</TableCell>
+      <TableCell>{website.last_checked_at ? new Date(website.last_checked_at).toLocaleDateString() : 'N/A'}</TableCell>
       <TableCell>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
@@ -50,14 +37,6 @@ const WebsiteItem = ({ website }) => {
             onClick={handleViewDetail}
           >
             View Detail
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            color="error"
-            onClick={handleDelete}
-          >
-            Delete
           </Button>
         </Box>
       </TableCell>

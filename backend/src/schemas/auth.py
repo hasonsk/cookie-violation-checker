@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from .user import UserInfo
+from .user import User, UserRole # Import User and UserRole enum
 
 class LoginSchema(BaseModel):
     email: EmailStr
@@ -7,12 +7,13 @@ class LoginSchema(BaseModel):
 
 class LoginResponseSchema(BaseModel):
     token: str
-    user: UserInfo
+    user: User
 
 class RegisterSchema(BaseModel):
     name: str
     email: EmailStr
     password: str
+    role: UserRole # Thêm trường này
 
 class RegisterResponseSchema(BaseModel):
     msg: str

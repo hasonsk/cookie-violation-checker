@@ -9,6 +9,44 @@ export const api = axios.create({
   },
 });
 
+export const websiteAPI = {
+  getAll: async ({ userId = null, role = null, search = '', skip = 0, limit = 100 } = {}) => {
+    const params = {
+      skip,
+      limit,
+      ...(search && { search }),
+      // userId and role are passed from the frontend, but the backend might handle filtering
+      // based on the authenticated user. Including them here for completeness if the backend
+      // expects them explicitly for certain roles/scenarios.
+      ...(userId && { user_id: userId }), // Assuming backend expects user_id
+      ...(role && { role }),
+    };
+    return await api.get('/websites', { params });
+  },
+  getById: async (id) => {
+    return await api.get(`/websites/${id}`);
+  },
+  delete: async (id) => {
+    return await api.delete(`/websites/${id}`);
+  },
+};
+
+export const domainRequestAPI = {
+  create: async (requestData) => {
+    return await api.post('/domain-requests', requestData);
+  },
+  getAll: async (status) => {
+    const params = status ? { status } : {};
+    return await api.get('/domain-requests', { params });
+  },
+  approve: async (id) => {
+    return await api.patch(`/domain-requests/${id}/approve`);
+  },
+  reject: async (id, feedback) => {
+    return await api.patch(`/domain-requests/${id}/reject`, { feedback });
+  },
+};
+
 let onAuthErrorCallback = null;
 
 export const setAuthErrorHandler = (callback) => {

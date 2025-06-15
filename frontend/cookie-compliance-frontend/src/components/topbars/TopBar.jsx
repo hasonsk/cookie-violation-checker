@@ -1,54 +1,18 @@
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../../store/slices/authSlice';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import BreadcrumbsNav from './BreadcrumbsNav';
 import UserMenu from './UserMenu';
 import LogoutDialog from './LogoutDialog';
+import useBreadcrumbs from '../../hooks/useBreadcrumbs'; // Import the new hook
+import useLogout from '../../hooks/useLogout'; // Import the new hook
 
 const TopBar = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [breadcrumbItems, setBreadcrumbItems] = useState([]);
 
-  useEffect(() => {
-    const pathnames = location.pathname.split('/').filter(Boolean);
-    if (pathnames.length === 0 || (pathnames.length === 1 && pathnames[0] === 'websites')) {
-      setBreadcrumbItems([
-        { label: 'Dashboard', href: '/' },
-        { label: 'Danh sách website', href: '/websites', active: true }
-      ]);
-    } else if (pathnames[0] === 'websites' && pathnames[1] === 'detail') {
-      const websiteName = location.state?.websiteName || pathnames[2] || 'Unknown';
-      setBreadcrumbItems([
-        { label: 'Dashboard', href: '/' },
-        { label: 'Danh sách website', href: '/websites' },
-        { label: `Chi tiết: ${websiteName}`, active: true }
-      ]);
-    }
-  }, [location]);
-
-  const handleLogout = () => setLogoutDialogOpen(true);
-
-  const confirmLogout = async () => {
-    try {
-      const result = await dispatch(logoutUser());
-      if (result.success) {
-        localStorage.removeItem('token');
-        setLogoutDialogOpen(false);
-        navigate('/login');
-      } else {
-        console.error('Logout failed:', result.message);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const breadcrumbItems = useBreadcrumbs(); // Use the custom hook for breadcrumbs
+  const { logoutDialogOpen, setLogoutDialogOpen, handleLogout, confirmLogout } = useLogout(); // Use the custom hook for logout
 
   return (
     <>

@@ -7,7 +7,6 @@ export const fetchUsers = createAsyncThunk(
   async (filters, { rejectWithValue }) => {
     try {
       const users = await userAPI.getUsers(filters);
-      console.log(users);
       return users;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -43,5 +42,4 @@ const userManagementSlice = createSlice({
 });
 
 // Export actions and reducer
-export const { } = userManagementSlice.actions; // Export any non-async actions
 export default userManagementSlice.reducer;

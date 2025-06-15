@@ -11,16 +11,6 @@ export const websiteAPI = {
     return response.data;
   },
 
-  create: async (websiteData) => {
-    const response = await api.post('/websites', websiteData);
-    return response.data;
-  },
-
-  update: async (id, websiteData) => {
-    const response = await api.put(`/websites/${id}`, websiteData);
-    return response.data;
-  },
-
   delete: async (id) => {
     const response = await api.delete(`/websites/${id}`);
     return response.data;

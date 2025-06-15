@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import {
   TrendingUp,
 } from 'lucide-react';
@@ -22,5 +23,14 @@ const MetricCard = ({ title, value, icon: Icon, trend = null, bgColor = "bg-blue
     </div>
   </div>
 );
+
+MetricCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  icon: PropTypes.elementType.isRequired, // Icon should be a React component type
+  trend: PropTypes.string,
+  bgColor: PropTypes.string,
+  iconColor: PropTypes.string,
+};
 
 export default MetricCard;

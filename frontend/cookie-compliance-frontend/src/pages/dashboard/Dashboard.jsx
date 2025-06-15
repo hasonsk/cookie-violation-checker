@@ -1,55 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import {
   Grid, Paper, Typography, Box, useTheme,
   Tabs, Tab, CircularProgress, Alert, List, ListItem, ListItemText, Divider
 } from '@mui/material';
 import { websiteAPI } from '../../store/api/websiteAPI'; // Import the API
-
-// Re-using MetricCard if it's intended for summary metrics
-const MetricCard = ({ title, value, icon: Icon, bgColor, iconColor }) => {
-  return (
-    <Paper
-      elevation={2}
-      sx={{
-        p: 3,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        borderRadius: 2,
-        bgcolor: bgColor || 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        transition: '0.3s',
-        '&:hover': {
-          boxShadow: 6,
-        },
-      }}
-    >
-      <Box
-        sx={{
-          bgcolor: iconColor?.includes('red') ? '#fee2e2' : iconColor?.includes('green') ? '#dcfce7' : 'grey.100',
-          p: 2,
-          borderRadius: '50%',
-          color: iconColor || 'text.primary',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 1,
-        }}
-      >
-        {Icon && <Icon size={24} />}
-      </Box>
-      <Box>
-        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-          {title}
-        </Typography>
-        <Typography variant="h5" sx={{ fontWeight: '600' }}>
-          {value}
-        </Typography>
-      </Box>
-    </Paper>
-  );
-};
+import MetricCard from '../../components/MetricCard'; // Import the shared MetricCard component
 
 // TabPanel component
 function TabPanel(props) {
@@ -79,7 +35,13 @@ function a11yProps(index) {
   };
 }
 
-export default function Dashboard() {
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+};
+
+const Dashboard = () => { // Converted to arrow function
   const theme = useTheme();
   const [analysisResult, setAnalysisResult] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -332,4 +294,6 @@ export default function Dashboard() {
       </Paper>
     </Box>
   );
-}
+};
+
+export default Dashboard;
