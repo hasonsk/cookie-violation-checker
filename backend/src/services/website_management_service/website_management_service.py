@@ -3,9 +3,15 @@ from datetime import datetime
 from bson import ObjectId
 from loguru import logger
 
+from typing import List, Optional
+from datetime import datetime
+from bson import ObjectId
+from loguru import logger
+
 from src.repositories.website_repository import WebsiteRepository
 from src.repositories.violation_repository import ViolationRepository
 from src.schemas.website import WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, WebsiteResponseSchema
+from src.schemas.violation import ComplianceAnalysisResponse # Import ComplianceAnalysisResponse
 from src.models.website import Website
 from src.models.user import UserRole # Import UserRole
 from src.exceptions.custom_exceptions import NotFoundException, BadRequestException # Import custom exceptions
@@ -70,10 +76,10 @@ class WebsiteManagementService:
         return response_list
 
     async def get_website_by_id(self, website_id: str) -> WebsiteResponseSchema:
-        website_data = await self.website_repo.get_by_id(website_id)
+        website_data = await self.website_repo.get_website_by_id(website_id)
         if not website_data:
             raise NotFoundException(f"Website with ID {website_id} not found")
-        return WebsiteResponseSchema.model_validate(website_data)
+        return WebsiteResponseSchema.model_validate(website_data.model_dump())
 
     async def create_website(self, website_data: WebsiteCreateSchema, user_id: str) -> WebsiteResponseSchema:
         # Check if a website with the same domain already exists for this provider
@@ -87,7 +93,7 @@ class WebsiteManagementService:
         website_dict["updated_at"] = datetime.utcnow()
 
         new_website_id = await self.website_repo.create(website_dict)
-        created_website = await self.website_repo.get_by_id(new_website_id)
+        created_website = await self.website_repo.get_website_by_id(new_website_id)
         return WebsiteResponseSchema.model_validate(created_website)
 
     async def update_website(self, website_id: str, website_data: WebsiteUpdateSchema) -> WebsiteResponseSchema:
@@ -98,7 +104,7 @@ class WebsiteManagementService:
         if updated_count == 0:
             raise NotFoundException(f"Website with ID {website_id} not found")
 
-        updated_website = await self.website_repo.get_by_id(website_id)
+        updated_website = await self.website_repo.get_website_by_id(website_id)
         return WebsiteResponseSchema.model_validate(updated_website)
 
     async def delete_website(self, website_id: str):
@@ -106,30 +112,56 @@ class WebsiteManagementService:
         if deleted_count == 0:
             raise NotFoundException(f"Website with ID {website_id} not found")
 
-    async def get_website_analytics(self, website_id: str) -> dict:
+    async def get_website_analytics(self, website_id: str) -> List[ComplianceAnalysisResponse]:
         """
-        Retrieves analytics data for a specific website.
-        This is a placeholder implementation.
+        Retrieves the latest compliance analysis data for a specific website.
         """
-        # Example: Fetch website details and some violation summary
-        website = await self.website_repo.get_by_id(website_id)
+        # Get website info
+        website = await self.website_repo.get_website_by_id(website_id)
         if not website:
             raise NotFoundException(f"Website with ID {website_id} not found")
 
-        violations = await self.violation_repo.get_violations_by_website_id(website_id)
+        # Lấy danh sách các vi phạm liên quan đến domain của website
+        all_violations_data = await self.violation_repo.get_violations_by_website(str(website.domain))
+        logger.warning(f"Found {len(all_violations_data)} violations for website {website.domain}")
 
-        # Basic analytics: total violations, last check date, etc.
-        total_violations_count = sum(len(v.violations) for v in violations)
-        # last_checked_at = max([v.checked_at for v in violations]) if violations else None
+        if not all_violations_data:
+            return [ComplianceAnalysisResponse(
+                website_url=str(website.domain),
+                analysis_date=datetime.utcnow(),
+                total_issues=0,
+                compliance_score=100.0,
+                issues=[],
+                statistics={
+                    "by_severity": {"Critical": 0, "High": 0, "Medium": 0, "Low": 0},
+                    "by_category": {"Specific": 0, "General": 0, "Undefined": 0}
+                },
+                summary={
+                    "critical_issues": 0, "high_issues": 0, "undeclared_cookies": [],
+                    "declared_cookies": [], "declared_third_parties": [],
+                    "third_party_cookies": [], "long_term_cookies": []
+                },
+                policy_cookies_count=0,
+                actual_cookies_count=0,
+                details={
+                    "declared_cookie_details": [], "undeclared_cookie_details": [],
+                    "declared_violating_cookies": [], "declared_compliant_cookies": [],
+                    "third_party_domains": {"actual": [], "declared": []},
+                    "declared_by_third_party": {}, "expired_cookies_vs_declared": []
+                },
+                policy_url=website.policy_url or ""
+            )]
 
-        return {
-            "website_id": website_id,
-            "domain": str(website.domain),
-            "total_violations_found": total_violations_count,
-            "number_of_checks": len(violations),
-            # "last_checked_at": last_checked_at.isoformat() if last_checked_at else None,
-            "analytics_data_placeholder": "More detailed analytics would go here."
-        }
+        # Chuyển từng violation thành ComplianceAnalysisResponse
+        results: List[ComplianceAnalysisResponse] = []
+
+        for violation in all_violations_data:
+            violation["website_url"] = violation.get("website_url", str(website.domain))
+            violation["policy_url"] = str(website.policy_url or "")
+            violation["analysis_date"] = violation.get("analyzed_at", datetime.utcnow())
+            results.append(ComplianceAnalysisResponse.model_validate(violation))
+
+        return results
 
     async def trigger_website_analysis(self, payload: dict) -> dict:
         """

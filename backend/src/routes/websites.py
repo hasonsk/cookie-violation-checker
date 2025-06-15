@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List, Optional
 from src.schemas.website import WebsiteResponseSchema, WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema
 from src.schemas.user import User
+from src.schemas.violation import ComplianceAnalysisResponse # Import ComplianceAnalysisResponse
 from src.services.website_management_service.website_management_service import WebsiteManagementService
 from src.dependencies.dependencies import get_website_management_service, get_current_user
 from src.models.user import UserRole
@@ -45,7 +46,7 @@ async def get_website_by_id(
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
-@router.get("/websites/{website_id}/analytics", response_model=dict) # Adjust response model as needed
+@router.get("/websites/{website_id}/analytics", response_model=List[ComplianceAnalysisResponse]) # Adjust response model as needed
 async def get_website_analytics(
     website_id: str,
     current_user: User = Depends(get_current_user),
@@ -96,36 +97,3 @@ async def update_website(
         return await website_management_service.update_website(website_id, website)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-@router.delete("/websites/{website_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_website(
-    website_id: str,
-    current_user: User = Depends(get_current_user),
-    website_management_service: WebsiteManagementService = Depends(get_website_management_service)
-):
-    """
-    Xóa một website.
-    """
-    try:
-        await website_management_service.delete_website(website_id)
-        return {"message": "Website deleted successfully"}
-    except NotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-@router.post("/analyze", response_model=dict, status_code=status.HTTP_202_ACCEPTED) # Adjust response model as needed
-async def analyze_website(
-    payload: dict, # Define a proper schema for payload if needed
-    current_user: User = Depends(get_current_user),
-    website_management_service: WebsiteManagementService = Depends(get_website_management_service)
-):
-    """
-    Kích hoạt phân tích một website.
-    """
-    try:
-        # This method needs to be implemented in WebsiteManagementService
-        analysis_result = await website_management_service.trigger_website_analysis(payload)
-        return {"message": "Website analysis initiated successfully", "result": analysis_result}
-    except BadRequestException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An error occurred: {str(e)}")

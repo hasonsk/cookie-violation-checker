@@ -1,26 +1,21 @@
 import React from 'react';
 import { TableCell, TableRow, Button, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux'; // Import useDispatch
-import { deleteWebsite, updateWebsite } from '../../store/slices/websiteSlice'; // Import async thunks
+import { useDispatch } from 'react-redux';
+import { websiteAPI  } from '../../services/api';
+import { deleteWebsite, updateWebsite, fetchWebsiteAnalytics } from '../../store/slices/websiteSlice';
 
 const WebsiteItem = ({ website }) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // Initialize useDispatch
+  const dispatch = useDispatch();
 
-  const handleViewDetail = () => {
-    // Navigate to detail page with website data
-    navigate(`/websites/detail/${website._id}`, { // Use website.id
-      state: {
-        websiteData: website,
-      }
-    });
+  const handleViewDetail = async () => {
+      navigate(`/websites/detail/${website._id}`);
   };
 
   return (
     <TableRow>
       <TableCell>{website.domain}</TableCell>
-      {/* <TableCell>{website.company_name}</TableCell> */}
       <TableCell>
         {website.policy_url ? <div>Có</div> : (
           <div>Không</div>

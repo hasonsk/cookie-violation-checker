@@ -26,6 +26,9 @@ export const websiteAPI = {
   getById: async (id) => {
     return await api.get(`/websites/${id}`);
   },
+  getAnalyticsById: async (id) => {
+    return await api.get(`/websites/${id}/analytics`);
+  },
   delete: async (id) => {
     return await api.delete(`/websites/${id}`);
   },

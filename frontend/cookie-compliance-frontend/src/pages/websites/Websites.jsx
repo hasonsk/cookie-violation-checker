@@ -37,7 +37,7 @@ const WebsiteList = () => {
     }
   }, [authLoading, userId, user?.role, getWebsites]);
 
-  // 🔎 Filter client-side mỗi khi người dùng gõ
+  console.log('Websites:', websites);
   useEffect(() => {
     if (searchInput.trim() === '') {
       setFilteredWebsites(websites);

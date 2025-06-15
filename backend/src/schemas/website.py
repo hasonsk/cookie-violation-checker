@@ -37,6 +37,12 @@ class WebsiteUpdateSchema(BaseModel):
     cookies: Optional[List[PolicyCookie]] = Field(None)
 
 class WebsiteResponseSchema(WebsiteBase):
+    model_config = ConfigDict(
+        populate_by_name=True,  # Allow both alias and field name
+        arbitrary_types_allowed=True,
+        from_attributes=True,
+        str_strip_whitespace=True
+    )
     id: PyObjectId = Field(alias="_id")
 
 class WebsiteListResponseSchema(BaseModel):

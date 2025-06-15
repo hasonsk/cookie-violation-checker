@@ -83,6 +83,63 @@ const websiteSlice = createSlice({
     clearCurrentWebsite: (state) => {
       state.currentWebsite = null;
     },
+    setWebsiteAnalytics: (state, action) => {
+      const analyticsData = action.payload;
+      if (analyticsData && analyticsData.length > 0) {
+        let totalComplianceScore = 0;
+        let totalIssues = 0;
+        const severityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+        const categoryCounts = { Specific: 0, General: 0, Undefined: 0 };
+        let totalCriticalIssues = 0;
+        let totalHighIssues = 0;
+
+        analyticsData.forEach(data => {
+          totalComplianceScore += data.compliance_score;
+          totalIssues += data.total_issues;
+
+          for (const severity in data.statistics.by_severity) {
+            severityCounts[severity] += data.statistics.by_severity[severity];
+          }
+          for (const category in data.statistics.by_category) {
+            categoryCounts[category] += data.statistics.by_category[category];
+          }
+          totalCriticalIssues += data.summary.critical_issues;
+          totalHighIssues += data.summary.high_issues;
+        });
+
+        const numDataPoints = analyticsData.length;
+
+        const avgSeverityCounts = {};
+        for (const severity in severityCounts) {
+          avgSeverityCounts[severity] = severityCounts[severity] / numDataPoints;
+        }
+
+        const avgCategoryCounts = {};
+        for (const category in categoryCounts) {
+          avgCategoryCounts[category] = categoryCounts[category] / numDataPoints;
+        }
+
+        state.currentWebsite = {
+          ...state.currentWebsite,
+          compliance_score: totalComplianceScore / numDataPoints,
+          total_issues: totalIssues / numDataPoints,
+          issues: analyticsData[0].issues, // Taking from the first data point as averaging objects/arrays is not straightforward
+          statistics: {
+            by_severity: avgSeverityCounts,
+            by_category: avgCategoryCounts,
+          },
+          summary: {
+            ...analyticsData[0].summary, // Keep existing summary fields
+            critical_issues: totalCriticalIssues / numDataPoints,
+            high_issues: totalHighIssues / numDataPoints,
+          },
+          policy_cookies_count: analyticsData[0].policy_cookies_count,
+          actual_cookies_count: analyticsData[0].actual_cookies_count,
+          details: analyticsData[0].details,
+          policy_url: analyticsData[0].policy_url,
+        };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -151,5 +208,5 @@ const websiteSlice = createSlice({
   },
 });
 
-export const { clearError, setCurrentPage, clearCurrentWebsite } = websiteSlice.actions;
+export const { clearError, setCurrentPage, clearCurrentWebsite, setWebsiteAnalytics } = websiteSlice.actions;
 export default websiteSlice.reducer;
