@@ -58,17 +58,19 @@ def get_violation_repository() -> ViolationRepository:
 def get_llm_provider() -> ILLMProvider:
     return CookieExtractorFactory.create_provider(
         provider_type=LLMProviderType.GEMINI,
+        # provider_type=LLMProviderType.LLAMA,
         api_key=settings.external.GEMINI_API_KEY,
+        # api_endpoint=settings.external.LLAMA_API_ENDPOINT,
         model=settings.external.GEMINI_MODEL,
-        temperature=settings.external.GEMINI_TEMPERATURE,
-        max_tokens=settings.external.GEMINI_MAX_OUTPUT_TOKENS
+        temperature=settings.external.TEMPERATURE,
+        max_tokens=settings.external.MAX_OUTPUT_TOKENS
     )
 
 def get_content_analyzer() -> ContentAnalyzer:
     return ContentAnalyzer()
 
 def get_prompt_builder() -> PromptBuilder:
-    return PromptBuilder()
+    return PromptBuilder(system_prompt=settings.llm.SYSTEM_PROMPT_GEMINI)
 
 def get_response_processor() -> LLMResponseProcessor:
     return LLMResponseProcessor()
@@ -150,11 +152,6 @@ def get_website_management_service(
     violation_repo: ViolationRepository = Depends(get_violation_repository)
 ) -> WebsiteManagementService:
     return WebsiteManagementService(website_repo, violation_repo)
-
-# def get_reporter_service(
-#     violation_repo: ViolationRepository = Depends(get_violation_repository)
-# ) -> ReporterService:
-#     return ReporterService(violation_repo)
 
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),

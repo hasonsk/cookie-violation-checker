@@ -40,8 +40,10 @@ class ExternalServicesSettings(BaseSettings):
     HF_TOKEN: str = ""
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-1.5-flash"
-    GEMINI_TEMPERATURE: float = 0.7 # Default value, can be adjusted
-    GEMINI_MAX_OUTPUT_TOKENS: int = 8192 # Default value, can be adjusted
+    TEMPERATURE: float = 0.7 # Default value, can be adjusted
+    MAX_OUTPUT_TOKENS: int = 8192 # Default value, can be adjusted
+
+    LLAMA_API_ENDPOINT: str = "https://a199-34-143-141-251.ngrok-free.app/generate"
 
 class InternalAPISettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
@@ -86,16 +88,45 @@ class PolicyDiscoverySettings(BaseSettings):
     FOOTER_SELECTORS: list[str] = ['footer', '.footer', '.site-footer']
     NAV_SELECTORS: list[str] = ['nav', '.navigation', '.nav', '.menu']
 
-class RedisSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
-
-    REDIS_URL: str = "redis://localhost:6379"
-    REDIS_TTL: int = 3600 # seconds
-
 class LLMSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    SYSTEM_PROMPT_LLAMA: str = """
+You are a specialized AI system for extracting and structuring cookie declarations from website privacy policies and cookie notices.
+Your task is to analyze the provided text and extract cookie information, then classify cookies into three distinct categories based on their specificity level.
 
-    SYSTEM_PROMPT: str = """
+CLASSIFICATION RULES
+- specific: Clearly named cookies (e.g., _ga, _fbp) with at least one of the following attributes: purpose, retention, third_party, or behavior. These cookies must be technically identifiable.
+- general: Cookie categories without specific names (e.g., "Marketing Cookies", "Necessary Cookies") described at a category level without exact technical details.
+- undefined: Cookie mentions that are vague or ambiguous (e.g., "Cookies are used to improve our services") and cannot be classified into specific or general.
+
+OUTPUT FORMAT: TYPE|name|attribute|value
+
+ATTRIBUTES:
+• purpose (required): Strictly Necessary, Functionality, Analytical, Targeting/Advertising/Marketing, Performance, Social Sharing
+• retention: Exact timeframes ("2 years", "session", "persistent")
+• third_party: Provider names ("Google, Facebook") or "First Party"
+• behavior: How cookie works/stored/used
+
+RULES:
+- One attribute per line
+- Skip undefined attributes
+- No extra text outside output
+
+EXAMPLE:
+Input: "Cookie _ga lasts 2 years for Google Analytics traffic analysis. Marketing cookies show ads.Some cookies improve user experience."
+
+Output:
+specific|_ga|purpose|Analytical
+specific|_ga|retention|2 years
+specific|_ga|third_party|Google Analytics
+specific|_ga|behavior|analyzes website traffic
+
+general|Marketing cookies|purpose|Targeting/Advertising/Marketing
+general|Marketing cookies|behavior|show personalized advertisements
+
+undefined|cookies|behavior|improve user experience
+"""
+    SYSTEM_PROMPT_GEMINI: str = """
 ROLE: You are a highly specialized AI for extracting and classifying cookie declarations from website cookie policies. Your task is to analyze the input text and return structured data as a valid JSON object following the exact schema below.
 
 Your Capabilities
@@ -212,8 +243,7 @@ class Settings:
         self.internal_api = InternalAPISettings()
         self.crawler = CrawlerSettings()
         self.policy_discovery = PolicyDiscoverySettings()
-        self.redis = RedisSettings()
-        self.llm = LLMSettings() # Add LLMSettings
+        self.llm = LLMSettings()
         self.violation = ViolationSettings()
 
 settings = Settings()

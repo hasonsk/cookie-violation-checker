@@ -8,35 +8,18 @@ logger = logging.getLogger(__name__)
 
 
 class LlamaLLMProvider(ILLMProvider):
-    """
-    Llama LLM Provider - Functional Cohesion
-    Single responsibility: Handle communication with Llama API
-    """
-
     def __init__(
         self,
         api_endpoint: str,
-        model: str,
+        # model: str,
         api_key: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 1000,
         timeout: int = 30,
         **kwargs
     ):
-        """
-        Initialize Llama provider
-
-        Args:
-            api_endpoint: API endpoint URL
-            model: Model name (e.g., 'llama-3.1-8b')
-            api_key: Optional API key for authentication
-            temperature: Generation temperature (0.0 to 1.0)
-            max_tokens: Maximum output tokens
-            timeout: Request timeout in seconds
-            **kwargs: Additional configuration parameters
-        """
         self.api_endpoint = api_endpoint
-        self.model = model
+        # self.model = model
         self.api_key = api_key
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -50,8 +33,8 @@ class LlamaLLMProvider(ILLMProvider):
         if not self.api_endpoint:
             raise ValueError("API endpoint is required for Llama provider")
 
-        if not self.model:
-            raise ValueError("Model name is required for Llama provider")
+        # if not self.model:
+        #     raise ValueError("Model name is required for Llama provider")
 
         if not (0.0 <= self.temperature <= 1.0):
             raise ValueError("Temperature must be between 0.0 and 1.0")
@@ -74,7 +57,6 @@ class LlamaLLMProvider(ILLMProvider):
             Generated content as string
         """
         try:
-            # Prepare headers
             headers = {"Content-Type": "application/json"}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
@@ -86,11 +68,10 @@ class LlamaLLMProvider(ILLMProvider):
 
             # Prepare payload
             payload = {
-                "model": self.model,
+                # "model": self.model,
                 "prompt": prompt,
-                "max_tokens": max_tokens,
+                "max_length": max_tokens,
                 "temperature": temperature,
-                "stream": False,
                 **{k: v for k, v in kwargs.items() if k not in ['temperature', 'max_tokens', 'timeout']}
             }
 
@@ -99,7 +80,7 @@ class LlamaLLMProvider(ILLMProvider):
                 async with session.post(
                     self.api_endpoint,
                     json=payload,
-                    headers=headers
+                    # headers=headers
                 ) as response:
 
                     if response.status != 200:
@@ -108,18 +89,9 @@ class LlamaLLMProvider(ILLMProvider):
 
                     result = await response.json()
 
-                    # Extract text from response (format may vary by API)
-                    if "choices" in result and result["choices"]:
-                        generated_text = result["choices"][0].get("text", "")
-                    elif "response" in result:
-                        generated_text = result["response"]
-                    elif "output" in result:
-                        generated_text = result["output"]
-                    else:
-                        logger.warning(f"Unexpected Llama API response format: {result}")
-                        generated_text = ""
+                    logger.debug(f"Llama API response received: {result}")
 
-                    final_result = generated_text or '{"is_specific": 0, "cookies": []}'
+                    final_result = result.get('generated_text', '{"is_specific": 0, "cookies": []}') or '{"is_specific": 0, "cookies": []}'
                     logger.debug(f"Llama API response received: {len(final_result)} characters")
                     return final_result
 
@@ -139,7 +111,6 @@ class LlamaLLMProvider(ILLMProvider):
         """Get current model configuration"""
         return {
             "provider": self.get_provider_name(),
-            "model": self.model,
             "api_endpoint": self.api_endpoint,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,

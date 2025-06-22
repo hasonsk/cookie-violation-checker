@@ -1,8 +1,4 @@
-from typing import List, Optional
-from datetime import datetime
-from bson import ObjectId
-from loguru import logger
-
+import asyncio
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
@@ -11,10 +7,10 @@ from loguru import logger
 from src.repositories.website_repository import WebsiteRepository
 from src.repositories.violation_repository import ViolationRepository
 from src.schemas.website import WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, WebsiteResponseSchema
-from src.schemas.violation import ComplianceAnalysisResponse # Import ComplianceAnalysisResponse
+from src.schemas.violation import ComplianceAnalysisResponse
 from src.models.website import Website
-from src.models.user import UserRole # Import UserRole
-from src.exceptions.custom_exceptions import NotFoundException, BadRequestException # Import custom exceptions
+from src.models.user import UserRole
+from src.exceptions.custom_exceptions import NotFoundException, BadRequestException
 
 class WebsiteManagementService:
     def __init__(self, website_repo: WebsiteRepository, violation_repo: ViolationRepository):
@@ -36,9 +32,6 @@ class WebsiteManagementService:
         for website_data in websites_data:
             website = Website.model_validate(website_data) # Use model_validate
 
-            # Calculate check_count and last_checked_at (assuming 'violations' collection stores check history)
-            # This is a simplified approach. A more robust solution might involve a dedicated 'checks' collection
-            # or more complex aggregation queries.
             violations = await self.violation_repo.get_violations_by_website(str(website.domain))
             # logger.debug(f"Found {(violations)} violations for website {website.domain}")
             check_count = len(violations) # Count unique check dates
@@ -168,12 +161,6 @@ class WebsiteManagementService:
         Triggers the analysis process for a website.
         This is a placeholder implementation.
         """
-        # In a real application, this would likely involve:
-        # 1. Validating the payload (e.g., website_id or domain)
-        # 2. Enqueuing a task to a background worker (e.g., Celery, Redis Queue)
-        # 3. Returning a task ID or confirmation
-
-        # For now, just acknowledge the request
         website_id = payload.get("website_id")
         domain = payload.get("domain")
 
@@ -181,8 +168,6 @@ class WebsiteManagementService:
             raise BadRequestException("Either 'website_id' or 'domain' must be provided in the payload.")
 
         print(f"Initiating analysis for website_id: {website_id}, domain: {domain}")
-        # Simulate some work
-        import asyncio
         await asyncio.sleep(1)
 
         return {"status": "Analysis initiated", "website_id": website_id, "domain": domain}

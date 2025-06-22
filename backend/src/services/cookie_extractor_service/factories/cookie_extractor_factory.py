@@ -58,12 +58,12 @@ class CookieExtractorFactory:
     @staticmethod
     def _create_llama_provider(**config) -> LlamaLLMProvider:
         """Create Llama provider with validation"""
-        required_fields = ["api_endpoint", "model"]
+        required_fields = ["api_endpoint"]
         CookieExtractorFactory._validate_required_config(required_fields, config, "Llama")
 
         return LlamaLLMProvider(
             api_endpoint=config["api_endpoint"],
-            model=config["model"],
+            # model=config["model"],
             api_key=config.get("api_key"),
             temperature=config.get("temperature", 0.7),
             max_tokens=config.get("max_tokens", 1000),
@@ -104,7 +104,8 @@ class CookieExtractorFactory:
                 "defaults": {"temperature": 0.7, "max_tokens": 1000}
             },
             LLMProviderType.LLAMA: {
-                "required": ["api_endpoint", "model"],
+                # "required": ["api_endpoint", "model"],
+                "required": ["api_endpoint"],
                 "optional": ["api_key", "temperature", "max_tokens", "timeout"],
                 "defaults": {"temperature": 0.7, "max_tokens": 1000, "timeout": 30}
             },

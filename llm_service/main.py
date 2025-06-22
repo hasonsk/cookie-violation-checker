@@ -156,7 +156,6 @@ async def generate_text(request: GenerateRequest):
     try:
         logger.info(f"Generating text for prompt: {request.prompt[:50]}...")
 
-        # Prepare the prompt - you might want to adjust this based on your fine-tuning format
         formatted_prompt = request.prompt
 
         # Tokenize input
@@ -192,13 +191,12 @@ async def generate_text(request: GenerateRequest):
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         # Remove the original prompt from generated text
-        if generated_text.startswith(request.prompt):
-            generated_text = generated_text[len(request.prompt):].strip()
+        result_text = generated_text.split("assistant")[-1].strip()
 
         logger.info("Text generation completed")
 
         return GenerateResponse(
-            generated_text=generated_text,
+            generated_text=result_text,
             model_info="sonhask/Meta-Llama-3.1-8B-Instruct-bnb-4bit_v6 (Unsloth fine-tuned)"
         )
 

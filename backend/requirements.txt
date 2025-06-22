@@ -24,6 +24,5 @@ pytest-mock
 python-dotenv
 pydantic[email]
 pydantic-settings
-redis
 requests
 uvicorn

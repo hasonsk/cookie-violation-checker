@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from loguru import logger
+
 class ILLMProvider(ABC):
     """Abstract base class cho các LLM providers"""
 

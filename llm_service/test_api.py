@@ -1,9 +1,9 @@
 import requests
 
-public_url="https://7133-34-143-233-30.ngrok-free.app/"
+public_url="https://a199-34-143-141-251.ngrok-free.app/"
 # Health check
-response = requests.get(f"{public_url}/health")
-print(response.json())
+# response = requests.get(f"{public_url}/health")
+# print(response.json())
 
 SYSTEM_PROMPT = """You are a specialized AI system for extracting and structuring cookie declarations from website privacy policies and cookie notices.
 Your task is to analyze the provided text and extract cookie information, then classify cookies into three distinct categories based on their specificity level.
@@ -49,9 +49,7 @@ This context is provided to extract:
 Extract cookie attribute using the EAV format above.
 <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
-policy_content = """
-
-These cookies are necessary for our website to function properly and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms or where they’re essential to provide you with a service you have requested. You cannot opt-out of these cookies. You can set your browser to block or alert you about these cookies, but if you do, some parts of the site will not then work. These cookies do not store any personally identifiable information.
+policy_content = """These cookies are necessary for our website to function properly and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms or where they’re essential to provide you with a service you have requested. You cannot opt-out of these cookies. You can set your browser to block or alert you about these cookies, but if you do, some parts of the site will not then work. These cookies do not store any personally identifiable information.
 
 Domain	Cookies	Used as
 clc.stackoverflow.com	__cflb	1st Party
