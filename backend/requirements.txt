@@ -11,6 +11,7 @@ isort
 jwt
 kafka-python
 langdetect
+loguru
 lxml
 motor
 passlib

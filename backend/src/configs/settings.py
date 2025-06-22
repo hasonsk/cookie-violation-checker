@@ -243,7 +243,7 @@ class Settings:
         self.internal_api = InternalAPISettings()
         self.crawler = CrawlerSettings()
         self.policy_discovery = PolicyDiscoverySettings()
-        self.llm = LLMSettings()
+        self.llm = LLMSettings() # Add LLMSettings
         self.violation = ViolationSettings()
 
 settings = Settings()
