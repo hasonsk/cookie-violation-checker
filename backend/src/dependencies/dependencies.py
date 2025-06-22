@@ -3,11 +3,6 @@ from playwright.async_api import async_playwright
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.utils.cache_utils import CacheManager
-from src.utils.dom_parser_utils import DOMParserService
-from src.utils.table_extractor import TableExtractor
-from src.utils.text_processing import TextProcessor
-from src.utils.translation_utils import TranslationManager
 from src.repositories.user_repository import UserRepository
 from src.repositories.domain_request_repository import DomainRequestRepository
 from src.repositories.policy_content_repository import PolicyContentRepository

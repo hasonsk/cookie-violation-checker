@@ -10,7 +10,6 @@ from src.services.policy_crawler_service.interfaces.content_extractor_interface 
 from src.services.policy_crawler_service.interfaces.search_provider_interface import ISearchProvider
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
 from src.services.policy_crawler_service.search_providers.bing_search import BingSearch
-from src.utils.cache_utils import CacheManager
 from src.utils.dom_parser_utils import DOMParserService
 from src.utils.table_extractor import TableExtractor
 from src.utils.text_processing import TextProcessor
@@ -49,12 +48,11 @@ class CrawlerFactory:
         text_processor = TextProcessor(executor)
         translation_manager = TranslationManager(executor)
         table_extractor = TableExtractor()
-        cache_manager = CacheManager()
 
         # Create specialized components
         discovery_service = LinkDiscovery(dom_parser, content_extractor)
         content_processor = ContentProcessor(text_processor, translation_manager, table_extractor)
-        storage_repository = PolicyStorageService(policy_content_repo, cache_manager)
+        storage_repository = PolicyStorageService(policy_content_repo)
 
         return PolicyCrawlerService(
             discovery_service=discovery_service,

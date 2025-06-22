@@ -71,34 +71,38 @@ class ComplianceComparator:
         declared_by_third_party_stats = _group_declared_by_third_party(declared_policy_cookies)
         retention_violations = _detect_retention_violations(policy_cookies, actual_cookies)
 
-        result =  {
+        # Loại bỏ các cookie có name trùng nhau
+        unique_actual_cookies = {c.name: c for c in actual_cookies}.values()
+        unique_policy_cookies = {pc.cookie_name: pc for pc in policy_cookies}.values()
+
+        result = {
             "total_issues": len(all_issues),
             "issues": [i.dict() for i in sorted(all_issues, key=lambda x: x.severity)],
             "statistics": {
                 "by_severity": severity_counts,
                 "by_category": category_counts,
             },
-            "policy_cookies_count": len(policy_cookies),
-            "actual_cookies_count": len(actual_cookies),
+            "policy_cookies_count": len(unique_policy_cookies),
+            "actual_cookies_count": len(unique_actual_cookies),
             "compliance_score": compliance_score,
             "summary": {
                 "critical_issues": severity_counts.get("Critical", 0),
                 "high_issues": severity_counts.get("High", 0),
                 "undeclared_cookies": [c.name for c in undeclared_actual_cookies],
-                "declared_cookies": [pc.cookie_name for pc in declared_policy_cookies],
-                "declared_third_parties": list(set(tp for pc in declared_policy_cookies for tp in pc.declared_third_parties if tp)),
+                "declared_cookies": [pc.cookie_name for pc in unique_policy_cookies],
+                "declared_third_parties": list(set(tp for pc in unique_policy_cookies for tp in pc.declared_third_parties if tp)),
                 "third_party_cookies": [c.name for c in third_party_actual_cookies],
                 "long_term_cookies": [c.name for c in long_term_actual_cookies],
             },
             "details": {
-                "declared_cookie_details": [pc.dict() for pc in declared_policy_cookies],
+                "declared_cookie_details": [pc.dict() for pc in unique_policy_cookies],
                 "undeclared_cookie_details": [c.dict() for c in undeclared_actual_cookies],
-                "realtime_cookie_details": [ac.dict() for ac in actual_cookies if ac.name not in declared_names],
+                "realtime_cookie_details": [ac.dict() for ac in unique_actual_cookies],
                 "declared_violating_cookies": [c.dict() for c in declared_violating_cookies],
                 "declared_compliant_cookies": [pc.dict() for pc in declared_compliant_cookies],
                 "third_party_domains": {
                     "actual": list({c.domain for c in third_party_actual_cookies}),
-                    "declared": list({tp for pc in declared_policy_cookies for tp in pc.declared_third_parties if tp})
+                    "declared": list({tp for pc in unique_policy_cookies for tp in pc.declared_third_parties if tp})
                 },
                 "declared_by_third_party": declared_by_third_party_stats,
                 "expired_cookies_vs_declared": retention_violations,
