@@ -9,3 +9,8 @@ pyngrok==7.0.0
 requests==2.31.0
 numpy==1.24.3
 sentencepiece==0.1.99
+unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+peft==0.6.2
+huggingface_hub==0.19.4
+tqdm==4.66.1
+pandas==2.0.3
