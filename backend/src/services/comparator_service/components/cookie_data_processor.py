@@ -1,5 +1,5 @@
-from typing import Dict, List
-from datetime import datetime
+from typing import Dict, List, Union
+# Removed datetime import as it's no longer needed for conversion here
 
 from src.schemas.cookie import PolicyCookie, ActualCookie
 from src.services.comparator_service.interfaces.cookie_data_processor import ICookieDataProcessor
@@ -14,32 +14,17 @@ class CookieDataProcessor(ICookieDataProcessor):
 
         return [PolicyCookie(**cookie_data) for cookie_data in policy_json["cookies"]]
 
-    def process_actual_cookies(self, cookies: List[Dict]) -> List[ActualCookie]:
-        """Chỉ làm 1 việc: chuyển đổi cookie data thành ActualCookie objects"""
-        processed_cookies = []
+    def process_actual_cookies(self, cookies: List[ActualCookie]) -> List[ActualCookie]:
+        """
+        Chuẩn hóa expirationDate của các ActualCookie objects.
+        """
+        for cookie in cookies:
+            if cookie.expirationDate == 'Session':
+                cookie.expirationDate = None
+            # If it's already None or a string, keep it as is.
+            # The schema now expects Optional[str], so no datetime conversion here.
+        return cookies
 
-        for cookie_data in cookies:
-            # Chuẩn hóa expirationDate
-            cookie_data = self._normalize_expiration_date(cookie_data)
-            processed_cookies.append(ActualCookie(**cookie_data))
-
-        return processed_cookies
-
-    def _normalize_expiration_date(self, cookie_data: Dict) -> Dict:
-        """Helper method chỉ để chuẩn hóa expiration date"""
-        if 'expirationDate' not in cookie_data:
-            return cookie_data
-
-        exp_date = cookie_data['expirationDate']
-
-        if exp_date == 'Session' or exp_date is None:
-            cookie_data['expirationDate'] = None
-        elif not isinstance(exp_date, (datetime, type(None))):
-            try:
-                cookie_data['expirationDate'] = datetime.fromisoformat(
-                    exp_date.replace('Z', '+00:00')
-                )
-            except (ValueError, TypeError):
-                cookie_data['expirationDate'] = None
-
-        return cookie_data
+    # _normalize_expiration_date is no longer needed as a separate method
+    # since the logic is now directly in process_actual_cookies.
+    # Removing it to keep the code clean.

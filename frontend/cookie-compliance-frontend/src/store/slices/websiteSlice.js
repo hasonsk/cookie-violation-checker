@@ -92,10 +92,17 @@ const websiteSlice = createSlice({
         const categoryCounts = { Specific: 0, General: 0, Undefined: 0 };
         let totalCriticalIssues = 0;
         let totalHighIssues = 0;
+        const thirdPartyDomainCounts = {};
 
         analyticsData.forEach(data => {
           totalComplianceScore += data.compliance_score;
           totalIssues += data.total_issues;
+
+          if (data.details && Array.isArray(data.details.third_party_domain)) {
+            data.details.third_party_domain.forEach(domain => {
+              thirdPartyDomainCounts[domain] = (thirdPartyDomainCounts[domain] || 0) + 1;
+            });
+          }
 
           for (const severity in data.statistics.by_severity) {
             severityCounts[severity] += data.statistics.by_severity[severity];
@@ -137,6 +144,7 @@ const websiteSlice = createSlice({
           actual_cookies_count: analyticsData[0].actual_cookies_count,
           details: analyticsData[0].details,
           policy_url: analyticsData[0].policy_url,
+          third_party_domains_chart_data: thirdPartyDomainCounts,
         };
       }
     },

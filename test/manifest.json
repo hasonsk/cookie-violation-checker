@@ -1,9 +1,0 @@
-{
-  "manifest_version": 3,
-  "name": "Cookie Violation Checker",
-  "version": "1.0",
-  "permissions": ["cookies", "storage", "tabs"],
-  "background": {
-    "service_worker": "background.js"
-  }
-}

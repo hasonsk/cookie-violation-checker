@@ -4,24 +4,26 @@ import Topbar from '../components/topbars/TopBar';
 import { Outlet } from 'react-router-dom';
 import Footer from '../components/footer/Footer';
 import { Box } from '@mui/material'; // Import Box
+import './AdminLayout.css'; // Import the CSS file
 
 const AdminLayout = () => {
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        backgroundColor: 'rgb(249 250 251)', // Equivalent to bg-gray-50
-        minHeight: '100vh',
-        marginLeft: '15px', // Corresponds to Sidebar width
-      }}
-    >
-      <Sidebar />
-      <Box sx={{ flexGrow: 1 }}> {/* Equivalent to flex-1 */}
+    <Box className="admin-layout-grid">
+      <Box className="admin-layout-logo">
+        {/* Placeholder for Logo */}
+        Logo
+      </Box>
+      <Box className="admin-layout-header">
         <Topbar />
-        <Box component="main" sx={{ p: 3 }}>
-          <Outlet />
-          <Footer />
-        </Box>
+      </Box>
+      <Box className="admin-layout-sidebar">
+        <Sidebar />
+      </Box>
+      <Box component="main" className="admin-layout-content">
+        <Outlet />
+      </Box>
+      <Box className="admin-layout-footer">
+        <Footer />
       </Box>
     </Box>
   );

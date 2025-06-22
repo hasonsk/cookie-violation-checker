@@ -24,7 +24,7 @@ const UserTable = ({ filteredUsers, loading, error, handleOpenApprovalPanel, han
   }
 
   if (error) {
-    return <Alert severity="error">Error loading users: {error.message}</Alert>;
+    return <Alert severity="error" sx={{ mb: 2 }}>Error loading users: {error.message}</Alert>;
   }
 
   return (
@@ -62,6 +62,7 @@ const UserTable = ({ filteredUsers, loading, error, handleOpenApprovalPanel, han
                     {user.domain_requests.map(dr => dr.domain).join(', ')}
                     <Button
                       variant="outlined"
+                      color="primary" // Explicitly set color to primary
                       size="small"
                       sx={{ ml: 1 }}
                       onClick={() => handleOpenDomainDetails(user.domain_requests)}
@@ -77,6 +78,7 @@ const UserTable = ({ filteredUsers, loading, error, handleOpenApprovalPanel, han
                 {user.requested_role && !user.approved_by_admin && (
                   <Button
                     variant="outlined"
+                    color="primary" // Explicitly set color to primary
                     size="small"
                     onClick={() => handleOpenApprovalPanel(user)}
                   >

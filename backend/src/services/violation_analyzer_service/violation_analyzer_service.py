@@ -62,7 +62,7 @@ class ViolationAnalyzerService:
                 }
 
                 # Cập nhật thời gian quét
-                await self.website_repository.update_website(found_website.id, {"last_scanned_at": datetime.utcnow()})
+                await self.website_repository.update_website(found_website.id, {"last_checked_at": datetime.utcnow()})
                 logger.info("phase_skipped", phases=["policy_extraction", "feature_extraction"], request_id=request_id)
 
             else:
@@ -98,8 +98,9 @@ class ViolationAnalyzerService:
                 # Lưu website mới vào DB để tái sử dụng lần sau
                 new_website_data = {
                     "domain": root_url,
+                    "company_name": None, # Added missing field
                     "provider_id": None, # Hoặc provider_id nếu có
-                    "last_scanned_at": datetime.utcnow(),
+                    "last_checked_at": datetime.utcnow(),
                     "policy_url": policy_url,
                     "detected_language": policy_content.detected_language if policy_content else None,
                     "original_content": policy_content.original_content if policy_content else "",
@@ -114,7 +115,7 @@ class ViolationAnalyzerService:
 
             # === BƯỚC PHÂN TÍCH VÀ LƯU TRỮ (DÙNG CHUNG CHO CẢ 2 LUỒNG) ===
             logger.info("phase_started", phase="compliance_check", request_id=request_id)
-            result = await self.comparator_service.analyze_website_compliance(
+            result = await self.comparator_service.compare_compliance(
                 payload.website_url,
                 payload.cookies,
                 policy_features,

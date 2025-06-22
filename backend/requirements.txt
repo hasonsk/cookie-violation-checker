@@ -19,6 +19,8 @@ pydantic
 pymongo
 pytest
 pytest-cov
+pytest-asyncio
+pytest-mock
 python-dotenv
 pydantic[email]
 pydantic-settings

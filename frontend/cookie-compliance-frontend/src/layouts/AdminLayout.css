@@ -1,0 +1,40 @@
+.admin-layout-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr; /* Sidebar width and content area */
+  grid-template-rows: auto 1fr auto; /* Header, Content, Footer */
+  grid-template-areas:
+    "logo header"
+    "sidebar content"
+    "sidebar footer";
+  min-height: 100vh;
+  background-color: rgb(249 250 251); /* bg-gray-50 */
+}
+
+.admin-layout-logo {
+  grid-area: logo;
+  background-color: #f0f0f0; /* Placeholder color */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-layout-header {
+  grid-area: header;
+  /* Styles for the Topbar */
+}
+
+.admin-layout-sidebar {
+  grid-area: sidebar;
+  /* Styles for the Sidebar */
+}
+
+.admin-layout-content {
+  grid-area: content;
+  padding: 24px; /* p:3 in MUI */
+  overflow-y: auto; /* Enable scrolling for content if it overflows */
+}
+
+.admin-layout-footer {
+  grid-area: footer;
+}

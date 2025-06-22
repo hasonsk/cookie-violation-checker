@@ -11,12 +11,12 @@ class DomainRequestStatus(str, Enum):
     REJECTED = "rejected"
 
 class DomainRequest(BaseMongoDBModel):
-    user_id: PyObjectId = Field(..., description="ID of the user making the request")
+    requester_id: PyObjectId = Field(..., )
     company_name: str = Field(..., description="Name of the company/organization")
     domains: List[str] = Field(default_factory=list, description="List of domains to register")
     purpose: str = Field(..., description="Purpose and reason for domain registration")
     status: DomainRequestStatus = Field(default=DomainRequestStatus.PENDING, description="Current status of the request")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp when the request was created")
-    approved_by: Optional[PyObjectId] = Field(default=None, description="ID of the admin who approved the request")
-    approved_at: Optional[datetime] = Field(default=None, description="Timestamp when the request was approved")
-    feedback: Optional[str] = Field(default=None, description="Feedback from the admin if the request was rejected")
+    requester_id: PyObjectId = Field(..., description="ID of the user making the request")
+    processed_by: Optional[PyObjectId] = Field(default=None)
+    processed_at: Optional[datetime] = Field(default=None)
+    feedback: str = Field(default=None, description="Feedback from the admin if the request was rejected")

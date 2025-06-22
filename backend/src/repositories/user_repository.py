@@ -27,21 +27,6 @@ class UserRepository(BaseRepository):
             update_data
         )
 
-    async def request_role_change(self, user_id: str, requested_role: str) -> int:
-        """Request a role change for a user."""
-        return await self.update_user(user_id, {"requested_role": requested_role})
-
-
-    async def approve_role_change(self, user_id: str) -> int:
-        """Approve a user's role change request."""
-        user = await self.get_user_by_id(user_id)
-        if user and user.get("requested_role"):
-            modified_count = await self.update_user(user_id, {
-                "role": user["requested_role"],
-                "requested_role": None
-            })
-            return modified_count
-        return 0
 
     async def get_all_users(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Get all users, optionally filtered."""

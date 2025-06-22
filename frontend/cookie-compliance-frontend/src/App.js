@@ -4,6 +4,8 @@ import { Provider, useDispatch } from 'react-redux';
 import { store } from './store';
 import { useAuth } from './hooks/useAuth';
 import { setAuthErrorHandler } from './services/api';
+import { ThemeProvider } from '@mui/material/styles'; // Import ThemeProvider
+import theme from './theme'; // Import your custom theme
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -19,13 +21,11 @@ import DomainRequestManagement from './pages/domain_requests/DomainRequestManage
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import Loading from './components/Loading';
 import PropTypes from 'prop-types'; // Import PropTypes
 
 import './App.css';
-import UserRoleRequestForm from './pages/users/UserRoleRequestForm'; // Import the new user form
+import Profile from './pages/profile/Profile'; // Import the new Profile page
 // import logo from './logo.svg'; // Remove old logo import if it exists and is not used
 
 // Protected Route Component
@@ -74,7 +74,6 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
-      <ToastContainer />
       <Routes>
         {/* Public Routes */}
         <Route
@@ -109,11 +108,7 @@ function AppContent() {
           <Route path="websites/detail/:id" element={<WebsiteDetail />} />
           <Route path="admin/users" element={<UserManagement />} />
           <Route path="admin/domain-requests" element={<DomainRequestManagement />} /> {/* New route for domain request management */}
-          {/* New route for user's editable role request form */}
-          <Route path="my-request" element={<UserRoleRequestForm />} />
-          {/* If RoleRequestStatus is for admin, it should be under an admin path */}
-          {/* For now, I'll leave it imported but not routed, assuming its previous /* route was incorrect */}
-          {/* If it's meant to be a general status page for all users, it needs a specific route */}
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Catch all route - might need adjustment based on the conditional rendering */}
@@ -127,9 +122,11 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <Router>
-        <AppContent />
-      </Router>
+      <ThemeProvider theme={theme}> {/* Apply the custom theme */}
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
     </Provider>
   );
 }

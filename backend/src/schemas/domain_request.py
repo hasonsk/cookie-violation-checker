@@ -1,8 +1,9 @@
+from src.models.base import PyObjectId
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from src.models.base import PyObjectId # Import PyObjectId
+from bson import ObjectId
 
 class DomainRequestStatus(str, Enum):
     PENDING = "pending"
@@ -15,13 +16,12 @@ class DomainRequestCreateSchema(BaseModel):
     purpose: str = Field(..., min_length=10, max_length=1000)
 
 class DomainRequestResponseSchema(BaseModel):
-    id: PyObjectId = Field(..., alias="_id") # Use PyObjectId
-    user_id: PyObjectId # Use PyObjectId
+    id: PyObjectId = Field(..., alias="_id")
+    user_id: PyObjectId
     company_name: str
     domains: List[str]
     purpose: str
     status: DomainRequestStatus = DomainRequestStatus.PENDING
-    created_at: datetime
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
 
@@ -29,7 +29,7 @@ class DomainRequestResponseSchema(BaseModel):
         populate_by_name = True
         json_encoders = {
             datetime: lambda dt: dt.isoformat() + "Z",
-    PyObjectId: str # Re-added for explicit serialization
+    ObjectId: str # Re-added for explicit serialization
 }
 
 class DomainRequestPublic(BaseModel):

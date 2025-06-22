@@ -13,7 +13,7 @@ class ComparatorService:
         self.analyzer = ViolationAnalyzer()
         self.violation_repository = violation_repository
 
-    async def analyze_website_compliance(
+    async def compare_compliance(
         self,
         website_url: str,
         cookies: List[Dict],  # Nhận danh sách cookie thô (list of dicts) từ request

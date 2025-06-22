@@ -3,13 +3,6 @@ from enum import Enum
 
 from src.models.base import BaseMongoDBModel, PyObjectId
 
-class DiscoveryMethod(str, Enum):
-    LINK_TAG = "link_tag"
-    FOOTER_LINK = "footer_link"
-    NAVIGATION_LINK = "navigation_link"
-    BING_SEARCH = "bing_search"
-    SITEMAP = "sitemap"
-
 class PolicyContent(BaseMongoDBModel):
     """Data structure for policy content"""
     website_url: str

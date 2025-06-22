@@ -28,7 +28,7 @@ class ComparatorService:
         self._violation_persister = violation_persister
         self._domain_extractor = domain_extractor
 
-    async def analyze_website_compliance(
+    async def compare_compliance(
         self,
         website_url: str,
         cookies: List[Dict],

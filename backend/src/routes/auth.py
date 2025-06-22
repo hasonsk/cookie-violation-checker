@@ -35,11 +35,3 @@ async def approve_account(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     return await auth_service.approve_account(user_id, current_user)
-
-@router.patch("/users/{user_id}/approve-role", response_model=User)
-async def approve_role_change(
-    user_id: str = Path(...),
-    current_user: User = Depends(get_current_admin_or_manager),
-    auth_service: AuthService = Depends(get_auth_service)
-):
-    return await auth_service.approve_role_change(user_id, current_user)

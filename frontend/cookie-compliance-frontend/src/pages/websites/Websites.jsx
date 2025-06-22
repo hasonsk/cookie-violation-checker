@@ -11,6 +11,8 @@ import {
   TablePagination,
   Paper,
   Typography,
+  FormControlLabel, // Added
+  Checkbox, // Added
 } from '@mui/material';
 import WebsiteItem from './WebsiteItem';
 import DomainRequestForm from './DomainRequestForm';
@@ -22,6 +24,7 @@ const WebsiteList = () => {
   const { websites, loading: websitesLoading, getWebsites } = useWebsites();
 
   const [searchInput, setSearchInput] = useState('');
+  const [hasPolicyFilter, setHasPolicyFilter] = useState(false); // New state for policy filter
   const [filteredWebsites, setFilteredWebsites] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -37,19 +40,25 @@ const WebsiteList = () => {
     }
   }, [authLoading, userId, user?.role, getWebsites]);
 
-  console.log('Websites:', websites);
   useEffect(() => {
-    if (searchInput.trim() === '') {
-      setFilteredWebsites(websites);
-    } else {
+    let currentFiltered = websites;
+
+    // Apply search filter
+    if (searchInput.trim() !== '') {
       const lowerSearch = searchInput.toLowerCase();
-      const filtered = websites.filter(w =>
+      currentFiltered = currentFiltered.filter(w =>
         w.domain.toLowerCase().includes(lowerSearch)
       );
-      setFilteredWebsites(filtered);
     }
+
+    // Apply has policy filter
+    if (hasPolicyFilter) {
+      currentFiltered = currentFiltered.filter(w => w.policy_url);
+    }
+
+    setFilteredWebsites(currentFiltered);
     setPage(0); // Reset page khi lọc mới
-  }, [searchInput, websites]);
+  }, [searchInput, hasPolicyFilter, websites]); // Added hasPolicyFilter to dependencies
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -58,6 +67,10 @@ const WebsiteList = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handlePolicyFilterChange = (event) => {
+    setHasPolicyFilter(event.target.checked);
   };
 
   if (authLoading || websitesLoading) {
@@ -84,7 +97,7 @@ const WebsiteList = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}> {/* Adjusted for filters */}
         <TextField
           label="Tìm kiếm website..."
           variant="outlined"
@@ -93,18 +106,29 @@ const WebsiteList = () => {
           onChange={(e) => setSearchInput(e.target.value)}
           sx={{ maxWidth: 400 }}
         />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={hasPolicyFilter}
+              onChange={handlePolicyFilterChange}
+              name="hasPolicy"
+              color="primary"
+            />
+          }
+          label="Có chính sách cookie"
+        />
       </Box>
 
       <Paper elevation={1}>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'grey.50' }}>
-                <TableCell sx={{ fontWeight: 'bold' }}>Domain</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Chính sách cookie</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Vi phạm trung bình</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Lần kiểm tra cuối</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
+              <TableRow>
+                <TableCell>Domain</TableCell>
+                <TableCell>Chính sách cookie</TableCell>
+                {/* Removed "Vi phạm trung bình" column */}
+                <TableCell>Lần kiểm tra cuối</TableCell>
+                <TableCell>Hành động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

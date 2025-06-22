@@ -15,9 +15,6 @@ class DomainRequestRepository(BaseRepository):
         requests_data = await self.collection.find(query).skip(skip).limit(limit).to_list(length=limit)
         return [DomainRequest(**data) for data in requests_data]
 
-    async def get_request_by_user_id(self, user_id: str) -> Optional[Dict[str, Any]]:
-        return await self.find_one({"user_id": ObjectId(user_id), "status": "pending"})
-
     async def get_domain_requests_by_user_id(self, user_id: str) -> List[Dict[str, Any]]:
         """
         Retrieves all domain requests for a given user ID.

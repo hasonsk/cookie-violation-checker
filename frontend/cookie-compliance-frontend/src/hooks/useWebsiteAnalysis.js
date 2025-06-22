@@ -25,7 +25,6 @@ const useWebsiteAnalysis = (websiteUrl, cookies) => {
         setAnalysisResult(result);
       } catch (err) {
         setError(err);
-        console.error("Error fetching analysis result:", err);
       } finally {
         setLoading(false);
       }

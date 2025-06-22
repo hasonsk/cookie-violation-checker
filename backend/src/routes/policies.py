@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 
-from src.schemas.policy import PolicyRequest, BulkPolicyRequest, PolicyExtractResponse, PolicyExtractRequest
+from src.schemas.policy import PolicyExtractResponse, PolicyExtractRequest
 
 from src.services.policy_crawler_service.policy_crawler_service import PolicyCrawlerService
 from src.services.policy_crawler_service.crawler_factory import CrawlerFactory

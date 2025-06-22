@@ -74,34 +74,3 @@ class AuthService:
             raise UserNotFoundError()
         user = User(**user_data) # Directly create User from user_data
         return user
-
-    async def approve_account(self, user_id: str, current_user: User) -> Optional[User]:
-        if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
-            raise UnauthorizedError("Only admins or CMP managers can approve accounts.")
-
-        user_data = await self.user_repo.get_user_by_id(user_id)
-        if not user_data:
-            raise UserNotFoundError()
-
-        updated_user_data = await self.user_repo.approve_account(user_id)
-        if updated_user_data:
-            updated_user = User(**updated_user_data) # Directly create User from updated_user_data
-            return updated_user
-        return None
-
-    async def approve_role_change(self, user_id: str, current_user: User) -> Optional[User]:
-        if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
-            raise UnauthorizedError("Only admins or CMP managers can approve role changes.")
-
-        user_data = await self.user_repo.get_user_by_id(user_id)
-        if not user_data:
-            raise UserNotFoundError()
-        user = UserModel.parse_obj(user_data)
-        if not user.requested_role:
-            raise ValueError("No role change request pending for this user.")
-
-        updated_user_data = await self.user_repo.approve_role_change(user_id)
-        if updated_user_data:
-            updated_user = User(**updated_user_data) # Directly create User from updated_user_data
-            return updated_user
-        return None

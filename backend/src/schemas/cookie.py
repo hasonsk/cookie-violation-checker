@@ -3,10 +3,6 @@ from typing import List, Optional
 from enum import Enum
 from datetime import datetime
 
-class CookieSubmissionRequest(BaseModel):
-    website_url: str
-    cookies: List[dict]
-
 class CookieType(str, Enum):
     SPECIFIC = "SPECIFIC"
     GENERAL = "GENERAL"
@@ -27,8 +23,12 @@ class ActualCookie(BaseModel):
     name: str
     value: str
     domain: str
-    expirationDate: Optional[datetime]
+    expirationDate: Optional[str]
     secure: bool
     httpOnly: bool
     sameSite: Optional[str]
     path: Optional[str] = "/"
+
+class CookieSubmissionRequest(BaseModel):
+    website_url: str
+    cookies: List[ActualCookie]

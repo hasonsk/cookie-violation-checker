@@ -25,8 +25,8 @@ class DatabaseSettings(BaseSettings):
     MONGODB_PWD: str
     MONGODB_USER: str = "username"
     MONGODB_CLUSTER: str = "cluster.mongodb.net"
-    MONGODB_CONNECT_TIMEOUT_MS: int = 10000
-    MONGODB_SOCKET_TIMEOUT_MS: int = 10000
+    MONGODB_CONNECT_TIMEOUT_MS: int = 30000
+    MONGODB_SOCKET_TIMEOUT_MS: int = 30000
 
     def get_mongodb_uri(self) -> str:
         """Generate MongoDB connection URI"""

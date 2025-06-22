@@ -15,7 +15,7 @@ const useBreadcrumbs = () => {
     } else if (pathnames[0] === 'websites' && pathnames[1] === 'detail') {
       // This assumes location.state.websiteName is passed when navigating to website detail
       // If not, it will fall back to the path segment or 'Unknown'
-      const websiteName = location.state?.websiteName || pathnames[2] || 'Unknown';
+      const websiteName = location.state?.domain || pathnames[2] || 'Unknown';
       setBreadcrumbItems([
         { label: 'Dashboard', href: '/' },
         { label: 'Danh sách website', href: '/websites' },

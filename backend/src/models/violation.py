@@ -5,7 +5,7 @@ from datetime import datetime
 from src.models.base import BaseMongoDBModel, PyObjectId
 from src.models.cookie import PolicyCookie, ActualCookie, PolicyCookieList
 
-class ComplianceIssue(BaseModel): # Not a MongoDB model
+class ComplianceIssue(BaseModel):
     issue_id: int
     category: str
     type: str
@@ -27,8 +27,6 @@ class ComplianceSummary(BaseModel):
     long_term_cookies: List[str]
 
 class ComplianceAnalysisResult(BaseMongoDBModel):
-    website_id: PyObjectId
-    feature_id: PyObjectId
     analyzed_at: datetime
     total_issues: int
     compliance_score: float

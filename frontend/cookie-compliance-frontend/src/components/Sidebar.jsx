@@ -22,25 +22,16 @@ const baseMenuItems = [
     label: 'Dashboard',
     icon: <BarChart3 size={20} />,
     path: '/dashboard',
-    section: 'GENERAL',
   },
   {
     label: 'Websites',
     icon: <Globe size={20} />,
     path: '/websites',
-    section: 'DETAILS',
   },
-  // {
-  //   label: 'Tools',
-  //   icon: <Settings size={20} />,
-  //   path: '/tools',
-  //   section: 'DETAILS',
-  // },
   {
     label: 'About',
     icon: <Info size={20} />,
     path: '/about',
-    section: 'ABOUT',
   },
 ];
 
@@ -51,29 +42,16 @@ const Sidebar = () => {
   // Create a mutable copy of menuItems to add admin-specific items
   const menuItems = [...baseMenuItems];
 
-  // Add User Management only if user is admin
+  // Add Domain Request Management only if user is admin
   if (currentUser && currentUser.role === USER_ROLES.ADMIN) {
-    menuItems.push({
-      label: 'User Management',
-      icon: <Users size={20} />,
-      path: '/admin/users',
-      section: 'GENERAL',
-    });
-    // Also add Domain Request Management for admin
     menuItems.push({
       label: 'Domain Requests',
       icon: <Settings size={20} />,
       path: '/admin/domain-requests',
-      section: 'GENERAL',
     });
   }
 
-  // Group items by section
-  const groupedItems = menuItems.reduce((acc, item) => {
-    if (!acc[item.section]) acc[item.section] = [];
-    acc[item.section].push(item);
-    return acc;
-  }, {});
+  const flatMenuItems = menuItems;
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -94,7 +72,7 @@ const Sidebar = () => {
         [`& .MuiDrawer-paper`]: {
           width: 240,
           boxSizing: 'border-box',
-          backgroundColor: '#1e293b',
+          bgcolor: 'secondary.main', // Use theme's secondary color
           color: 'white',
         },
       }}
@@ -105,42 +83,31 @@ const Sidebar = () => {
         </Typography>
       </Toolbar>
       <Box sx={{ overflow: 'auto' }}>
-        {Object.entries(groupedItems).map(([section, items]) => (
-          <List
-            key={section}
-            subheader={
-              <Typography sx={{ pl: 2, mt: 2, fontSize: 12, color: '#94a3b8' }}>
-                {section}
-              </Typography>
-            }
-          >
-            {items.map((item) => (
-              <ListItemButton
-                key={item.path}
-                component={Link}
-                to={item.path}
-                selected={location.pathname === item.path} // 👈 Active check
-                sx={{
-                  '&:hover': { backgroundColor: '#334155' },
-                  '&.Mui-selected': {
-                    backgroundColor: '#475569',
-                    '&:hover': { backgroundColor: '#475569' },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: 'white', minWidth: 30 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            ))}
-          </List>
-        ))}
         <List>
+          {flatMenuItems.map((item) => (
+            <ListItemButton
+              key={item.path}
+              component={Link}
+              to={item.path}
+              selected={location.pathname === item.path} // 👈 Active check
+              sx={{
+                '&:hover': { bgcolor: 'secondary.dark' }, // Use a darker shade of secondary for hover
+                '&.Mui-selected': {
+                  bgcolor: 'secondary.light', // Use a lighter shade of secondary for selected
+                  '&:hover': { bgcolor: 'secondary.light' },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'white', minWidth: 30 }}> {/* Keep icon white for contrast */}
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          ))}
           <ListItemButton
             onClick={handleLogout}
             sx={{
-              '&:hover': { backgroundColor: '#334155' },
+              '&:hover': { bgcolor: 'secondary.dark' }, // Use a darker shade of secondary for hover
             }}
           >
             <ListItemIcon sx={{ color: 'white', minWidth: 30 }}>

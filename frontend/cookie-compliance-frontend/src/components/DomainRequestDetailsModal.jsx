@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'; // Import PropTypes
-import { Modal, Box, Typography, Button, TextField, Chip } from '@mui/material';
-import { toast } from 'react-toastify';
+import { Modal, Box, Typography, Button, TextField, Chip, Alert } from '@mui/material';
+// import { toast } from 'react-toastify'; // Removing react-toastify
 import { DOMAIN_STATUS } from '../constants/domainStatus'; // Import DOMAIN_STATUS
 
 const style = {
@@ -33,11 +33,14 @@ const DomainRequestDetailsModal = ({ open, onClose, request, onApprove, onReject
     setShowFeedbackInput(true);
   };
 
+  const [feedbackError, setFeedbackError] = useState('');
+
   const handleConfirmReject = () => {
     if (!feedback.trim()) {
-      toast.error("Vui lòng nhập lý do từ chối.");
+      setFeedbackError("Vui lòng nhập lý do từ chối.");
       return;
     }
+    setFeedbackError(''); // Clear error if feedback is provided
     onReject(request.id, feedback);
   };
 
@@ -103,20 +106,33 @@ const StatusChip = ({ status }) => {
         </>
       ) : (
         <Box sx={{ width: '100%' }}>
+          {feedbackError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {feedbackError}
+            </Alert>
+          )}
           <TextField
             fullWidth
             multiline
             rows={3}
             label="Lý do từ chối (bắt buộc)"
             value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
+            onChange={(e) => {
+              setFeedback(e.target.value);
+              if (feedbackError && e.target.value.trim()) {
+                setFeedbackError(''); // Clear error when user starts typing
+              }
+            }}
             variant="outlined"
             sx={{ mb: 2 }}
             disabled={loading}
+            error={!!feedbackError}
+            helperText={feedbackError}
           />
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
+              color="primary"
               onClick={() => setShowFeedbackInput(false)}
               disabled={loading}
             >
@@ -218,7 +234,7 @@ const StatusChip = ({ status }) => {
             handleConfirmReject={handleConfirmReject}
           />
         )}
-        <Button variant="outlined" onClick={onClose} sx={{ mt: 2 }}>
+        <Button variant="outlined" color="primary" onClick={onClose} sx={{ mt: 2 }}>
           Đóng
         </Button>
       </Box>

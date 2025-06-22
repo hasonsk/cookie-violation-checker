@@ -42,5 +42,4 @@ class BaseMongoDBModel(BaseModel):
     class Config:
         validate_by_name = True
         arbitrary_types_allowed = True
-        from_attributes = True # New in Pydantic v2
-        # json_encoders = {ObjectId: str} # Handled by PyObjectId now
+        from_attributes = True

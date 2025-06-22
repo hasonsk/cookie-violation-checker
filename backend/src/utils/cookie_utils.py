@@ -80,22 +80,37 @@ def parse_retention_to_days(retention_str: str) -> Optional[float]: # Changed re
     return None
 
 
-def calculate_actual_retention_days(expirationDate: Optional[datetime]) -> Optional[int]:
-    """Tính số ngày retention thực tế với timezone handling"""
-    if not expirationDate:
-        return 0  # Session cookie
+def calculate_actual_retention_days(expirationDate_str: Optional[str]) -> Optional[int]:
+    """Tính số ngày retention thực tế với timezone handling, chấp nhận string hoặc None."""
+    if not expirationDate_str or expirationDate_str.lower() == 'session':
+        return 0  # Session cookie or no expiration date
+
+    parsed_expiration_date = None
+    try:
+        # Try parsing as ISO format (e.g., "2026-06-16T07:09:10.000Z")
+        parsed_expiration_date = datetime.fromisoformat(expirationDate_str.replace('Z', '+00:00'))
+    except ValueError:
+        try:
+            # Try parsing other common date formats if ISO fails
+            parsed_expiration_date = email.utils.parsedate_to_datetime(expirationDate_str)
+        except Exception:
+            # If all parsing fails, treat as session or unknown
+            return 0
+
+    if not parsed_expiration_date:
+        return 0
 
     now = datetime.now()
     # Handle timezone-aware datetime
-    if expirationDate.tzinfo and not now.tzinfo:
-        now = now.replace(tzinfo=expirationDate.tzinfo)
-    elif not expirationDate.tzinfo and now.tzinfo:
-        expirationDate = expirationDate.replace(tzinfo=now.tzinfo)
+    if parsed_expiration_date.tzinfo and not now.tzinfo:
+        now = now.replace(tzinfo=parsed_expiration_date.tzinfo)
+    elif not parsed_expiration_date.tzinfo and now.tzinfo:
+        parsed_expiration_date = parsed_expiration_date.replace(tzinfo=now.tzinfo)
 
-    if expirationDate <= now:
+    if parsed_expiration_date <= now:
         return 0
 
-    delta = expirationDate - now
+    delta = parsed_expiration_date - now
     return max(0, delta.days)
 
 

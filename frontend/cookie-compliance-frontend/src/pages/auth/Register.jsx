@@ -109,7 +109,7 @@ const Register = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+        bgcolor: 'background.default', // Use theme's default background color
         padding: '20px',
       }}
     >
@@ -126,10 +126,10 @@ const Register = () => {
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: '30px' }}>
-          <Typography variant="h4" component="h1" sx={{ color: '#333', fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+          <Typography variant="h4" component="h1" sx={{ color: 'text.primary', fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
             Đăng ký
           </Typography>
-          <Typography variant="body1" sx={{ color: '#666', fontSize: '16px', margin: 0 }}>
+          <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '16px', margin: 0 }}>
             Tạo tài khoản mới để bắt đầu
           </Typography>
         </Box>
@@ -210,26 +210,14 @@ const Register = () => {
           <Button
             type="submit"
             variant="contained"
+            color="primary" // Use theme's primary color
             disabled={loading}
             sx={{
-              background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-              color: 'white',
-              border: 'none',
               padding: '14px',
               borderRadius: '8px',
               fontSize: '16px',
               fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              '&:hover:not(:disabled)': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 8px 20px rgba(118, 75, 162, 0.3)',
-              },
-              '&:disabled': {
-                opacity: 0.6,
-                cursor: 'not-allowed',
-                transform: 'none',
-              },
+              // Rely on theme.js for hover and disabled states
             }}
           >
             {loading ? 'Đang đăng ký...' : 'Đăng ký'}
@@ -237,9 +225,9 @@ const Register = () => {
         </Box>
 
         <Box sx={{ textAlign: 'center', marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-          <Typography variant="body2" sx={{ color: '#666', fontSize: '14px', margin: 0 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '14px', margin: 0 }}>
             Đã có tài khoản?{' '}
-            <Link component={RouterLink} to="/login" sx={{ color: '#764ba2', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
+            <Link component={RouterLink} to="/login" sx={{ color: 'primary.main', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
               Đăng nhập ngay
             </Link>
           </Typography>

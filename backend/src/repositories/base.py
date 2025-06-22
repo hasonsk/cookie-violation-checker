@@ -32,11 +32,10 @@ class BaseRepository:
         return str(result.inserted_id)
 
     async def insert_many(self, documents: List[Dict[str, Any]]) -> List[str]:
+        if not documents:
+            return []
         result = await self.collection.insert_many(documents)
         return [str(id) for id in result.inserted_ids]
-
-    async def aggregate(self, pipeline: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        return await self.collection.aggregate(pipeline).to_list(length=None)
 
     async def count_documents(self, query: Optional[Dict[str, Any]] = None) -> int:
         if query is None:
@@ -49,8 +48,4 @@ class BaseRepository:
 
     async def delete_one(self, query: Dict[str, Any]) -> int:
         result = await self.collection.delete_one(query)
-        return result.deleted_count
-
-    async def delete_many(self, query: Dict[str, Any]) -> int:
-        result = await self.collection.delete_many(query)
         return result.deleted_count

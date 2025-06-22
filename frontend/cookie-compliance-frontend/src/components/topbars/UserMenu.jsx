@@ -27,7 +27,7 @@ const UserMenu = ({ userName, anchorEl, setAnchorEl, onLogout }) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem onClick={() => { handleClose(); navigate('/my-request'); }}>My Request</MenuItem>
+        <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>Profile</MenuItem>
         <MenuItem onClick={() => { handleClose(); navigate('/settings'); }}>Settings</MenuItem>
         <Divider />
         <MenuItem onClick={() => { handleClose(); onLogout(); }}>Logout</MenuItem>

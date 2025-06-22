@@ -20,7 +20,6 @@ class PolicyCookie(BaseModel):
 
 class PolicyCookieList(BaseModel): # This is not a MongoDB model
     """Cấu trúc danh sách cookie trong policy"""
-    content_id: Optional[PyObjectId]
     is_specific: int
     cookies: List[PolicyCookie]
 

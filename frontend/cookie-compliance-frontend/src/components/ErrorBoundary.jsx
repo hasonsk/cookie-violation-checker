@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box, Typography, Button } from '@mui/material'; // Import MUI components
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -30,96 +31,73 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       // UI fallback khi có lỗi
       return (
-        <div className="error-boundary">
-          <div className="error-container">
-            <h2>Oops! Có lỗi xảy ra</h2>
-            <p>Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.</p>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+            padding: '20px',
+          }}
+        >
+          <Box
+            sx={{
+              textAlign: 'center',
+              maxWidth: '500px',
+              padding: '30px',
+              border: '2px solid',
+              borderColor: 'error.main', // Use theme error color
+              borderRadius: '8px',
+              backgroundColor: 'error.light', // A lighter shade of error for background
+              color: 'text.primary',
+            }}
+          >
+            <Typography variant="h5" component="h2" sx={{ color: 'error.main', marginBottom: '16px' }}>
+              Oops! Có lỗi xảy ra
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary', marginBottom: '24px', lineHeight: 1.6 }}>
+              Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.
+            </Typography>
 
-            <button
+            <Button
+              variant="contained"
+              color="primary"
               onClick={() => window.location.reload()}
-              className="retry-button"
+              sx={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                borderRadius: '6px',
+              }}
             >
               Tải lại trang
-            </button>
+            </Button>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="error-details">
-                <summary>Chi tiết lỗi (Development mode)</summary>
-                <pre className="error-stack">
+              <Box sx={{ marginTop: '20px', textAlign: 'left' }}>
+                <Typography variant="subtitle1" component="summary" sx={{ cursor: 'pointer', color: 'text.secondary', marginBottom: '10px' }}>
+                  Chi tiết lỗi (Development mode)
+                </Typography>
+                <Box
+                  component="pre"
+                  sx={{
+                    backgroundColor: 'background.default', // Use theme background color
+                    padding: '15px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    border: '1px solid',
+                    borderColor: 'divider', // Use theme divider color
+                  }}
+                >
                   {this.state.error.toString()}
                   <br />
                   {this.state.errorInfo && this.state.errorInfo.componentStack}
-                </pre>
-              </details>
+                </Box>
+              </Box>
             )}
-          </div>
-
-          <style jsx>{`
-            .error-boundary {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 400px;
-              padding: 20px;
-            }
-
-            .error-container {
-              text-align: center;
-              max-width: 500px;
-              padding: 30px;
-              border: 2px solid #ff6b6b;
-              border-radius: 8px;
-              background-color: #fff5f5;
-            }
-
-            .error-container h2 {
-              color: #e53e3e;
-              margin-bottom: 16px;
-            }
-
-            .error-container p {
-              color: #666;
-              margin-bottom: 24px;
-              line-height: 1.6;
-            }
-
-            .retry-button {
-              background-color: #3182ce;
-              color: white;
-              border: none;
-              padding: 12px 24px;
-              border-radius: 6px;
-              cursor: pointer;
-              font-size: 16px;
-              transition: background-color 0.2s;
-            }
-
-            .retry-button:hover {
-              background-color: #2c5aa0;
-            }
-
-            .error-details {
-              margin-top: 20px;
-              text-align: left;
-            }
-
-            .error-details summary {
-              cursor: pointer;
-              color: #666;
-              margin-bottom: 10px;
-            }
-
-            .error-stack {
-              background-color: #f7fafc;
-              padding: 15px;
-              border-radius: 4px;
-              font-size: 12px;
-              overflow-x: auto;
-              white-space: pre-wrap;
-              border: 1px solid #e2e8f0;
-            }
-          `}</style>
-        </div>
+          </Box>
+        </Box>
       );
     }
 

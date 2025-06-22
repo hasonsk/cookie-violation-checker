@@ -93,6 +93,7 @@ class ComplianceComparator:
             "details": {
                 "declared_cookie_details": [pc.dict() for pc in declared_policy_cookies],
                 "undeclared_cookie_details": [c.dict() for c in undeclared_actual_cookies],
+                "realtime_cookie_details": [ac.dict() for ac in actual_cookies if ac.name not in declared_names],
                 "declared_violating_cookies": [c.dict() for c in declared_violating_cookies],
                 "declared_compliant_cookies": [pc.dict() for pc in declared_compliant_cookies],
                 "third_party_domains": {
