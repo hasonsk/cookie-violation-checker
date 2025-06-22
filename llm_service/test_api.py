@@ -1,159 +1,71 @@
 import requests
-import json
-import time
-import sys
 
-# Configuration
-API_URL = "https://c9c8-35-226-153-152.ngrok-free.app/"  # Change this to your ngrok URL if using ngrok
+public_url="https://7133-34-143-233-30.ngrok-free.app/"
+# Health check
+response = requests.get(f"{public_url}/health")
+print(response.json())
 
-def test_connection():
-    """Test if server is running and accessible"""
-    try:
-        print("🔍 Testing server connection...")
-        response = requests.get(API_URL, timeout=10)
-        print(f"✅ Server is running! Status: {response.status_code}")
-        print(f"Response: {response.text}")
-        return True
-    except requests.exceptions.ConnectionError:
-        print("❌ Connection refused - Server is not running")
-        return False
-    except requests.exceptions.Timeout:
-        print("❌ Connection timeout - Server is slow to respond")
-        return False
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        return False
+SYSTEM_PROMPT = """You are a specialized AI system for extracting and structuring cookie declarations from website privacy policies and cookie notices.
+Your task is to analyze the provided text and extract cookie information, then classify cookies into three distinct categories based on their specificity level.
 
-def test_health():
-    """Test health endpoint"""
-    try:
-        print("\n🏥 Testing health endpoint...")
-        response = requests.get(f"{API_URL}/health", timeout=30)
+CLASSIFICATION RULES
+- specific: Clearly named cookies (e.g., _ga, _fbp) with at least one of the following attributes: purpose, retention, third_party, or behavior. These cookies must be technically identifiable.
+- general: Cookie categories without specific names (e.g., "Marketing Cookies", "Necessary Cookies") described at a category level without exact technical details.
+- undefined: Cookie mentions that are vague or ambiguous (e.g., "Cookies are used to improve our services") and cannot be classified into specific or general.
 
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
-        print(f"Raw Response: {response.text}")
+OUTPUT FORMAT: TYPE|name|attribute|value
 
-        if response.status_code == 200:
-            try:
-                health_data = response.json()
-                print("✅ Health check successful!")
-                print(json.dumps(health_data, indent=2))
-                return health_data
-            except json.JSONDecodeError:
-                print("❌ Invalid JSON response from health endpoint")
-                return None
-        else:
-            print(f"❌ Health check failed with status: {response.status_code}")
-            return None
+ATTRIBUTES:
+• purpose (required): Strictly Necessary, Functionality, Analytical, Targeting/Advertising/Marketing, Performance, Social Sharing
+• retention: Exact timeframes ("2 years", "session", "persistent")
+• third_party: Provider names ("Google, Facebook") or "First Party"
+• behavior: How cookie works/stored/used
 
-    except Exception as e:
-        print(f"❌ Health check error: {e}")
-        return None
+RULES:
+- One attribute per line
+- Skip undefined attributes
+- No extra text outside output
 
-def test_generation():
-    """Test text generation"""
-    try:
-        print("\n🤖 Testing text generation...")
+EXAMPLE:
+Input: "Cookie _ga lasts 2 years for Google Analytics traffic analysis. Marketing cookies show ads.Some cookies improve user experience."
 
-        payload = {
-            "prompt": "Hello, how are you?",
-            "max_length": 100,
-            "temperature": 0.7
-        }
+Output:
+specific|_ga|purpose|Analytical
+specific|_ga|retention|2 years
+specific|_ga|third_party|Google Analytics
+specific|_ga|behavior|analyzes website traffic
 
-        response = requests.post(
-            f"{API_URL}/generate",
-            json=payload,
-            timeout=120,
-            headers={"Content-Type": "application/json"}
-        )
+general|Marketing cookies|purpose|Targeting/Advertising/Marketing
+general|Marketing cookies|behavior|show personalized advertisements
 
-        print(f"Status Code: {response.status_code}")
-        print(f"Raw Response: {response.text}")
+undefined|cookies|behavior|improve user experience"""
 
-        if response.status_code == 200:
-            try:
-                result = response.json()
-                print("✅ Generation successful!")
-                print(f"Generated: {result.get('generated_text', 'No text found')}")
-                return True
-            except json.JSONDecodeError:
-                print("❌ Invalid JSON response from generation endpoint")
-                return False
-        else:
-            print(f"❌ Generation failed with status: {response.status_code}")
-            print(f"Error response: {response.text}")
-            return False
+prompt_format = """<|start_header_id|>system<|end_header_id|>
+{SYSTEM_PROMPT}
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+This context is provided to extract:
+{instruction}
 
-    except Exception as e:
-        print(f"❌ Generation test error: {e}")
-        return False
+Extract cookie attribute using the EAV format above.
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
-def check_server_logs():
-    """Instructions for checking server logs"""
-    print("\n📋 Server Debugging Steps:")
-    print("1. Check if the server is running:")
-    print("   - Look for 'python main.py' process")
-    print("   - Check terminal where you started the server")
-    print()
-    print("2. Check server logs for errors:")
-    print("   - Model loading errors")
-    print("   - CUDA/GPU memory issues")
-    print("   - Missing dependencies")
-    print()
-    print("3. Common issues:")
-    print("   - Model not loaded (503 Service Unavailable)")
-    print("   - CUDA out of memory")
-    print("   - Missing Hugging Face token")
-    print("   - Network/firewall issues")
+policy_content = """
 
-def main():
-    print("🧪 API Server Debug Test")
-    print("=" * 50)
+These cookies are necessary for our website to function properly and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms or where they’re essential to provide you with a service you have requested. You cannot opt-out of these cookies. You can set your browser to block or alert you about these cookies, but if you do, some parts of the site will not then work. These cookies do not store any personally identifiable information.
 
-    # Test 1: Basic connection
-    if not test_connection():
-        print("\n❌ Server is not accessible. Please check:")
-        print("1. Is the server running? (python main.py)")
-        print("2. Is the URL correct?")
-        print("3. Are you using the right port (8000)?")
-        check_server_logs()
-        return
+Domain	Cookies	Used as
+clc.stackoverflow.com	__cflb	1st Party
+stackoverflow.email	iterableEmailCampaignId, iterableEndUserId, iterableMessageId, iterableTemplateId	1st Party
+stack.imgur.com	__cf_bm	1st Party
+discordapp.com	__cf_bm	3rd Party"""
 
-    # Test 2: Health check
-    health_data = test_health()
-    if not health_data:
-        print("\n❌ Health endpoint failed")
-        check_server_logs()
-        return
+# Test generation
+payload = {
+    "prompt": prompt_format.format(SYSTEM_PROMPT=SYSTEM_PROMPT, instruction=policy_content),
+    "max_length": 4096,
+    "temperature": 0.1
+}
 
-    # Check if model is loaded
-    if not health_data.get("model_loaded", False):
-        print("\n⚠️ Model is not loaded yet!")
-        print("This is normal - model loading can take 2-10 minutes")
-        print("Please wait and try again...")
-
-        # Wait and retry
-        print("Waiting 30 seconds and retrying...")
-        time.sleep(30)
-        health_data = test_health()
-
-        if not health_data or not health_data.get("model_loaded", False):
-            print("❌ Model still not loaded. Check server logs for errors.")
-            return
-
-    # Test 3: Text generation
-    if health_data.get("model_loaded", False):
-        print(f"\n✅ Model loaded: {health_data.get('model_name', 'Unknown')}")
-        test_generation()
-
-    print("\n🎉 All tests completed!")
-
-if __name__ == "__main__":
-    # Check if URL was provided as argument
-    if len(sys.argv) > 1:
-        API_URL = sys.argv[1].rstrip('/')
-        print(f"Using custom API URL: {API_URL}")
-
-    main()
+# Basic generation
+response = requests.post(f"{public_url}/generate", json=payload)
+print("Basic:", response.json())

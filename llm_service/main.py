@@ -1,6 +1,6 @@
-from unsloth import FastLanguageModel
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from unsloth import FastLanguageModel
 import torch
 import uvicorn
 import asyncio
@@ -11,18 +11,11 @@ import os
 from huggingface_hub import login
 import ast
 import json
-import pandas as pd
-import numpy as np
-from datasets import Dataset, load_dataset
-from tqdm import tqdm
 from typing import List, Dict, Any
-from peft import PeftModel, PeftConfig
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Llama-3.1-8B Custom Fine-tuned API Server",
     description="LLM API server using custom fine-tuned Llama-3.1-8B with Unsloth and 4-bit quantization",
@@ -47,7 +40,6 @@ class GenerateRequest(BaseModel):
 
 class GenerateResponse(BaseModel):
     generated_text: str
-    prompt: str
     model_info: str
 
 class HealthResponse(BaseModel):
@@ -207,7 +199,6 @@ async def generate_text(request: GenerateRequest):
 
         return GenerateResponse(
             generated_text=generated_text,
-            prompt=request.prompt,
             model_info="sonhask/Meta-Llama-3.1-8B-Instruct-bnb-4bit_v6 (Unsloth fine-tuned)"
         )
 
