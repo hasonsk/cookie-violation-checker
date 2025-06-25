@@ -20,3 +20,5 @@ def decode_access_token(token: str):
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except jwt.ExpiredSignatureError:
         return None
+    except jwt.InvalidTokenError:
+        return None

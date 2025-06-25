@@ -8,7 +8,6 @@ google
 google.genai
 httpx
 isort
-jwt
 kafka-python
 langdetect
 loguru
@@ -18,6 +17,7 @@ passlib
 playwright
 pydantic
 pymongo
+PyJWT
 pytest
 pytest-cov
 pytest-asyncio

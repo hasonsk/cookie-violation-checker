@@ -48,7 +48,6 @@ class ExternalServicesSettings(BaseSettings):
 class InternalAPISettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
-    API_BASE: str
     REQUEST_TIMEOUT: int = 100
     MAX_RETRIES: int = 3
     MAX_CONCURRENT_REQUESTS: int = 10
