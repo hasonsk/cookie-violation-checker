@@ -14,13 +14,13 @@ app = FastAPI(
     debug=settings.app.APP_DEBUG
 )
 
-origins = [
-    "http://localhost:3000",
-    "http://192.168.0.113:3000",
-    "http://127.0.0.1:3000",
-    "http://0.0.0.0:3000"
-]
-
+origins = settings.app.CORS_ORIGINS.split(",") if settings.app.CORS_ORIGINS else [
+                                                                                "http://localhost:3000",
+                                                                                "http://192.168.0.113:3000",
+                                                                                "http://127.0.0.1:3000",
+                                                                                "http://0.0.0.0:3000",
+                                                                            ]
+# Thêm middleware CORS để cho phép truy cập từ các domain frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Cho phép domain frontend

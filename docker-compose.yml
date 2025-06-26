@@ -17,6 +17,8 @@ services:
     build:
       context: ./frontend/cookie-compliance-frontend
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
     container_name: react_frontend
     ports:
       - "9131:80"

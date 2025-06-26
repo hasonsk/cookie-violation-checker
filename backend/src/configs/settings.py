@@ -10,6 +10,7 @@ class AppSettings(BaseSettings):
     API_DESCRIPTION: str = "API for analyzing cookie compliance and detecting violations."
     API_VERSION: str = "1.0.0"
     API_BASE: str = ""
+    CORS_ORIGINS: str = ""
 
 class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
