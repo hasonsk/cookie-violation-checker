@@ -60,12 +60,9 @@ EXTRACT detailed information about each cookie mentioned in that policy"""
 
     @classmethod
     def extract_response(cls, generated_text: str) -> str:
-        if "assistant" in generated_text:
-            result_text = generated_text.split("assistant")[-1].strip()
+        if "### Response:" in generated_text:
+            result_text = generated_text.split("### Response:")[-1].strip()
         else:
-            if "### Response:" in generated_text:
-                result_text = generated_text.split("### Response:")[-1].strip()
-            else:
-                result_text = generated_text.strip()
+            result_text = generated_text.strip()
 
         return result_text

@@ -2,9 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+from pyngrok import ngrok
 
 from configs.settings import settings
-from services.cookie_extract_service import CookieExtractService
+from services.cookie_extract_service import cookie_extract_service
 from routes import generate
 from utils.logging import setup_logging, get_logger
 
@@ -17,7 +18,6 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting up the application...")
     try:
-        cookie_extract_service = CookieExtractService()
         await cookie_extract_service.load_model()
         logger.info("Model loaded successfully during startup")
     except Exception as e:
@@ -45,13 +45,19 @@ app.add_middleware(
 )
 
 if __name__ == "__main__":
+    # Mở tunnel với ngrok
+    public_url = ngrok.connect(8000)
+    print(" * Ngrok tunnel URL:", public_url)
+
+    # Khởi chạy FastAPI với uvicorn
     uvicorn.run(
-        "app.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=False,
+        app,
+        host="0.0.0.0",
+        port=8000,
         log_level=settings.log_level
     )
+
+
 # from fastapi import FastAPI, HTTPException
 # from pydantic import BaseModel
 # from unsloth import FastLanguageModel

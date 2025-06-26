@@ -127,7 +127,7 @@ class CookieExtractService:
                 formatted_prompt,
                 return_tensors="pt",
                 truncation=True,
-                max_length=min(request.max_length, settings.max_input_length)
+                max_length=settings.max_input_length
             )
 
             # Move to GPU if available
@@ -139,16 +139,12 @@ class CookieExtractService:
                 outputs = self.model.generate(
                     input_ids=inputs["input_ids"],
                     attention_mask=inputs["attention_mask"],
-                    max_new_tokens=min(request.max_length, settings.max_new_tokens),
+                    max_new_tokens=settings.max_new_tokens,
                     temperature=request.temperature,
                     top_p=request.top_p,
-                    top_k=request.top_k,
                     do_sample=request.do_sample,
-                    num_return_sequences=request.num_return_sequences,
                     pad_token_id=self.tokenizer.pad_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
-                    repetition_penalty=request.repetition_penalty,
-                    use_cache=request.use_cache
                 )
 
             # Decode and extract response
@@ -161,3 +157,5 @@ class CookieExtractService:
         except Exception as e:
             logger.error(f"Error during generation: {e}")
             raise RuntimeError(f"Generation failed: {e}")
+
+cookie_extract_service = CookieExtractService()
