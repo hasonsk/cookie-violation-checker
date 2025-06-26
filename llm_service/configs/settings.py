@@ -18,9 +18,11 @@ class Settings(BaseSettings):
 
     model_name: str = "sonhask/meta-Llama-3.1-8B-Instruct-bnb-4bit-DATN"
     max_seq_length: int = 4096
-    max_new_tokens: int = 2048
+    max_new_tokens: int = 4096
     max_input_length: int = 4096
     load_in_4bit: bool = True
+    temperature: float = 0.0
+    top_p: int = 1
 
     # Hugging Face Configuration
     huggingface_api_key: Optional[str] = os.environ.get("HUGGINGFACE_API_KEY")

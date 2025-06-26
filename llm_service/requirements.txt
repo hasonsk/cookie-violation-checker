@@ -14,3 +14,4 @@ peft==0.6.2
 huggingface_hub==0.19.4
 tqdm==4.66.1
 pandas==2.0.3
+pydantic_settings
