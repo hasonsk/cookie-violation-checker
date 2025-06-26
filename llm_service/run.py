@@ -6,8 +6,8 @@
 from pyngrok import ngrok, conf
 import os
 
-# Set your ngrok auth token here
-NGROK_TOKEN = "YOUR_NGROK_TOKEN"  # Get this from https://dashboard.ngrok.com/get-started/your-authtoken
+# Set ngrok auth token
+NGROK_TOKEN = "xxx"  # Get this from https://dashboard.ngrok.com/get-started/your-authtoken
 ngrok.set_auth_token(NGROK_TOKEN)
 
 # Cell 3: Clone repository and setup
