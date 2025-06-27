@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Dict, Any
-
+from loguru import logger
 from src.services.cookie_extractor_service.interfaces.llm_provider import ILLMProvider
 from src.services.cookie_extractor_service.providers.gemini_provider import GeminiLLMProvider
 from src.services.cookie_extractor_service.providers.llama_provider import LlamaLLMProvider
@@ -50,27 +50,25 @@ class CookieExtractorFactory:
         return GeminiLLMProvider(
             api_key=config["api_key"],
             model=config["model"],
-            temperature=config.get("temperature", 0.7),
-            max_tokens=config.get("max_tokens", 1000),
+            temperature=config.get("temperature", 0.0),
+            max_tokens=config.get("max_tokens", 2048),
             **{k: v for k, v in config.items() if k not in ["api_key", "model", "temperature", "max_tokens"]}
         )
 
     @staticmethod
     def _create_llama_provider(**config) -> LlamaLLMProvider:
         """Create Llama provider with validation"""
-        required_fields = ["api_endpoint"]
+        required_fields = ["api_endpoint", "api_key"]
         CookieExtractorFactory._validate_required_config(required_fields, config, "Llama")
 
+        logger.info("Check llama")
+
         return LlamaLLMProvider(
-            api_endpoint=config["api_endpoint"],
+            api_endpoint=config.get("api_endpoint"),
             # model=config["model"],
             api_key=config.get("api_key"),
-            temperature=config.get("temperature", 0.7),
-            max_tokens=config.get("max_tokens", 1000),
-            timeout=config.get("timeout", 30),
-            **{k: v for k, v in config.items()
-               if k not in ["api_endpoint", "model", "api_key", "temperature", "max_tokens", "timeout"]}
         )
+
     @staticmethod
     def _validate_required_config(required_fields: list, config: Dict[str, Any], provider_name: str) -> None:
         """Validate that required configuration fields are present"""
@@ -105,9 +103,8 @@ class CookieExtractorFactory:
             },
             LLMProviderType.LLAMA: {
                 # "required": ["api_endpoint", "model"],
-                "required": ["api_endpoint"],
-                "optional": ["api_key", "temperature", "max_tokens", "timeout"],
-                "defaults": {"temperature": 0.7, "max_tokens": 1000, "timeout": 30}
+                "required": [],
+                "defaults": {}
             },
         }
 

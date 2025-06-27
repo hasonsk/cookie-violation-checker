@@ -44,7 +44,8 @@ class ExternalServicesSettings(BaseSettings):
     TEMPERATURE: float = 0.7 # Default value, can be adjusted
     MAX_OUTPUT_TOKENS: int = 8192 # Default value, can be adjusted
 
-    LLAMA_API_ENDPOINT: str = "https://a199-34-143-141-251.ngrok-free.app/generate"
+    LLAMA_API_KEY: str = ""
+    LLAMA_API_ENDPOINT: str = ""
 
 class InternalAPISettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')

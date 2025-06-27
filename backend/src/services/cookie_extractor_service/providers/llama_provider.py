@@ -13,17 +13,11 @@ class LlamaLLMProvider(ILLMProvider):
         api_endpoint: str,
         # model: str,
         api_key: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1000,
-        timeout: int = 30,
         **kwargs
     ):
         self.api_endpoint = api_endpoint
         # self.model = model
         self.api_key = api_key
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.timeout = timeout
         self.config = kwargs
 
         self._validate_configuration()
@@ -36,21 +30,13 @@ class LlamaLLMProvider(ILLMProvider):
         # if not self.model:
         #     raise ValueError("Model name is required for Llama provider")
 
-        if not (0.0 <= self.temperature <= 1.0):
-            raise ValueError("Temperature must be between 0.0 and 1.0")
 
-        if self.max_tokens <= 0:
-            raise ValueError("Max tokens must be greater than 0")
-
-        if self.timeout <= 0:
-            raise ValueError("Timeout must be greater than 0")
-
-    async def generate_content(self, prompt: str, **kwargs) -> str:
+    async def generate_content(self, content: str, **kwargs) -> str:
         """
         Generate content using Llama API
 
         Args:
-            prompt: Input prompt
+            content: Input content
             **kwargs: Override parameters for this request
 
         Returns:
@@ -58,27 +44,21 @@ class LlamaLLMProvider(ILLMProvider):
         """
         try:
             headers = {"Content-Type": "application/json"}
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
+            # if self.api_key:
+            #     headers["Authorization"] = f"Bearer {self.api_key}"
 
             # Use provided parameters or fall back to instance defaults
-            temperature = kwargs.get('temperature', self.temperature)
-            max_tokens = kwargs.get('max_tokens', self.max_tokens)
-            timeout = kwargs.get('timeout', self.timeout)
-
             # Prepare payload
             payload = {
                 # "model": self.model,
-                "prompt": prompt,
-                "max_length": max_tokens,
-                "temperature": temperature,
-                **{k: v for k, v in kwargs.items() if k not in ['temperature', 'max_tokens', 'timeout']}
+                "content": content,
             }
 
             # Make API request
+            timeout = kwargs.get('timeout', 300)  # Default timeout set to 30 seconds
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
                 async with session.post(
-                    self.api_endpoint,
+                    f"{self.api_endpoint}?key={self.api_key}",
                     json=payload,
                     # headers=headers
                 ) as response:
@@ -91,8 +71,8 @@ class LlamaLLMProvider(ILLMProvider):
 
                     logger.debug(f"Llama API response received: {result}")
 
-                    final_result = result.get('generated_text', '{"is_specific": 0, "cookies": []}') or '{"is_specific": 0, "cookies": []}'
-                    logger.debug(f"Llama API response received: {len(final_result)} characters")
+                    final_result = result.get('generated_text', '{"is_specific": 0, "cookies": []}')
+                    logger.debug(f"Llama API response received: {final_result} characters")
                     return final_result
 
         except aiohttp.ClientError as e:
