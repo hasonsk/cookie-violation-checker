@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from configs.settings import settings
+from utils.auth import verify_api_key
 from schemas.extract import CookieExtractRequest
 from services.cookie_extract_service import LlamaCookieExtractionService
 
@@ -26,7 +27,10 @@ app.add_middleware(
 )
 
 @app.post("/extract")
-def extract_cookie_info(request: CookieExtractRequest):
+def extract_cookie_info(
+        request: CookieExtractRequest,
+        _: str = Depends(verify_api_key)
+        ):
     response = cookie_extractor.generate_response(request.content)
     return {"result": response}
 
