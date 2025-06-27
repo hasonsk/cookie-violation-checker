@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from schemas.generate import GenerateRequest, GenerateResponse
+from schemas.extract import CookieExtractRequest, CookieExtractResponse
 from services.cookie_extract_service import cookie_extract_service
 from configs.settings import settings
 from exceptions.custom_exceptions import ModelNotLoadedException, LLMServiceException
@@ -8,7 +8,7 @@ from exceptions.custom_exceptions import ModelNotLoadedException, LLMServiceExce
 router = APIRouter()
 
 @router.post("/generate", response_model=GenerateResponse)
-async def generate_text(request: GenerateRequest):
+async def generate_text(request: CookieExtractRequest):
     if not cookie_extract_service.is_loaded:
         raise ModelNotLoadedException()
 

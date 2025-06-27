@@ -1,36 +1,21 @@
 import uvicorn
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pyngrok import ngrok
 
 from configs.settings import settings
-from services.cookie_extract_service import cookie_extract_service
-from routes import generate
-
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Starting up the application...")
-    try:
-        await cookie_extract_service.load_model()
-        print("Model loaded successfully during startup")
-    except Exception as e:
-        print(f"Failed to load model during startup: {e}")
-
-    yield
-
-    print("Shutting down the application...")
+from schemas.extract import CookieExtractRequest
+from services.cookie_extract_service import LlamaCookieExtractionService
 
 app = FastAPI(
     title=settings.title,
     description=settings.description,
     version=settings.version,
-    lifespan=lifespan
 )
 
-app.include_router(generate.router, tags=["Generation"])
+cookie_extractor = LlamaCookieExtractionService(
+    model_path="sonhask/meta-Llama-3.1-8B-Instruct-bnb-4bit-DATN"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,10 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/extract")
+def extract_cookie_info(request: CookieExtractRequest):
+    response = cookie_extractor.generate_response(request.content)
+    return {"result": response}
+
 if __name__ == "__main__":
     public_url = ngrok.connect(8000)
     print(" * Ngrok tunnel URL:", public_url)
-
     uvicorn.run(
         app,
         host="0.0.0.0",

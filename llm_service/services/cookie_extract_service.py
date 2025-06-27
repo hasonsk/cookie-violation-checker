@@ -1,96 +1,98 @@
-from typing import Optional, Any
 import torch
 from unsloth import FastLanguageModel
-from peft import PeftConfig, PeftModel
-from huggingface_hub import login
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from configs.settings import settings
-from utils.prompt_formatter import PromptFormatter
-from schemas.generate import GenerateRequest
-
-class CookieExtractService:
-    def __init__(self):
-        self.model: Optional[Any] = None
-        self.tokenizer: Optional[Any] = None
-        self.is_loaded: bool = False
-        self.prompt_formatter = PromptFormatter()
+class LlamaCookieExtractionService:
+    def __init__(self, model_path: str):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Sử dụng device: {self.device}")
+        print("Đang tải mô hình với Unsloth...")
 
-    async def load_model(self) -> None:
-        try:
-            print(f"Using device: {'cuda' if torch.cuda.is_available() else 'cpu'}")
-            if settings.huggingface_api_key:
-                login(settings.huggingface_api_key)
+        self.model, self.tokenizer = FastLanguageModel.from_pretrained(
+            model_name=model_path,
+            max_seq_length=2048,
+            dtype=None,
+            load_in_4bit=True,
+        )
 
-            await self._load_model()
-            self._setup_tokenizer()
+        if hasattr(self.model, "eval"):
+            self.model.eval()
 
-            self.is_loaded = True
-            print("Model loaded successfully")
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            self.is_loaded = False
-            raise
+        self.model.to(self.device)
+        print("✅ Mô hình đã sẵn sàng!")
 
-    async def _load_model(self) -> None:
-        try:
-            print("Loading model with Unsloth...")
-            self.model, self.tokenizer = FastLanguageModel.from_pretrained(
-                model_name=settings.model_name,
-                max_seq_length=settings.max_seq_length,
-                dtype=None,
-                load_in_4bit=settings.load_in_4bit,
+    def build_prompt(self, instruction: str, content: str) -> str:
+        return f"""{alpaca_prompt.format(instruction, content)}"""
+
+    def generate_response(self, content: str, max_new_tokens=2048, temperature=0):
+
+        prompt = self.build_prompt(SYSTEM_PROMPT, content)
+        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True,
+                                max_length=max_new_tokens).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=temperature > 0,
+                temperature=temperature,
+                top_p=1,
+                pad_token_id=self.tokenizer.eos_token_id
             )
-        except Exception as e:
-            print(f"Unsloth failed: {e}\nFalling back...")
-            await self._fallback_load()
 
-    async def _fallback_load(self) -> None:
-        model_path = settings.model_name
-        try:
-            config = PeftConfig.from_pretrained(model_path)
-            base = AutoModelForCausalLM.from_pretrained(
-                config.base_model_name_or_path,
-                device_map="auto",
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            )
-            self.model = PeftModel.from_pretrained(base, model_path)
-        except:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                device_map="auto",
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            )
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        decoded_output = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        result_text = decoded_output.split("### Response:")[-1].strip()
 
-    def _setup_tokenizer(self) -> None:
-        if self.tokenizer and self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+        json_start = result_text.find("{")
+        json_end = result_text.rfind("}")
+        if json_start != -1 and json_end != -1 and json_end > json_start:
+            return result_text[json_start:json_end+1]
 
-    async def generate_text(self, request: GenerateRequest) -> str:
-        if not self.is_loaded:
-            raise RuntimeError("Model not loaded")
+        return result_text
 
-        try:
-            prompt = self.prompt_formatter.format_prompt(request.prompt, self.tokenizer)
-            inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=settings.max_input_length).to(self.device)
+alpaca_prompt = """You are an expert AI assistant specialized in analyzing website cookie policies. Your task is to read the provided cookie policy text and extract detailed, structured information about each cookie mentioned, adhering strictly to the guidelines and format specified below.
+RESPONSE Format: JSON following structure:
 
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    **inputs,
-                    max_new_tokens=settings.max_new_tokens,
-                    do_sample=settings.temperature > 0,
-                    temperature=settings.temperature,
-                    top_p=settings.top_p,
-                    pad_token_id=self.tokenizer.pad_token_id
-                )
+{{
+  "is_specific": 0,
+  "cookies": [
+     {{
+      "cookie_name": "cookie_name",
+      "declared_purpose": "declared_purpose",
+      "declared_retention": "declared_retention",
+      "declared_third_parties": ["declared_third_parties"],
+      "declared_description": "declared_description"
+    }}, ...
+  ]
+}}
+If no cookies are specifically described, only response {{"is_specific": 0, "cookies": []}}
 
-            generated = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            return self.prompt_formatter.extract_response(generated)
+### Instruction:
+{}
 
-        except Exception as e:
-            print(f"Generation failed: {e}")
-            raise RuntimeError(f"Generation failed: {e}")
+### Input:
+{}
 
-cookie_extract_service = CookieExtractService()
+### Response:
+"""
+
+SYSTEM_PROMPT = """
+Extraction guidelines:
+For "is_specific": Determines if the website provides detailed descriptions of individual cookies:
+- Set to 0 if cookies are only described generically (e.g., "performance cookies," "necessary cookies," "Google cookies") without specific explanations
+- Set to 1 if cookies are described with specific names, purposes, retention periods, and third parties. Example: "The '_ga' cookie is used by Google Analytics to distinguish users and is stored for 2 years" would result in is_specific = 1
+
+For the "cookies" list containing objects, each object has
+- "cookie_name": Extract the exact technical name as mentioned. One object just has only one cookie name, ìf more one, create multiple objects. For example: ga, _gid, _gat --> 3 object cookies
+- "declared_purpose": cookie's purpose. With the following options:
+  * Strictly Necessary: Essential for basic website functionality
+  * Functionality: Personalizes user experience
+  * Analytical: Collects usage data
+  * Targeting/Advertising/Marketing: For personalized ads
+  * Performance: Improves technical performance
+  * Social Sharing: Enables social media integration
+  * Null: When no specific purpose information is provided
+- "declared_retention": Record the exact storage duration as mentioned
+- "declared_third_parties": An list of third parties involved in the use of this cookie for website-owned cookies
+- "declared_description": exact wording from the policy without modification or embellishment
+
+EXTRACT detailed information about each cookie mentioned in that policy"""

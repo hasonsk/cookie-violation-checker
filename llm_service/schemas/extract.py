@@ -1,9 +1,9 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
-class GenerateRequest(BaseModel):
-    prompt: str = ""
+class CookieExtractRequest(BaseModel):
+    content: str = ""
 
-class GenerateResponse(BaseModel):
+class CookieExtractResponse(BaseModel):
     generated_text: str
     model_info: str

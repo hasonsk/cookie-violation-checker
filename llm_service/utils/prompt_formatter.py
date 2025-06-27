@@ -62,7 +62,12 @@ EXTRACT detailed information about each cookie mentioned in that policy"""
     def extract_response(cls, generated_text: str) -> str:
         if "### Response:" in generated_text:
             result_text = generated_text.split("### Response:")[-1].strip()
-        else:
-            result_text = generated_text.strip()
+
+        # Trích xuất phần JSON
+        json_start = result_text.find("{")
+        json_end = result_text.rfind("}")
+        if json_start != -1 and json_end != -1 and json_end > json_start:
+            json_text = result_text[json_start:json_end+1]
+            return json_text
 
         return result_text
