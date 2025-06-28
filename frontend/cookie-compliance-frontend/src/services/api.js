@@ -35,6 +35,15 @@ export const websiteAPI = {
   },
 };
 
+export const userAPI = {
+  getMe: async () => {
+    return await api.get('/users/me');
+  },
+  updateMe: async (userData) => {
+    return await api.patch('/users/me', userData);
+  },
+};
+
 export const domainRequestAPI = {
   create: async (requestData) => {
     return await api.post('/domain-requests', requestData);

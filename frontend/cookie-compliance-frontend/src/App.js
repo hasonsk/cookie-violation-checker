@@ -20,6 +20,7 @@ import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
 import UserManagement from './pages/users/UserManagement';
 import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement';
+import AboutPage from './pages/AboutPage'; // Import the new AboutPage
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
@@ -111,6 +112,7 @@ function AppContent() {
           <Route path="admin/users" element={<UserManagement />} />
           <Route path="admin/domain-requests" element={<DomainRequestManagement />} /> {/* New route for domain request management */}
           <Route path="profile" element={<Profile />} />
+          <Route path="about" element={<AboutPage />} /> {/* New route for About page */}
         </Route>
 
         {/* Catch all route - might need adjustment based on the conditional rendering */}

@@ -23,7 +23,7 @@ const TopBar = () => {
             <BreadcrumbsNav items={breadcrumbItems} />
           </Box>
           <Box display="flex" alignItems="center" gap={1.5}>
-            <UserMenu userName={user.name} anchorEl={anchorEl} setAnchorEl={setAnchorEl} onLogout={handleLogout} />
+            <UserMenu userName={user?.name || ''} anchorEl={anchorEl} setAnchorEl={setAnchorEl} onLogout={handleLogout} />
           </Box>
         </Toolbar>
       </AppBar>

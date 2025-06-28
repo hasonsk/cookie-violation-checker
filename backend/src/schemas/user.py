@@ -24,3 +24,7 @@ class User(BaseModel):
             PyObjectId: str # Encode PyObjectId to string
         }
         from_attributes = True # New in Pydantic v2
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    name: Optional[str] = None

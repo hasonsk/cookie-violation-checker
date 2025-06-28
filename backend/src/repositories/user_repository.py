@@ -20,9 +20,9 @@ class UserRepository(BaseRepository):
         """Create a new user."""
         return await self.insert_one(user_data)
 
-    async def update_user(self, user_id: str, update_data: Dict[str, Any]) -> int:
-        """Update user information."""
-        return await self.update_one(
+    async def update_user(self, user_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Update user information and return the updated user document."""
+        return await self.find_one_and_update(
             {"_id": ObjectId(user_id)},
             update_data
         )

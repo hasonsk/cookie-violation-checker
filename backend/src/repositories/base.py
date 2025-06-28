@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 from bson import ObjectId
+from pymongo import ReturnDocument # Import ReturnDocument
 from src.configs.database import get_collection
 
 class BaseRepository:
@@ -45,6 +46,14 @@ class BaseRepository:
     async def update_one(self, query: Dict[str, Any], update: Dict[str, Any]) -> int:
         result = await self.collection.update_one(query, {"$set": update})
         return result.modified_count
+
+    async def find_one_and_update(self, query: Dict[str, Any], update: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Finds a single document and updates it, returning the updated document."""
+        return await self.collection.find_one_and_update(
+            query,
+            {"$set": update},
+            return_document=ReturnDocument.AFTER
+        )
 
     async def delete_one(self, query: Dict[str, Any]) -> int:
         result = await self.collection.delete_one(query)

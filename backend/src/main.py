@@ -31,7 +31,7 @@ app.add_middleware(
 
 try:
     app.include_router(auth.router, tags=["Authentication"])
-    app.include_router(users.router, prefix="/api/admin", tags=["Users"]) # Added prefix for admin users
+    app.include_router(users.router, prefix="/api", tags=["Users"])
     app.include_router(websites.router, tags=["Websites"])
     app.include_router(policies.router, tags=["Policies"])
     app.include_router(violations.router, tags=["Violations"])
