@@ -158,8 +158,10 @@ const websiteSlice = createSlice({
       })
       .addCase(fetchWebsites.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.data || action.payload;
-        state.totalCount = action.payload.total || action.payload.length;
+        state.items = action.payload.websites;
+        state.totalCount = action.payload.total_count;
+        state.currentPage = action.payload.page;
+        state.pageSize = action.payload.page_size;
         // Update last fetch parameters and timestamp
         state.lastFetchParams = action.meta.arg;
         state.lastFetchTimestamp = new Date().getTime();

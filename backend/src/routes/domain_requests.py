@@ -14,11 +14,6 @@ async def create_domain_request(
     current_user: User = Depends(get_current_user),
     domain_request_service: DomainRequestService = Depends(get_domain_request_service)
 ):
-    """
-    Gửi yêu cầu đăng ký domain.
-    Tác nhân: Nhà cung cấp dịch vụ.
-    Tiền điều kiện: Người dùng đã đăng nhập thành công vào hệ thống với vai trò nhà cung cấp dịch vụ.
-    """
     if current_user.role not in ["provider", "admin"]: # Assuming 'provider' is the role for Nhà cung cấp dịch vụ
         raise DomainRequestNotAuthorizedError("Only service providers or admins can submit domain registration requests.")
 

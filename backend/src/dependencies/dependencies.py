@@ -51,28 +51,27 @@ def get_cookie_feature_repository() -> CookieFeatureRepository:
 def get_violation_repository() -> ViolationRepository:
     return ViolationRepository()
 
+def get_llm_provider() -> ILLMProvider:
+    return CookieExtractorFactory.create_provider(
+        provider_type=LLMProviderType.GEMINI,
+        # provider_type=LLMProviderType.LLAMA,
+        api_key=settings.external.GEMINI_API_KEY,
+        # api_endpoint=settings.external.LLAMA_API_ENDPOINT,
+        model=settings.external.GEMINI_MODEL,
+        temperature=settings.external.TEMPERATURE,
+        max_tokens=settings.external.MAX_OUTPUT_TOKENS
+    )
+
 # def get_llm_provider() -> ILLMProvider:
 #     return CookieExtractorFactory.create_provider(
-#         provider_type=LLMProviderType.GEMINI,
-#         # provider_type=LLMProviderType.LLAMA,
-#         api_key=settings.external.GEMINI_API_KEY,
-#         # api_endpoint=settings.external.LLAMA_API_ENDPOINT,
-#         model=settings.external.GEMINI_MODEL,
-#         temperature=settings.external.TEMPERATURE,
-#         max_tokens=settings.external.MAX_OUTPUT_TOKENS
+#         # provider_type=LLMProviderType.GEMINI,
+#         provider_type=LLMProviderType.LLAMA,
+#         api_key=settings.external.LLAMA_API_KEY,
+#         api_endpoint=settings.external.LLAMA_API_ENDPOINT,
+#         # model=settings.external.GEMINI_MODEL,
+#         # temperature=settings.external.TEMPERATURE,
+#         # max_tokens=settings.external.MAX_OUTPUT_TOKENS
 #     )
-
-def get_llm_provider() -> ILLMProvider:
-    logger.info("Loading LLama")
-    return CookieExtractorFactory.create_provider(
-        # provider_type=LLMProviderType.GEMINI,
-        provider_type=LLMProviderType.LLAMA,
-        api_key=settings.external.LLAMA_API_KEY,
-        api_endpoint=settings.external.LLAMA_API_ENDPOINT,
-        # model=settings.external.GEMINI_MODEL,
-        # temperature=settings.external.TEMPERATURE,
-        # max_tokens=settings.external.MAX_OUTPUT_TOKENS
-    )
 
 def get_content_analyzer() -> ContentAnalyzer:
     return ContentAnalyzer()

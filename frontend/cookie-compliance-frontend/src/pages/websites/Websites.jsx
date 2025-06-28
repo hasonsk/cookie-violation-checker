@@ -11,8 +11,8 @@ import {
   TablePagination,
   Paper,
   Typography,
-  FormControlLabel, // Added
-  Checkbox, // Added
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import WebsiteItem from './WebsiteItem';
 import DomainRequestForm from './DomainRequestForm';
@@ -21,56 +21,41 @@ import { useWebsites } from '../../hooks/useWebsites';
 
 const WebsiteList = () => {
   const { user, isProvider, loading: authLoading, userId } = useAuth();
-  const { websites, loading: websitesLoading, getWebsites } = useWebsites();
+  const { websites, loading: websitesLoading, getWebsites, totalCount, currentPage, pageSize, changePage } = useWebsites();
 
   const [searchInput, setSearchInput] = useState('');
-  const [hasPolicyFilter, setHasPolicyFilter] = useState(false); // New state for policy filter
-  const [filteredWebsites, setFilteredWebsites] = useState([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [hasPolicyFilter, setHasPolicyFilter] = useState(false);
 
   useEffect(() => {
     if (!authLoading && userId) {
-      getWebsites({
+      const params = {
         userId,
         role: user?.role,
-        skip: 0,
-        limit: 1000, // Tải tất cả nếu dữ liệu nhỏ
-      });
+        search: searchInput,
+        hasPolicy: hasPolicyFilter, // Pass filter to backend
+      };
+      getWebsites(currentPage, pageSize, params);
     }
-  }, [authLoading, userId, user?.role, getWebsites]);
-
-  useEffect(() => {
-    let currentFiltered = websites;
-
-    // Apply search filter
-    if (searchInput.trim() !== '') {
-      const lowerSearch = searchInput.toLowerCase();
-      currentFiltered = currentFiltered.filter(w =>
-        w.domain.toLowerCase().includes(lowerSearch)
-      );
-    }
-
-    // Apply has policy filter
-    if (hasPolicyFilter) {
-      currentFiltered = currentFiltered.filter(w => w.policy_url);
-    }
-
-    setFilteredWebsites(currentFiltered);
-    setPage(0); // Reset page khi lọc mới
-  }, [searchInput, hasPolicyFilter, websites]); // Added hasPolicyFilter to dependencies
+  }, [authLoading, userId, user?.role, getWebsites, currentPage, pageSize, searchInput, hasPolicyFilter]);
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    changePage(newPage + 1); // Redux currentPage is 1-based, MUI page is 0-based
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newLimit = parseInt(event.target.value, 10);
+    changePage(1); // Reset to first page
+    getWebsites(1, newLimit, { userId, role: user?.role, search: searchInput, hasPolicy: hasPolicyFilter });
   };
 
   const handlePolicyFilterChange = (event) => {
     setHasPolicyFilter(event.target.checked);
+    changePage(1); // Reset to first page on filter change
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value);
+    changePage(1); // Reset to first page on search change
   };
 
   if (authLoading || websitesLoading) {
@@ -89,21 +74,15 @@ const WebsiteList = () => {
     );
   }
 
-  // Dữ liệu hiển thị theo page
-  const paginatedData = filteredWebsites.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}> {/* Adjusted for filters */}
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
         <TextField
           label="Tìm kiếm website..."
           variant="outlined"
           fullWidth
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={handleSearchInputChange}
           sx={{ maxWidth: 400 }}
         />
         <FormControlLabel
@@ -126,13 +105,12 @@ const WebsiteList = () => {
               <TableRow>
                 <TableCell>Domain</TableCell>
                 <TableCell>Chính sách cookie</TableCell>
-                {/* Removed "Vi phạm trung bình" column */}
                 <TableCell>Lần kiểm tra cuối</TableCell>
                 <TableCell>Hành động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedData.map((row) => (
+              {websites.map((row) => (
                 <WebsiteItem key={row.id} website={row} />
               ))}
             </TableBody>
@@ -141,9 +119,9 @@ const WebsiteList = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={filteredWebsites.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
+          count={totalCount}
+          rowsPerPage={pageSize}
+          page={currentPage - 1}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Số dòng mỗi trang:"

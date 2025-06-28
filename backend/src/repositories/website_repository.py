@@ -40,6 +40,10 @@ class WebsiteRepository(BaseRepository):
         websites_data = await self.collection.find(query).skip(skip).limit(limit).to_list(length=limit)
         return [Website(**data) for data in websites_data]
 
+    async def count_websites(self, filters: Optional[Dict] = None) -> int:
+        query = filters if filters is not None else {}
+        return await self.collection.count_documents(query)
+
     async def get_website_by_id(self, website_id: str) -> Optional[Website]:
         """
         Retrieves a website by its ID.

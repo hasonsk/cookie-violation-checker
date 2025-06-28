@@ -6,7 +6,7 @@ from loguru import logger
 
 from src.repositories.website_repository import WebsiteRepository
 from src.repositories.violation_repository import ViolationRepository
-from src.schemas.website import WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, WebsiteResponseSchema
+from src.schemas.website import WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, WebsiteResponseSchema, PaginatedWebsiteResponseSchema
 from src.schemas.violation import ComplianceAnalysisResponse
 from src.models.website import Website
 from src.models.user import UserRole
@@ -17,7 +17,7 @@ class WebsiteManagementService:
         self.website_repo = website_repo
         self.violation_repo = violation_repo
 
-    async def get_all_websites(self, user_id: str, user_role: UserRole, search_query: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[WebsiteListResponseSchema]:
+    async def get_all_websites(self, user_id: str, user_role: UserRole, search_query: Optional[str] = None, skip: int = 0, limit: int = 100) -> PaginatedWebsiteResponseSchema:
         filters = {}
         if search_query:
             filters["domain"] = {"$regex": search_query, "$options": "i"} # Case-insensitive search
@@ -26,21 +26,13 @@ class WebsiteManagementService:
         if user_role == UserRole.PROVIDER:
             filters["provider_id"] = ObjectId(user_id)
 
+        total_count = await self.website_repo.count_websites(filters)
         websites_data = await self.website_repo.get_all_websites(filters, skip=skip, limit=limit)
 
         response_list = []
         for website_data in websites_data:
             website = Website.model_validate(website_data) # Use model_validate
 
-            violations = await self.violation_repo.get_violations_by_website(str(website.domain))
-            # logger.debug(f"Found {(violations)} violations for website {website.domain}")
-            check_count = len(violations) # Count unique check dates
-
-            # last_checked_at = None
-            # if violations:
-            #     last_checked_at = max([v.checked_at for v in violations])
-
-            # Calculate policy_status (simplified, needs actual logic based on compliance analysis)
             policy_status = "unknown"
             if website.is_specific is not None:
                 policy_status = "specific" if website.is_specific == 1 else "general"
@@ -48,25 +40,23 @@ class WebsiteManagementService:
             # Calculate num_specified_cookies
             num_specified_cookies = len(website.policy_cookies)
 
-            # logger.warning(f"Website {website.domain} has {violations}.")
-            # Calculate average violations
-            # total_violations = sum([len(v.issues) for v in violations])
-            # avg_violations = total_violations / check_count if check_count > 0 else 0.0
-
             response_list.append(
                 WebsiteListResponseSchema(
-                    id=website.id, # Pass PyObjectId directly
+                    id=website.id,
                     domain=str(website.domain),
                     company_name=website.company_name,
-                    check_count=check_count,
                     policy_status=policy_status,
                     policy_url=website.policy_url,
                     num_specified_cookies=num_specified_cookies,
-                    # avg_violations=avg_violations,
-                    # last_checked_at=last_checked_at
+                    last_checked_at=website.last_checked_at
                 )
             )
-        return response_list
+        return PaginatedWebsiteResponseSchema(
+            websites=response_list,
+            total_count=total_count,
+            page=int(skip / limit) + 1,
+            page_size=limit
+        )
 
     async def get_website_by_id(self, website_id: str) -> WebsiteResponseSchema:
         website_data = await self.website_repo.get_website_by_id(website_id)

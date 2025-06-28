@@ -56,9 +56,13 @@ class WebsiteListResponseSchema(BaseModel):
     id: PyObjectId = Field(alias="_id")
     domain: str = Field(..., description="The domain name of the website")
     company_name: Optional[str] = Field(default=None, description="The name of the company owning the website")
-    check_count: int = Field(default=0, description="Number of times the website has been checked")
     policy_status: str = Field(default="unknown", description="Status of the cookie policy")
     policy_url: Optional[str] = Field(default=None, description="URL of the cookie policy page")
-    num_specified_cookies: int = Field(default=0, description="Number of cookies specified in the policy")
-    avg_violations: float = Field(default=0.0, description="Average number of violations per check")
     last_checked_at: Optional[datetime] = Field(default=None, description="Date of the most recent check")
+    num_specified_cookies: int = Field(default=0, description="Number of cookies specified in the policy")
+
+class PaginatedWebsiteResponseSchema(BaseModel):
+    websites: List[WebsiteListResponseSchema]
+    total_count: int
+    page: int
+    page_size: int

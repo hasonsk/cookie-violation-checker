@@ -26,14 +26,15 @@ export const useWebsites = () => {
   } = useSelector(state => state.websites);
 
   const getWebsites = useCallback(
-    (params) => {
+    (page, pageSize, params = {}) => {
       const now = new Date().getTime();
+      const currentParams = { ...params, skip: (page - 1) * pageSize, limit: pageSize };
       const isCached = lastFetchParams &&
-                       JSON.stringify(lastFetchParams) === JSON.stringify(params) &&
+                       JSON.stringify(lastFetchParams) === JSON.stringify(currentParams) &&
                        (now - lastFetchTimestamp < CACHE_DURATION);
 
-      if (!isCached || websites.length === 0) { // Always refetch if no data is present
-        dispatch(fetchWebsites(params));
+      if (!isCached || websites.length === 0) {
+        dispatch(fetchWebsites(currentParams));
       }
     },
     [dispatch, lastFetchParams, lastFetchTimestamp, websites.length]

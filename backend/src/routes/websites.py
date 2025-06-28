@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List, Optional
-from src.schemas.website import WebsiteResponseSchema, WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema
+from src.schemas.website import WebsiteResponseSchema, WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, PaginatedWebsiteResponseSchema
 from src.schemas.user import User
-from src.schemas.violation import ComplianceAnalysisResponse # Import ComplianceAnalysisResponse
+from src.schemas.violation import ComplianceAnalysisResponse
 from src.services.website_management_service.website_management_service import WebsiteManagementService
 from src.dependencies.dependencies import get_website_management_service, get_current_user
 from src.models.user import UserRole
@@ -11,7 +11,7 @@ from src.exceptions.custom_exceptions import NotFoundException, BadRequestExcept
 
 router = APIRouter(prefix="/api", tags=["Websites"])
 
-@router.get("/websites", response_model=List[WebsiteListResponseSchema])
+@router.get("/websites", response_model=PaginatedWebsiteResponseSchema)
 async def get_all_websites(
     current_user: User = Depends(get_current_user),
     search: Optional[str] = Query(None, description="Search keyword for domain name"),
@@ -70,9 +70,6 @@ async def create_website(
     current_user: User = Depends(get_current_user),
     website_management_service: WebsiteManagementService = Depends(get_website_management_service)
 ):
-    """
-    Tạo một website mới.
-    """
     if current_user.role != UserRole.PROVIDER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

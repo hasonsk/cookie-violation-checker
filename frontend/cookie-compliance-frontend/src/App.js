@@ -17,7 +17,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
 import UserManagement from './pages/users/UserManagement';
-import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement'; // Import DomainRequestManagement
+import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement';
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
