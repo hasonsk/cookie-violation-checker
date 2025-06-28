@@ -10,58 +10,90 @@ import {
   TableRow,
   TablePagination,
   Paper,
-  Typography,
-  FormControlLabel,
-  Checkbox,
+  Skeleton,
 } from '@mui/material';
 import WebsiteItem from './WebsiteItem';
 import DomainRequestForm from './DomainRequestForm';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebsites } from '../../hooks/useWebsites';
+import { toast } from 'react-toastify';
 
 const WebsiteList = () => {
   const { user, isProvider, loading: authLoading, userId } = useAuth();
-  const { websites, loading: websitesLoading, getWebsites, totalCount, currentPage, pageSize, changePage } = useWebsites();
+  const {
+    websites,
+    loading: websitesLoading,
+    getWebsites,
+    totalCount,
+    currentPage,
+    pageSize,
+    changePage,
+  } = useWebsites();
 
-  const [searchInput, setSearchInput] = useState('');
-  const [hasPolicyFilter, setHasPolicyFilter] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [committedSearch, setCommittedSearch] = useState('');
 
+  // Gọi API mỗi khi committedSearch hoặc bộ lọc thay đổi
   useEffect(() => {
     if (!authLoading && userId) {
       const params = {
         userId,
         role: user?.role,
-        search: searchInput,
-        hasPolicy: hasPolicyFilter, // Pass filter to backend
+        search: committedSearch,
       };
       getWebsites(currentPage, pageSize, params);
     }
-  }, [authLoading, userId, user?.role, getWebsites, currentPage, pageSize, searchInput, hasPolicyFilter]);
+  }, [
+    authLoading,
+    userId,
+    user?.role,
+    currentPage,
+    pageSize,
+    committedSearch,
+    getWebsites,
+  ]);
+
+  // Hiển thị toast nếu không có kết quả
+  useEffect(() => {
+    if (committedSearch && !websitesLoading && websites.length === 0) {
+      toast.warning('Không tìm thấy kết quả phù hợp.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    }
+  }, [websites, websitesLoading, committedSearch]);
 
   const handleChangePage = (event, newPage) => {
-    changePage(newPage + 1); // Redux currentPage is 1-based, MUI page is 0-based
+    changePage(newPage + 1);
   };
 
   const handleChangeRowsPerPage = (event) => {
     const newLimit = parseInt(event.target.value, 10);
-    changePage(1); // Reset to first page
-    getWebsites(1, newLimit, { userId, role: user?.role, search: searchInput, hasPolicy: hasPolicyFilter });
-  };
-
-  const handlePolicyFilterChange = (event) => {
-    setHasPolicyFilter(event.target.checked);
-    changePage(1); // Reset to first page on filter change
+    changePage(1);
+    const params = {
+      userId,
+      role: user?.role,
+      search: committedSearch,
+    };
+    getWebsites(1, newLimit, params);
   };
 
   const handleSearchInputChange = (e) => {
-    setSearchInput(e.target.value);
-    changePage(1); // Reset to first page on search change
+    setSearchText(e.target.value);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setCommittedSearch(searchText.trim());
+      changePage(1);
+    }
   };
 
   if (authLoading || websitesLoading) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography>Đang tải...</Typography>
+        <Skeleton variant="text" width={300} height={40} sx={{ mb: 2 }} />
+        <Skeleton variant="rectangular" width="100%" height={300} />
       </Box>
     );
   }
@@ -81,20 +113,10 @@ const WebsiteList = () => {
           label="Tìm kiếm website..."
           variant="outlined"
           fullWidth
-          value={searchInput}
+          value={searchText}
           onChange={handleSearchInputChange}
-          sx={{ maxWidth: 400 }}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={hasPolicyFilter}
-              onChange={handlePolicyFilterChange}
-              name="hasPolicy"
-              color="primary"
-            />
-          }
-          label="Có chính sách cookie"
+          onKeyDown={handleSearchKeyDown}
+          sx={{ maxWidth: '100%' }}
         />
       </Box>
 

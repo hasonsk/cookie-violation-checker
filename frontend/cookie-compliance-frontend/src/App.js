@@ -6,6 +6,8 @@ import { useAuth } from './hooks/useAuth';
 import { setAuthErrorHandler } from './services/api';
 import { ThemeProvider } from '@mui/material/styles'; // Import ThemeProvider
 import theme from './theme'; // Import your custom theme
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -122,6 +124,7 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
+      <ToastContainer />
       <ThemeProvider theme={theme}> {/* Apply the custom theme */}
         <Router>
           <AppContent />

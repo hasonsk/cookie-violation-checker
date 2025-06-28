@@ -31,9 +31,10 @@ export const useWebsites = () => {
       const currentParams = { ...params, skip: (page - 1) * pageSize, limit: pageSize };
       const isCached = lastFetchParams &&
                        JSON.stringify(lastFetchParams) === JSON.stringify(currentParams) &&
-                       (now - lastFetchTimestamp < CACHE_DURATION);
+                       (now - lastFetchTimestamp < CACHE_DURATION) &&
+                       (totalCount > 0 || (totalCount === 0 && websites.length === 0)); // Add condition for no results
 
-      if (!isCached || websites.length === 0) {
+      if (!isCached) {
         dispatch(fetchWebsites(currentParams));
       }
     },
