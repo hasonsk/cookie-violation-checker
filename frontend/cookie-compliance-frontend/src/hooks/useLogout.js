@@ -13,9 +13,7 @@ const useLogout = () => {
   const confirmLogout = async () => {
     try {
       const result = await dispatch(logoutUser());
-      // Assuming logoutUser returns a payload with a success property or similar
-      // For RTK Query, it might be `unwrap()` or checking `isSuccess`
-      if (result.meta.requestStatus === 'fulfilled') { // Check RTK Query fulfilled status
+      if (result.meta.requestStatus === 'fulfilled') {
         localStorage.removeItem('token');
         setLogoutDialogOpen(false);
         navigate('/login');

@@ -10,11 +10,11 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux'; // Import useSelector and useDispatch
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { logoutUser } from '../store/slices/authSlice'; // Import logoutUser action
+import { useSelector } from 'react-redux'; // Import useSelector
 import { Globe, BarChart3, Settings, Info, Users, LogOut } from 'lucide-react';
 import { USER_ROLES } from '../constants/roles'; // Import USER_ROLES
+import useLogout from '../hooks/useLogout'; // Import useLogout hook
+import LogoutDialog from './topbars/LogoutDialog'; // Import LogoutDialog
 
 // Define menu items outside the component to prevent re-creation on every render
 const baseMenuItems = [
@@ -52,16 +52,7 @@ const Sidebar = () => {
   }
 
   const flatMenuItems = menuItems;
-
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      dispatch(logoutUser());
-      navigate('/login');
-    }
-  };
+  const { logoutDialogOpen, setLogoutDialogOpen, handleLogout, confirmLogout } = useLogout();
 
   return (
     <Drawer
@@ -117,6 +108,13 @@ const Sidebar = () => {
           </ListItemButton>
         </List>
       </Box>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutDialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+        onConfirm={confirmLogout}
+      />
     </Drawer>
   );
 };

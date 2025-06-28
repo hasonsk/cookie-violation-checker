@@ -10,7 +10,9 @@ import {
   Button,
   CircularProgress,
   Alert,
+  Skeleton, // Add Skeleton import
 } from '@mui/material';
+import { LoadingSkeleton } from '../../components/Loading'; // Import LoadingSkeleton
 
 const RoleRequestStatus = () => {
   const [userStatus, setUserStatus] = useState(null);
@@ -40,9 +42,12 @@ const RoleRequestStatus = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading status...</Typography>
+      <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+        <LoadingSkeleton lines={1} height="40px" variant="text" width="60%" /> {/* Title skeleton */}
+        <Box sx={{ mt: 3, mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f9f9f9' }}>
+          <LoadingSkeleton lines={1} height="24px" variant="text" width="50%" /> {/* Submitted Request Details title */}
+          <LoadingSkeleton lines={6} height="20px" variant="text" width="100%" sx={{ mt: 1 }} /> {/* Status details */}
+        </Box>
       </Box>
     );
   }

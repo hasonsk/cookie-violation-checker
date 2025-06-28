@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, CircularProgress, Alert, Skeleton } from '@mui/material';
+import { LoadingSkeleton } from '../../components/Loading';
 import { userAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
@@ -56,8 +57,13 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+      <Box sx={{ p: 3, maxWidth: 600, margin: 'auto' }}>
+        <LoadingSkeleton lines={1} height="40px" variant="text" width="60%" /> {/* Title skeleton */}
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="56px" variant="rectangular" width="100%" /> {/* Name field skeleton */}
+          <LoadingSkeleton lines={1} height="56px" variant="rectangular" width="100%" sx={{ mt: 2 }} /> {/* Email field skeleton */}
+          <LoadingSkeleton lines={1} height="48px" variant="rectangular" width="150px" sx={{ mt: 2 }} /> {/* Button skeleton */}
+        </Box>
       </Box>
     );
   }

@@ -11,8 +11,10 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Skeleton, // Add Skeleton import
 } from '@mui/material';
+import { LoadingSkeleton } from '../../components/Loading'; // Import LoadingSkeleton
 
 const UserRoleRequestForm = () => {
   const currentUser = useSelector(state => state.auth.user);
@@ -77,9 +79,18 @@ const UserRoleRequestForm = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading request data...</Typography>
+      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+        <LoadingSkeleton lines={1} height="40px" variant="text" width="70%" /> {/* Title skeleton */}
+        <Box sx={{ mt: 3, mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#f9f9f9' }}>
+          <LoadingSkeleton lines={1} height="24px" variant="text" width="50%" /> {/* Current Request Status title */}
+          <LoadingSkeleton lines={4} height="20px" variant="text" width="100%" sx={{ mt: 1 }} /> {/* Status details */}
+        </Box>
+        <LoadingSkeleton lines={1} height="24px" variant="text" width="60%" /> {/* Submit New Role Request title */}
+        <LoadingSkeleton lines={1} height="20px" variant="text" width="80%" sx={{ mt: 1, mb: 2 }} /> {/* Description text */}
+        <LoadingSkeleton lines={1} height="56px" variant="rectangular" width="100%" sx={{ mb: 2 }} /> {/* Requested Role select */}
+        <LoadingSkeleton lines={1} height="120px" variant="rectangular" width="100%" sx={{ mb: 2 }} /> {/* Domains textfield */}
+        <LoadingSkeleton lines={1} height="96px" variant="rectangular" width="100%" sx={{ mb: 2 }} /> {/* Reason textfield */}
+        <LoadingSkeleton lines={1} height="48px" variant="rectangular" width="180px" /> {/* Button */}
       </Box>
     );
   }

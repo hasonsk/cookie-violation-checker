@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Grid, Paper, Typography, Box, useTheme,
-  Tabs, Tab, CircularProgress, Alert, List, ListItem, ListItemText, Divider
+  Tabs, Tab, CircularProgress, Alert, List, ListItem, ListItemText, Divider, Skeleton
 } from '@mui/material';
+import { LoadingSkeleton } from '../../components/Loading'; // Import LoadingSkeleton
 import { websiteAPI } from '../../store/api/websiteAPI'; // Import the API
 
 // Re-using MetricCard if it's intended for summary metrics
@@ -114,9 +115,30 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>Analyzing cookies...</Typography>
+      <Box sx={{ p: 3 }}>
+        <Grid container spacing={3} mb={3}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <LoadingSkeleton lines={1} height="100px" variant="rectangular" width="100%" /> {/* Metric Card Skeleton */}
+            </Grid>
+          ))}
+        </Grid>
+
+        <Paper
+          sx={{
+            p: 3,
+            borderRadius: 3,
+            boxShadow: theme.shadows[1],
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <LoadingSkeleton lines={1} height="30px" variant="text" width="40%" mb={2} /> {/* Report Title Skeleton */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <LoadingSkeleton lines={1} height="48px" variant="rectangular" width="100%" /> {/* Tabs Skeleton */}
+          </Box>
+          <LoadingSkeleton lines={5} height="20px" variant="text" width="100%" /> {/* List items skeleton */}
+        </Paper>
       </Box>
     );
   }

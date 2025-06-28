@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Skeleton } from '@mui/material'; // Import Skeleton from Material-UI
 import './Loading.css'; // Import the new CSS file
 
 const Loading = ({
@@ -46,18 +47,46 @@ Loading.propTypes = {
   color: PropTypes.string,
 };
 
-// Loading skeleton cho danh sách
-export const LoadingSkeleton = ({ lines = 3, height = '20px' }) => (
-  <div className="skeleton-container">
-    {Array.from({ length: lines }, (_, index) => (
-      <div key={index} className="skeleton-line" style={{ height }}></div>
-    ))}
-  </div>
-);
+// Loading skeleton cho danh sách hoặc các hình dạng khác
+export const LoadingSkeleton = ({
+  lines = 3,
+  height = '20px',
+  variant = 'line', // 'text', 'rectangular', 'circular', or 'line' (custom CSS)
+  width, // for rectangular/text variants
+  animation = 'wave', // 'pulse' or 'wave'
+}) => {
+  if (variant === 'line') {
+    return (
+      <div className="skeleton-container">
+        {Array.from({ length: lines }, (_, index) => (
+          <div key={index} className="skeleton-line" style={{ height }}></div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="skeleton-container">
+      {Array.from({ length: lines }, (_, index) => (
+        <Skeleton
+          key={index}
+          variant={variant}
+          width={width || (variant === 'text' ? '100%' : '50px')} // Default width for text/rectangular
+          height={height}
+          animation={animation}
+          sx={{ borderRadius: variant === 'circular' ? '50%' : '4px' }} // Apply border-radius for consistency
+        />
+      ))}
+    </div>
+  );
+};
 
 LoadingSkeleton.propTypes = {
   lines: PropTypes.number,
   height: PropTypes.string,
+  variant: PropTypes.oneOf(['text', 'rectangular', 'circular', 'line']),
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  animation: PropTypes.oneOf(['pulse', 'wave', false]),
 };
 
 // Loading dots

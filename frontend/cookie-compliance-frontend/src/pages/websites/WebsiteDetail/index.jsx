@@ -39,6 +39,7 @@ import {
 } from "chart.js";
 import { Bar, Line, Pie } from "react-chartjs-2";
 
+import { LoadingSkeleton } from "../../../components/Loading"; // Import LoadingSkeleton
 import useWebsiteDetail from "./hooks/useWebsiteDetail";
 import useChartData from "./hooks/useChartData";
 import {
@@ -630,18 +631,52 @@ const WebsiteDetail = () => {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "80vh",
-        }}
-      >
-        <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>
-          Đang tải dữ liệu...
-        </Typography>
+      <Box sx={{ p: 3, bgcolor: "background.default", minHeight: "100vh" }}>
+        <LoadingSkeleton lines={1} height="60px" variant="rectangular" width="100%" />
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="200px" variant="rectangular" width="100%" />
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <LoadingSkeleton lines={1} height="150px" variant="rectangular" width="100%" />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LoadingSkeleton lines={1} height="150px" variant="rectangular" width="100%" />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LoadingSkeleton lines={1} height="150px" variant="rectangular" width="100%" />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LoadingSkeleton lines={1} height="150px" variant="rectangular" width="100%" />
+            </Grid>
+          </Grid>
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <LoadingSkeleton lines={1} height="350px" variant="rectangular" width="100%" />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <LoadingSkeleton lines={1} height="350px" variant="rectangular" width="100%" />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <LoadingSkeleton lines={1} height="350px" variant="rectangular" width="100%" />
+            </Grid>
+          </Grid>
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="350px" variant="rectangular" width="100%" />
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="250px" variant="rectangular" width="100%" />
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="250px" variant="rectangular" width="100%" />
+        </Box>
+        <Box sx={{ mt: 3 }}>
+          <LoadingSkeleton lines={1} height="250px" variant="rectangular" width="100%" />
+        </Box>
       </Box>
     );
   }
