@@ -22,6 +22,9 @@ import WebsiteDetail from './pages/websites/WebsiteDetail';
 import UserManagement from './pages/users/UserManagement';
 import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement';
 import AboutPage from './pages/AboutPage'; // Import the new AboutPage
+import TermsOfService from './pages/TermsOfService'; // Import TermsOfService
+import PrivacyPolicy from './pages/PrivacyPolicy'; // Import PrivacyPolicy
+import NotFound from './pages/NotFound'; // Import NotFound
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
@@ -113,6 +116,14 @@ function AppContent() {
             </PublicRoute>
           }
         />
+        <Route
+          path="/terms-of-service"
+          element={<TermsOfService />}
+        />
+        <Route
+          path="/privacy-policy"
+          element={<PrivacyPolicy />}
+        />
 
         {/* Protected Routes */}
         <Route
@@ -128,14 +139,14 @@ function AppContent() {
           <Route path="websites" element={<WebsitesList />} />
           <Route path="websites/detail/:id" element={<WebsiteDetail />} />
           <Route path="admin/users" element={<UserManagement />} />
-          <Route path="admin/domain-requests" element={<DomainRequestManagement />} /> {/* New route for domain request management */}
+          <Route path="admin/domain-requests" element={<DomainRequestManagement />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="about" element={<AboutPage />} /> {/* New route for About page */}
-          <Route path="settings" element={<Settings />} /> {/* New route for Settings page */}
+          <Route path="about" element={<AboutPage />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Catch all route - might need adjustment based on the conditional rendering */}
-        {/* If a 404 page is desired, it should be implemented here. */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {/* {isAuthenticated && !isApproved && <ApprovalPending />} */}
     </ErrorBoundary>

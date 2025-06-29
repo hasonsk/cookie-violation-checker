@@ -75,8 +75,11 @@ const Login = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'background.default', // Use theme's default background color
         padding: '20px',
+        backgroundImage: 'url(/path/to/your/background-image.jpg)', // Placeholder image
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <Box

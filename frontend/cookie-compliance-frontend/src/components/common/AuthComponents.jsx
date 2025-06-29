@@ -124,11 +124,11 @@ export const TermsAndPrivacyCheckbox = ({ checked, onChange, error, disabled }) 
       label={
         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px', lineHeight: 1.4 }}>
           Tôi đồng ý với{' '}
-          <Link component={RouterLink} to="/terms" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          <Link component={RouterLink} to="/terms-of-service" target="_blank" rel="noopener noreferrer" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
             Điều khoản sử dụng
           </Link>{' '}
           và{' '}
-          <Link component={RouterLink} to="/privacy" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          <Link component={RouterLink} to="/privacy-policy" target="_blank" rel="noopener noreferrer" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
             Chính sách bảo mật
           </Link>
         </Typography>

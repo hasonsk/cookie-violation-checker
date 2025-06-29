@@ -17,10 +17,10 @@ const Footer = () => {
         &copy; {new Date().getFullYear()} Cookie Compliance Checker. All rights reserved.
       </Typography>
       <Box component="nav" sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-        <Link href="/privacy-policy" color="primary" underline="hover">
+        <Link href="/privacy-policy" color="primary" underline="hover" target="_blank" rel="noopener noreferrer">
           Privacy Policy
         </Link>
-        <Link href="/terms-of-service" color="primary" underline="hover">
+        <Link href="/terms-of-service" color="primary" underline="hover" target="_blank" rel="noopener noreferrer">
           Terms of Service
         </Link>
         <Link href="/contact-us" color="primary" underline="hover">
