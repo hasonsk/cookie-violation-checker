@@ -15,6 +15,8 @@ class User(BaseModel):
     password: Optional[str] = None
     name: str
     role: UserRole
+    approved_by_admin: bool # Add approved_by_admin to schema
+    company_name: Optional[str] = None # Add company_name to schema
     status: Optional[str] = None
 
     class Config:

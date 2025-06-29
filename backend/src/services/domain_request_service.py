@@ -1,6 +1,6 @@
 from typing import List, Optional
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException # Import HTTPException
 
 from src.schemas.domain_request import DomainRequestCreateSchema, DomainRequestResponseSchema, DomainRequestStatus
@@ -14,7 +14,7 @@ class DomainRequestService:
         self.domain_request_repo = domain_request_repo
         self.website_repo = website_repo
 
-    async def create_domain_request(self, request_data: DomainRequestCreateSchema, user_id: str) -> DomainRequestResponseSchema:
+    async def create_domain_request(self, request_data: DomainRequestCreateSchema, requester_id: str) -> DomainRequestResponseSchema:
         # Check for duplicate domains
         for domain in request_data.domains:
             existing_website = await self.website_repo.get_website_by_root_url(domain)
@@ -22,23 +22,23 @@ class DomainRequestService:
                 raise DomainAlreadyExistsError(f"Domain '{domain}' is already registered.")
 
         new_request = DomainRequest(
-            user_id=ObjectId(user_id),
+            requester_id=ObjectId(requester_id),
             company_name=request_data.company_name,
             domains=request_data.domains,
             purpose=request_data.purpose,
             status=DomainRequestStatus.PENDING,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
 
         # FIX: Loại bỏ _id khỏi dict trước khi insert
-        request_dict = new_request.dict(by_alias=True, exclude_none=True)
+        request_dict = new_request.model_dump(by_alias=True, exclude_none=True)
         # Đảm bảo không có _id trong dict
         request_dict.pop('_id', None)
         request_dict.pop('id', None)  # Cũng loại bỏ 'id' nếu có
 
         inserted_id = await self.domain_request_repo.create_domain_request(request_dict)
         created_request = await self.domain_request_repo.get_domain_request_by_id(str(inserted_id))
-        return DomainRequestResponseSchema.parse_obj(created_request)
+        return DomainRequestResponseSchema.model_validate(created_request)
 
     async def get_all_domain_requests(self, status: Optional[DomainRequestStatus] = None, skip: int = 0, limit: int = 100) -> List[DomainRequestResponseSchema]:
         filters = {}
@@ -63,8 +63,8 @@ class DomainRequestService:
             if not existing_website:
                 new_website_data = {
                     "domain": domain_url,
-                    "provider_id": domain_request.user_id, # Gán cho provider đã yêu cầu
-                    "last_checked_at": datetime.utcnow() # Changed from last_scanned_at to last_checked_at
+                    "provider_id": domain_request.requester_id, # Gán cho provider đã yêu cầu
+                    "last_checked_at": datetime.now(timezone.utc) # Changed from last_scanned_at to last_checked_at
                     # Các trường khác có thể để giá trị mặc định
                 }
                 await self.website_repo.create_website(new_website_data)
@@ -75,8 +75,8 @@ class DomainRequestService:
             request_id,
             {
                 "status": DomainRequestStatus.APPROVED.value,
-                "approved_by": ObjectId(approver_id),
-                "approved_at": datetime.utcnow()
+                "processed_by": ObjectId(approver_id),
+                "processed_at": datetime.now(timezone.utc)
             }
         )
         if not updated_data:
@@ -88,19 +88,22 @@ class DomainRequestService:
         if not request_data:
             raise DomainRequestNotFoundError()
 
-        domain_request = DomainRequest.parse_obj(request_data)
+        domain_request = DomainRequest.model_validate(request_data)
         if domain_request.status != DomainRequestStatus.PENDING:
             raise HTTPException(status_code=400, detail="Request is not in pending status.")
+
+        if not feedback: # Ensure feedback is not None or empty
+            raise HTTPException(status_code=400, detail="Feedback is required to reject a domain request.")
 
         updated_data = await self.domain_request_repo.update_domain_request(
             request_id,
             {
                 "status": DomainRequestStatus.REJECTED.value,
-                "approved_by": ObjectId(approver_id),
-                "approved_at": datetime.utcnow(),
+                "processed_by": ObjectId(approver_id),
+                "processed_at": datetime.now(timezone.utc),
                 "feedback": feedback
             }
         )
         if not updated_data:
             raise HTTPException(status_code=500, detail="Failed to reject domain request.")
-        return DomainRequestResponseSchema.parse_obj(updated_data)
+        return DomainRequestResponseSchema.model_validate(updated_data)
