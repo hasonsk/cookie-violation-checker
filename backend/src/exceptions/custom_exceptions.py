@@ -80,3 +80,7 @@ class NotFoundException(Exception):
 class BadRequestException(Exception):
     def __init__(self, message: str = "Bad request"):
         super().__init__(message)
+
+class PolicyCrawlException(Exception):
+    def __init__(self, message: str = "Failed to crawl policy"):
+        super().__init__(message)

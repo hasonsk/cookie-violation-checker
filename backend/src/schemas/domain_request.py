@@ -6,9 +6,6 @@ from enum import Enum
 from bson import ObjectId
 import re
 
-# Regex for basic domain validation (e.g., example.com, sub.example.co.uk)
-# This regex allows for subdomains, a domain name, and a top-level domain.
-# It does not allow IP addresses or URLs with paths/queries.
 DOMAIN_REGEX = r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$"
 
 def validate_domain_format(domain: str) -> str:
