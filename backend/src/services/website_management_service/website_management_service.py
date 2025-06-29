@@ -6,25 +6,52 @@ from loguru import logger
 
 from src.repositories.website_repository import WebsiteRepository
 from src.repositories.violation_repository import ViolationRepository
+from src.repositories.domain_request_repository import DomainRequestRepository # Import DomainRequestRepository
 from src.schemas.website import WebsiteListResponseSchema, WebsiteCreateSchema, WebsiteUpdateSchema, WebsiteResponseSchema, PaginatedWebsiteResponseSchema
 from src.schemas.violation import ComplianceAnalysisResponse
 from src.models.website import Website
 from src.models.user import UserRole
+from src.schemas.domain_request import DomainRequestStatus # Import DomainRequestStatus
 from src.exceptions.custom_exceptions import NotFoundException, BadRequestException
 
 class WebsiteManagementService:
-    def __init__(self, website_repo: WebsiteRepository, violation_repo: ViolationRepository):
+    def __init__(self, website_repo: WebsiteRepository, violation_repo: ViolationRepository, domain_request_repo: DomainRequestRepository): # Add domain_request_repo
         self.website_repo = website_repo
         self.violation_repo = violation_repo
+        self.domain_request_repo = domain_request_repo # Initialize domain_request_repo
 
-    async def get_all_websites(self, user_id: str, user_role: UserRole, search_query: Optional[str] = None, skip: int = 0, limit: int = 100) -> PaginatedWebsiteResponseSchema:
+    async def get_all_websites(self, user_id: str, user_role: UserRole, is_approved: bool, search_query: Optional[str] = None, skip: int = 0, limit: int = 100) -> PaginatedWebsiteResponseSchema: # Add is_approved
         filters = {}
         if search_query:
             filters["domain"] = {"$regex": search_query, "$options": "i"} # Case-insensitive search
 
         # Filter by provider_id if the user is a provider
         if user_role == UserRole.PROVIDER:
-            filters["provider_id"] = ObjectId(user_id)
+            if is_approved:
+                # If provider is approved, filter by domains from their approved requests
+                approved_requests = await self.domain_request_repo.get_domain_requests_by_requester_id(
+                    requester_id=user_id,
+                    status=DomainRequestStatus.APPROVED.value
+                )
+                approved_domains = [domain for req in approved_requests for domain in req.domains]
+                if approved_domains:
+                    filters["domain"] = {"$in": approved_domains}
+                else:
+                    # If no approved domains, return empty list
+                    return PaginatedWebsiteResponseSchema(
+                        websites=[],
+                        total_count=0,
+                        page=int(skip / limit) + 1,
+                        page_size=limit
+                    )
+            else:
+                # If provider is not approved, they should not see any websites
+                return PaginatedWebsiteResponseSchema(
+                    websites=[],
+                    total_count=0,
+                    page=int(skip / limit) + 1,
+                    page_size=limit
+                )
 
         total_count = await self.website_repo.count_websites(filters)
         websites_data = await self.website_repo.get_all_websites(filters, skip=skip, limit=limit)

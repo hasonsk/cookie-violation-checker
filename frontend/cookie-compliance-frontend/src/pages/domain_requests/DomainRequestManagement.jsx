@@ -120,9 +120,7 @@ const DomainRequestManagement = () => {
             <TableBody>
               {requests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    Không có yêu cầu domain nào.
-                  </TableCell>
+                  <TableCell colSpan={6} align="center">Không có yêu cầu domain nào.</TableCell>
                 </TableRow>
               ) : (
                 requests.map((request) => (
@@ -133,9 +131,7 @@ const DomainRequestManagement = () => {
                     <TableCell>{getStatusChip(request.status)}</TableCell>
                     <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Button variant="outlined" size="small" onClick={() => handleOpenModal(request)}>
-                        Xem chi tiết
-                      </Button>
+                      <Button variant="outlined" size="small" onClick={() => handleOpenModal(request)}>Xem chi tiết</Button>
                     </TableCell>
                   </TableRow>
                 ))

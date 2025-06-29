@@ -35,11 +35,15 @@ class DomainRequestRepository(BaseRepository):
                 raise
         return domain_requests
 
-    async def get_domain_requests_by_user_id(self, user_id: str) -> List[Dict[str, Any]]:
+    async def get_domain_requests_by_requester_id(self, requester_id: str, status: Optional[str] = None) -> List[DomainRequest]:
         """
-        Retrieves all domain requests for a given user ID.
+        Retrieves domain requests for a given requester ID, optionally filtered by status.
         """
-        return await self.find_all({"user_id": ObjectId(user_id)})
+        filters = {"requester_id": ObjectId(requester_id)}
+        if status:
+            filters["status"] = status
+        requests_data = await self.collection.find(filters).to_list(length=None) # Fetch all matching requests
+        return [DomainRequest(**data) for data in requests_data]
 
     async def update_request_status(self, request_id: str, status: str, feedback: Optional[str] = None, processed_by: Optional[ObjectId] = None) -> int:
         update_fields = {"status": status, "processed_at": datetime.utcnow()}

@@ -52,8 +52,8 @@ class AuthService:
             approved_by_admin=False # Luôn đặt là False khi đăng ký
         )
         # Sửa lại user.dict() thành new_user.model_dump() theo Pydantic v2
-        # Ensure all fields, including those with default values, are included
-        await self.user_repo.create_user(new_user.model_dump(by_alias=True, exclude_unset=False, exclude_defaults=False))
+        # Exclude default values (like _id=None) to allow MongoDB to generate them
+        await self.user_repo.create_user(new_user.model_dump(by_alias=True, exclude_unset=False, exclude_defaults=True))
         return RegisterResponseSchema(msg="Đăng ký thành công. Vui lòng chờ quản trị viên phê duyệt.")
 
     async def login_user(self, data: LoginSchema) -> LoginResponseSchema:

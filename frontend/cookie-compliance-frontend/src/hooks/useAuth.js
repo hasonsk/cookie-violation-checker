@@ -14,7 +14,7 @@ export const useAuth = () => {
     initialized
   } = useSelector((state) => state.auth);
 
-  // Check auth status on app load
+  // Check auth status on app load (added comment to force recompile)
   useEffect(() => {
     if (!initialized && !loading) {
       dispatch(checkAuthStatus());
@@ -42,7 +42,7 @@ export const useAuth = () => {
     isAdmin: user?.role === 'admin',
     isManager: user?.role === 'manager',
     isProvider: user?.role === 'provider',
-    isApproved: user?.approved_by_admin, // Add this
+    isApproved: user?.approved_by_admin,
     userId: user?._id,
     userName: user?.name || user?.fullName,
     userEmail: user?.email,

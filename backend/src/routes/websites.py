@@ -27,6 +27,7 @@ async def get_all_websites(
     return await website_management_service.get_all_websites(
         user_id=str(current_user.id),
         user_role=current_user.role,
+        is_approved=current_user.approved_by_admin, # Pass is_approved flag
         search_query=search,
         skip=skip,
         limit=limit
@@ -46,7 +47,7 @@ async def get_website_by_id(
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
-@router.get("/websites/{website_id}/analytics", response_model=List[ComplianceAnalysisResponse]) # Adjust response model as needed
+@router.get("/websites/{website_id}/analytics", response_model=List[ComplianceAnalysisResponse])
 async def get_website_analytics(
     website_id: str,
     current_user: User = Depends(get_current_user),
