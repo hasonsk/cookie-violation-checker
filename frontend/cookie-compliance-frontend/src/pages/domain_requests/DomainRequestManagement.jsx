@@ -30,23 +30,24 @@ const DomainRequestManagement = () => {
   };
 
   const handleApprove = async (requestId) => {
-    if (!user?.id) {
+    console.log(user)
+    if (!user?._id) {
       toast.error("Không thể phê duyệt: Thiếu thông tin người dùng.");
       return;
     }
-    const result = await dispatch(approveDomainRequest({ requestId, approverId: user.id }));
+    const result = await dispatch(approveDomainRequest({ requestId, approverId: user._id }));
     if (approveDomainRequest.fulfilled.match(result)) {
       handleCloseModal();
-      dispatch(fetchDomainRequests(filterStatus)); // Refresh list
+      dispatch(fetchDomainRequests(filterStatus));
     }
   };
 
   const handleReject = async (requestId, feedback) => {
-    if (!user?.id) {
+    if (!user?._id) {
       toast.error("Không thể từ chối: Thiếu thông tin người dùng.");
       return;
     }
-    const result = await dispatch(rejectDomainRequest({ requestId, approverId: user.id, feedback }));
+    const result = await dispatch(rejectDomainRequest({ requestId, approverId: user._id, feedback }));
     if (rejectDomainRequest.fulfilled.match(result)) {
       handleCloseModal();
       dispatch(fetchDomainRequests(filterStatus)); // Refresh list

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'; // Import PropTypes
 import { Modal, Box, Typography, Button, TextField, Chip, Alert } from '@mui/material';
 // import { toast } from 'react-toastify'; // Removing react-toastify
-import { DOMAIN_STATUS } from '../constants/domainStatus'; // Import DOMAIN_STATUS
+import { DOMAIN_STATUS } from '../constants/domainStatus';
 
 const style = {
   position: 'absolute',
@@ -40,8 +40,8 @@ const DomainRequestDetailsModal = ({ open, onClose, request, onApprove, onReject
       setFeedbackError("Vui lòng nhập lý do từ chối.");
       return;
     }
-    setFeedbackError(''); // Clear error if feedback is provided
-    onReject(request.id, feedback);
+    setFeedbackError('');
+    onReject(request._id, feedback);
   };
 
   if (!request) {
@@ -177,13 +177,13 @@ const StatusChip = ({ status }) => {
           Chi tiết yêu cầu Domain
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>ID Yêu cầu:</strong> {request.id}
+          <strong>ID Yêu cầu:</strong> {request._id}
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>Tên công ty:</strong> {request.company_name}
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Người yêu cầu:</strong> {request.user_email}
+          <strong>Người yêu cầu:</strong> {request.requester_id}
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>Trạng thái:</strong> <StatusChip status={request.status} />
@@ -222,7 +222,7 @@ const StatusChip = ({ status }) => {
 
         {request.status === DOMAIN_STATUS.PENDING && (
           <RequestActions
-            requestId={request.id}
+            requestId={request._id}
             onApprove={onApprove}
             onReject={onReject}
             loading={loading}

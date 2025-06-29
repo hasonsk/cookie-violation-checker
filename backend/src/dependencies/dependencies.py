@@ -134,9 +134,10 @@ def get_domain_request_repository() -> DomainRequestRepository:
 
 def get_domain_request_service(
     domain_request_repo: DomainRequestRepository = Depends(get_domain_request_repository),
-    website_repo: WebsiteRepository = Depends(get_website_repository)
+    website_repo: WebsiteRepository = Depends(get_website_repository),
+    user_repo: UserRepository = Depends(get_user_repository) # Add UserRepository dependency
 ) -> DomainRequestService:
-    return DomainRequestService(domain_request_repo, website_repo)
+    return DomainRequestService(domain_request_repo, website_repo, user_repo)
 
 def get_violation_analyzer_service(
     policy_crawler: PolicyCrawlerService = Depends(create_playwright_bing_extractor),

@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import Enum
 from bson import ObjectId
 import re
+from src.schemas.user import UserPublicSchema # Import UserPublicSchema
 
 DOMAIN_REGEX = r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$"
 
@@ -33,8 +34,10 @@ class DomainRequestResponseSchema(BaseModel):
     purpose: str
     status: DomainRequestStatus = DomainRequestStatus.PENDING
     processed_by: Optional[PyObjectId] = None
+    processed_by_info: Optional[UserPublicSchema] = None # Add processed_by_info
     processed_at: Optional[datetime] = None
-    feedback: str = Field(..., min_length=10, max_length=1000)
+    feedback: Optional[str] = Field(None, min_length=10, max_length=1000)
+    requester_info: Optional[UserPublicSchema] = None # Add requester_info
 
     class Config:
         populate_by_name = True

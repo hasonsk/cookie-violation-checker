@@ -35,7 +35,7 @@ class PyObjectId(ObjectId):
         return json_schema
 
 class BaseMongoDBModel(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id")
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

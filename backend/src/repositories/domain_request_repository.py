@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from bson import ObjectId
 
@@ -13,7 +13,27 @@ class DomainRequestRepository(BaseRepository):
     async def get_all_domain_requests(self, filters: Optional[Dict] = None, skip: int = 0, limit: int = 100) -> List[DomainRequest]:
         query = filters if filters is not None else {}
         requests_data = await self.collection.find(query).skip(skip).limit(limit).to_list(length=limit)
-        return [DomainRequest(**data) for data in requests_data]
+        domain_requests = []
+        for data in requests_data:
+            # Ensure 'created_at' is present for older documents that might not have it
+            if "created_at" not in data or data["created_at"] is None:
+                data["created_at"] = datetime.now(timezone.utc)
+
+            # Map 'user_id' from database to 'requester_id' for Pydantic model
+            if "user_id" in data and "requester_id" not in data:
+                data["requester_id"] = data.pop("user_id") # Use pop to remove user_id and assign to requester_id
+
+            try:
+                domain_requests.append(DomainRequest(**data))
+            except Exception as e:
+                # Log the error and the problematic data
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error validating DomainRequest data: {e}. Data: {data}")
+                # Depending on desired behavior, you might re-raise, skip, or return partial results
+                # For now, we'll re-raise to ensure the error is caught
+                raise
+        return domain_requests
 
     async def get_domain_requests_by_user_id(self, user_id: str) -> List[Dict[str, Any]]:
         """

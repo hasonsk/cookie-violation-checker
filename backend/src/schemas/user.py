@@ -1,7 +1,6 @@
 from typing import Optional, List
 from enum import Enum
 from pydantic import BaseModel, Field
-from src.schemas.domain_request import DomainRequestPublic
 from src.models.base import PyObjectId # Import PyObjectId from base model
 
 class UserRole(str, Enum):
@@ -26,6 +25,20 @@ class User(BaseModel):
             PyObjectId: str # Encode PyObjectId to string
         }
         from_attributes = True # New in Pydantic v2
+
+class UserPublicSchema(BaseModel):
+    id: PyObjectId = Field(..., alias="_id")
+    name: str
+    email: str
+    role: UserRole
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {
+            PyObjectId: str
+        }
+        from_attributes = True
 
 class UserUpdate(BaseModel):
     email: Optional[str] = None
