@@ -39,18 +39,8 @@ AuthAlert.propTypes = {
 };
 
 // Reusable FormGroup component
-export const FormGroup = ({ label, type, id, name, value, onChange, error, placeholder, disabled, children, isSelect = false }) => (
+export const FormGroup = ({ type, id, name, value, onChange, error, placeholder, disabled, children, isSelect = false }) => (
   <FormControl fullWidth margin="normal" error={!!error} sx={{ gap: '8px' }}>
-    <InputLabel htmlFor={id} shrink sx={{
-      fontWeight: 600,
-      fontSize: '14px',
-      position: 'relative',
-      transform: 'none',
-      marginBottom: '8px',
-      // Rely on theme for color, or define specific InputLabel styles in theme.js if needed
-    }}>
-      {label}
-    </InputLabel>
     {isSelect ? (
       <Select
         id={id}
@@ -59,7 +49,7 @@ export const FormGroup = ({ label, type, id, name, value, onChange, error, place
         onChange={onChange}
         disabled={disabled}
         variant="outlined"
-        labelId={`${id}-label`}
+        label={placeholder} // Use placeholder as label for Select
         native={true} // Add native prop to use standard HTML <option> elements
         // Rely on MuiTextField styleOverrides in theme.js for consistent styling
         // The padding for input inside Select is handled by MuiOutlinedInput-input
@@ -73,7 +63,7 @@ export const FormGroup = ({ label, type, id, name, value, onChange, error, place
         name={name}
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
+        label={placeholder} // Use placeholder as label for TextField
         disabled={disabled}
         variant="outlined"
         fullWidth
@@ -86,7 +76,6 @@ export const FormGroup = ({ label, type, id, name, value, onChange, error, place
 );
 
 FormGroup.propTypes = {
-  label: PropTypes.string.isRequired,
   type: PropTypes.string,
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,

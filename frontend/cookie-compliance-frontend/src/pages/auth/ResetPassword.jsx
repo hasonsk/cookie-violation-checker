@@ -69,7 +69,6 @@ const ResetPassword = () => {
           <AuthAlert type="error" message={error} />
 
           <FormGroup
-            label="Mật khẩu mới"
             type="password"
             id="newPassword"
             name="newPassword"
@@ -80,7 +79,6 @@ const ResetPassword = () => {
           />
 
           <FormGroup
-            label="Xác nhận mật khẩu mới"
             type="password"
             id="confirmPassword"
             name="confirmPassword"
