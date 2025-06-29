@@ -32,7 +32,7 @@ export const ThemeContextProvider = ({ children }) => {
             main: '#1976D2',
           },
           secondary: {
-            main: '#02153d', // A more professional red/maroon color
+            main: '#192b3b', // A more professional red/maroon color
           },
         },
         typography: {
