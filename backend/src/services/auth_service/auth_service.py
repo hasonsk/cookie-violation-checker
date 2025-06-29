@@ -1,25 +1,31 @@
 from passlib.context import CryptContext
 from typing import Any, Dict, Optional, List
 from pydantic import EmailStr
+import secrets
+from datetime import datetime, timedelta
 
 from src.schemas.auth import (
     RegisterSchema,
     RegisterResponseSchema,
-)
-from src.schemas.auth import (
     LoginSchema,
     LoginResponseSchema,
+    ForgotPasswordRequestSchema,
+    ResetPasswordRequestSchema,
+    MessageResponseSchema,
 )
 from src.schemas.user import User # Import User
 from src.models.user import User as UserModel, UserRole # Alias User from models to avoid conflict
 from src.models.domain_request import DomainRequest
 from src.utils.jwt_handler import create_access_token, decode_access_token
+from src.configs.settings import settings
 
 from src.exceptions.custom_exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     UnauthorizedError,
-    UserNotFoundError
+    UserNotFoundError,
+    InvalidTokenError,
+    TokenExpiredError
 )
 from src.repositories.user_repository import UserRepository
 from src.repositories.domain_request_repository import DomainRequestRepository
@@ -75,3 +81,44 @@ class AuthService:
             raise UserNotFoundError()
         user = User(**user_data) # Directly create User from user_data
         return user
+
+    async def request_password_reset(self, email: EmailStr) -> MessageResponseSchema:
+        user_data = await self.user_repo.get_user_by_email(email)
+        if not user_data:
+            raise UserNotFoundError()
+
+        user = UserModel.parse_obj(user_data)
+        reset_token = secrets.token_urlsafe(32)
+        reset_token_expires = datetime.utcnow() + timedelta(minutes=settings.app.RESET_TOKEN_EXPIRE_MINUTES)
+
+        await self.user_repo.update_user(
+            user.id,
+            {"reset_token": reset_token, "reset_token_expires": reset_token_expires}
+        )
+
+        # In a real application, you would send an email here.
+        # For now, we'll just return a success message.
+        print(f"Password reset token for {email}: {reset_token}")
+        return MessageResponseSchema(message="Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email của bạn.")
+
+    async def reset_password(self, token: str, new_password: str) -> MessageResponseSchema:
+        user_data = await self.user_repo.get_user_by_reset_token(token)
+        if not user_data:
+            raise InvalidTokenError()
+
+        user = UserModel.parse_obj(user_data)
+
+        if user.reset_token_expires and user.reset_token_expires < datetime.utcnow():
+            # Clear expired token
+            await self.user_repo.update_user(
+                user.id,
+                {"reset_token": None, "reset_token_expires": None}
+            )
+            raise TokenExpiredError()
+
+        hashed_password = pwd_context.hash(new_password)
+        await self.user_repo.update_user(
+            user.id,
+            {"password": hashed_password, "reset_token": None, "reset_token_expires": None}
+        )
+        return MessageResponseSchema(message="Mật khẩu của bạn đã được đặt lại thành công.")

@@ -27,6 +27,9 @@ class UserRepository(BaseRepository):
             update_data
         )
 
+    async def get_user_by_reset_token(self, reset_token: str) -> Optional[Dict[str, Any]]:
+        """Get user by reset token."""
+        return await self.find_one({"reset_token": reset_token})
 
     async def get_all_users(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Get all users, optionally filtered."""

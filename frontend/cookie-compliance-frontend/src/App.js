@@ -14,6 +14,8 @@ import AdminLayout from './layouts/AdminLayout';
 // Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword'; // Import ForgotPassword
+import ResetPassword from './pages/auth/ResetPassword'; // Import ResetPassword
 import Dashboard from './pages/dashboard/Dashboard';
 import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
@@ -92,6 +94,22 @@ function AppContent() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/reset-password/:token"
+          element={
+            <PublicRoute>
+              <ResetPassword />
             </PublicRoute>
           }
         />

@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { registerUser, clearError } from '../../store/slices/authSlice';
 import { useAuth } from '../../hooks/useAuth';
 import useFormValidation from '../../hooks/useFormValidation';
 import { AuthAlert, FormGroup, TermsAndPrivacyCheckbox } from '../../components/common/AuthComponents';
-import { Box, Button, Typography, Link } from '@mui/material'; // Import Material UI components
+import { Box, Button, Typography, Link, Stepper, Step, StepLabel } from '@mui/material';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error, isAuthenticated } = useAuth();
+  const [activeStep, setActiveStep] = useState(0);
 
   const validationRules = {
     fullName: {
@@ -51,7 +53,7 @@ const Register = () => {
     },
   };
 
-  const { formData, errors, handleChange, validateForm } = useFormValidation(
+  const { formData, errors, handleChange, validateForm, setErrors } = useFormValidation(
     {
       fullName: '',
       email: '',
@@ -75,6 +77,49 @@ const Register = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  const steps = ['Thông tin cá nhân', 'Thông tin tài khoản'];
+
+  const handleNext = () => {
+    let currentStepFields = [];
+    if (activeStep === 0) {
+      currentStepFields = ['fullName', 'email', 'password', 'confirmPassword'];
+    } else if (activeStep === 1) {
+      currentStepFields = ['role', 'agreeToTerms'];
+    }
+
+    const stepErrors = {};
+    let isValid = true;
+    currentStepFields.forEach(field => {
+      const fieldError = validationRules[field]?.required && !formData[field] ? validationRules[field].required : '';
+      if (fieldError) {
+        stepErrors[field] = fieldError;
+        isValid = false;
+      } else if (validationRules[field]?.pattern && !validationRules[field].pattern.value.test(formData[field])) {
+        stepErrors[field] = validationRules[field].pattern.message;
+        isValid = false;
+      } else if (validationRules[field]?.minLength && formData[field].length < validationRules[field].minLength.value) {
+        stepErrors[field] = validationRules[field].minLength.message;
+        isValid = false;
+      } else if (validationRules[field]?.custom) {
+        const customError = validationRules[field].custom(formData[field], formData);
+        if (customError) {
+          stepErrors[field] = customError;
+          isValid = false;
+        }
+      }
+    });
+
+    setErrors(prevErrors => ({ ...prevErrors, ...stepErrors }));
+
+    if (isValid) {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -95,10 +140,101 @@ const Register = () => {
           state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
         });
       } else {
-        console.log('Register failed:', result.payload);
+        const errorMessage = result.payload || 'Đăng ký thất bại. Vui lòng thử lại.';
+        console.log('Register failed:', errorMessage);
+        setErrors(prevErrors => ({ ...prevErrors, api: errorMessage }));
+        toast.error(errorMessage);
       }
-    } catch (error) {
-      console.error('Register error:', error);
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Đăng ký thất bại. Vui lòng thử lại.';
+      console.error('Register error:', err);
+      setErrors(prevErrors => ({ ...prevErrors, api: errorMessage }));
+      toast.error(errorMessage);
+    }
+  };
+
+  const getStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <>
+            <FormGroup
+              label="Họ và tên"
+              type="text"
+              id="fullName"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              error={errors.fullName}
+              placeholder="Nhập họ và tên của bạn"
+              disabled={loading}
+            />
+
+            <FormGroup
+              label="Email"
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+              placeholder="Nhập email của bạn"
+              disabled={loading}
+            />
+
+            <FormGroup
+              label="Mật khẩu"
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+              placeholder="Nhập mật khẩu của bạn"
+              disabled={loading}
+            />
+
+            <FormGroup
+              label="Xác nhận mật khẩu"
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              error={errors.confirmPassword}
+              placeholder="Nhập lại mật khẩu của bạn"
+              disabled={loading}
+            />
+          </>
+        );
+      case 1:
+        return (
+          <>
+            <FormGroup
+              label="Vai trò mong muốn"
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              error={errors.role}
+              disabled={loading}
+              isSelect={true}
+            >
+              <option value="">Chọn vai trò</option>
+              <option value="manager">Quản lý (Manager)</option>
+              <option value="provider">Nhà cung cấp (Provider)</option>
+            </FormGroup>
+
+            <TermsAndPrivacyCheckbox
+              checked={formData.agreeToTerms}
+              onChange={handleChange}
+              error={errors.agreeToTerms}
+              disabled={loading}
+            />
+          </>
+        );
+      default:
+        return 'Unknown step';
     }
   };
 
@@ -109,7 +245,7 @@ const Register = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'background.default', // Use theme's default background color
+        bgcolor: 'background.default',
         padding: '20px',
       }}
     >
@@ -120,9 +256,9 @@ const Register = () => {
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
           padding: '40px',
           width: '100%',
-          maxWidth: '450px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
+          maxWidth: '500px',
+          maxHeight: 'none',
+          overflowY: 'visible',
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -134,94 +270,42 @@ const Register = () => {
           </Typography>
         </Box>
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <AuthAlert type="error" message={error} />
+        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+          {steps.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
 
-          <FormGroup
-            label="Họ và tên"
-            type="text"
-            id="fullName"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            error={errors.fullName}
-            placeholder="Nhập họ và tên của bạn"
-            disabled={loading}
-          />
+        <Box component="form" onSubmit={activeStep === steps.length - 1 ? handleSubmit : handleNext} sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <AuthAlert type="error" message={error || errors.api} />
 
-          <FormGroup
-            label="Email"
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            placeholder="Nhập email của bạn"
-            disabled={loading}
-          />
+          {getStepContent(activeStep)}
 
-          <FormGroup
-            label="Mật khẩu"
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="Nhập mật khẩu của bạn"
-            disabled={loading}
-          />
-
-          <FormGroup
-            label="Xác nhận mật khẩu"
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-            placeholder="Nhập lại mật khẩu của bạn"
-            disabled={loading}
-          />
-
-          <FormGroup
-            label="Vai trò mong muốn"
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            error={errors.role}
-            disabled={loading}
-            isSelect={true}
-          >
-            <option value="">Chọn vai trò</option>
-            <option value="manager">Quản lý (Manager)</option>
-            <option value="provider">Nhà cung cấp (Provider)</option>
-          </FormGroup>
-
-          <TermsAndPrivacyCheckbox
-            checked={formData.agreeToTerms}
-            onChange={handleChange}
-            error={errors.agreeToTerms}
-            disabled={loading}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary" // Use theme's primary color
-            disabled={loading}
-            sx={{
-              padding: '14px',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              // Rely on theme.js for hover and disabled states
-            }}
-          >
-            {loading ? 'Đang đăng ký...' : 'Đăng ký'}
-          </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            {activeStep !== 0 && (
+              <Button onClick={handleBack} disabled={loading} variant="outlined">
+                Quay lại
+              </Button>
+            )}
+            <Button
+              type={activeStep === steps.length - 1 ? 'submit' : 'button'}
+              onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              sx={{
+                padding: '14px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 600,
+                ml: activeStep === 0 ? 'auto' : 0, // Push to right if first step
+              }}
+            >
+              {loading ? (activeStep === steps.length - 1 ? 'Đang đăng ký...' : 'Đang xử lý...') : (activeStep === steps.length - 1 ? 'Đăng ký' : 'Tiếp theo')}
+            </Button>
+          </Box>
         </Box>
 
         <Box sx={{ textAlign: 'center', marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>

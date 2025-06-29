@@ -86,7 +86,7 @@ const Login = () => {
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
           padding: '40px',
           width: '100%',
-          maxWidth: '400px',
+          maxWidth: '500px',
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: '30px' }}>

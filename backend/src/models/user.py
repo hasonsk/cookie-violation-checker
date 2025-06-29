@@ -1,6 +1,7 @@
 from pydantic import Field, EmailStr
 from typing import Optional
 from enum import Enum
+from datetime import datetime
 
 from src.models.base import BaseMongoDBModel
 
@@ -16,3 +17,5 @@ class User(BaseMongoDBModel):
     company_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.PROVIDER)
     approved_by_admin: bool = Field(default=False)
+    reset_token: Optional[str] = None
+    reset_token_expires: Optional[datetime] = None

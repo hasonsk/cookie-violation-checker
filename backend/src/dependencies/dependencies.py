@@ -28,7 +28,6 @@ from src.services.comparator_service.comparator_service import ComparatorService
 from src.services.violation_analyzer_service.violation_analyzer_service import ViolationAnalyzerService
 from src.services.domain_request_service import DomainRequestService
 from src.services.website_management_service.website_management_service import WebsiteManagementService
-# from src.services.reporter_service.reporter_service import ReporterService
 
 from src.utils.jwt_handler import decode_access_token
 from src.schemas.user import User, UserRole

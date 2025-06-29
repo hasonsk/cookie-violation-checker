@@ -18,6 +18,14 @@ class UserNotFoundError(HTTPException):
     def __init__(self):
         super().__init__(status_code=404, detail="Người dùng không tồn tại")
 
+class InvalidTokenError(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=400, detail="Token không hợp lệ")
+
+class TokenExpiredError(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=400, detail="Token đã hết hạn")
+
 # Analyze-related
 class PolicyDiscoveryError(HTTPException):
     def __init__(self, status_code: int = 500):

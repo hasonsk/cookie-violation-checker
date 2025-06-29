@@ -80,6 +80,14 @@ api.interceptors.request.use(
   }
 );
 
+export const requestPasswordReset = async (email) => {
+  return await api.post('/auth/forgot-password', { email });
+};
+
+export const resetPassword = async (token, newPassword) => {
+  return await api.post('/auth/reset-password', { token, new_password: newPassword });
+};
+
 // Response interceptor để handle errors
 api.interceptors.response.use(
   (response) => response,

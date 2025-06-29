@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from .user import User, UserRole # Import User and UserRole enum
 
 class LoginSchema(BaseModel):
@@ -17,3 +18,13 @@ class RegisterSchema(BaseModel):
 
 class RegisterResponseSchema(BaseModel):
     msg: str
+
+class ForgotPasswordRequestSchema(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequestSchema(BaseModel):
+    token: str
+    new_password: str
+
+class MessageResponseSchema(BaseModel):
+    message: str

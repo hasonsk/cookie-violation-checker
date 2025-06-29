@@ -11,6 +11,8 @@ class AppSettings(BaseSettings):
     API_VERSION: str = "1.0.0"
     API_BASE: str = ""
     CORS_ORIGINS: str = ""
+    JWT_EXP_DELTA_MINUTES: int = 30
+    RESET_TOKEN_EXPIRE_MINUTES: int = 60 # New setting for password reset token expiration
 
 class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')

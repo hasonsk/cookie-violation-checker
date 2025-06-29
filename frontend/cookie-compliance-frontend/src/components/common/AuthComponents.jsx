@@ -60,6 +60,7 @@ export const FormGroup = ({ label, type, id, name, value, onChange, error, place
         disabled={disabled}
         variant="outlined"
         labelId={`${id}-label`}
+        native={true} // Add native prop to use standard HTML <option> elements
         // Rely on MuiTextField styleOverrides in theme.js for consistent styling
         // The padding for input inside Select is handled by MuiOutlinedInput-input
       >
@@ -143,7 +144,7 @@ export const TermsAndPrivacyCheckbox = ({ checked, onChange, error, disabled }) 
           </Link>
         </Typography>
       }
-      sx={{ alignItems: 'flex-start', '& .MuiFormControlLabel-label': { cursor: 'pointer' } }}
+      sx={{ alignItems: 'center', '& .MuiFormControlLabel-label': { cursor: 'pointer' } }}
     />
     {error && <FormHelperText sx={{ color: 'error.main', fontSize: '14px' }}>{error}</FormHelperText>}
   </Box>
