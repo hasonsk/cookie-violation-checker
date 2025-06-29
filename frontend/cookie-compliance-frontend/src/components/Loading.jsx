@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Skeleton } from '@mui/material'; // Import Skeleton from Material-UI
-import './Loading.css'; // Import the new CSS file
+import { Skeleton } from '@mui/material';
+import './Loading.css';
 
 const Loading = ({
   size = 'medium',

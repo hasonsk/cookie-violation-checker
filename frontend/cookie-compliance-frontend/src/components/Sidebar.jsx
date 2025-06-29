@@ -10,34 +10,42 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { useSelector } from 'react-redux'; // Import useSelector
 import { Globe, BarChart3, Settings, Info, Users, LogOut } from 'lucide-react';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { USER_ROLES } from '../constants/roles'; // Import USER_ROLES
 import useLogout from '../hooks/useLogout'; // Import useLogout hook
 import LogoutDialog from './topbars/LogoutDialog'; // Import LogoutDialog
 
 // Define menu items outside the component to prevent re-creation on every render
-const baseMenuItems = [
-  {
-    label: 'Dashboard',
-    icon: <BarChart3 size={20} />,
-    path: '/dashboard',
-  },
-  {
-    label: 'Websites',
-    icon: <Globe size={20} />,
-    path: '/websites',
-  },
-  {
-    label: 'About',
-    icon: <Info size={20} />,
-    path: '/about',
-  },
-];
-
 const Sidebar = () => {
   const location = useLocation();
   const currentUser = useSelector(state => state.auth.user);
+  const { t } = useTranslation(); // Initialize useTranslation
+
+  // Define menu items inside the component to use t() for translation
+  const baseMenuItems = [
+    {
+      label: t('dashboard'), // Assuming 'dashboard' key exists in translations
+      icon: <BarChart3 size={20} />,
+      path: '/dashboard',
+    },
+    {
+      label: t('websites'), // Assuming 'websites' key exists in translations
+      icon: <Globe size={20} />,
+      path: '/websites',
+    },
+    {
+      label: t('about'), // Assuming 'about' key exists in translations
+      icon: <Info size={20} />,
+      path: '/about',
+    },
+    {
+      label: t('settings.title'), // Use translation for settings title
+      icon: <Settings size={20} />,
+      path: '/settings',
+    },
+  ];
 
   // Create a mutable copy of menuItems to add admin-specific items
   const menuItems = [...baseMenuItems];

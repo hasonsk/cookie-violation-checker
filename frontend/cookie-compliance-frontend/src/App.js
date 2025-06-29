@@ -4,9 +4,8 @@ import { Provider, useDispatch } from 'react-redux';
 import { store } from './store';
 import { useAuth } from './hooks/useAuth';
 import { setAuthErrorHandler } from './services/api';
-import { ThemeProvider } from '@mui/material/styles'; // Import ThemeProvider
-import theme from './theme'; // Import your custom theme
 import { ToastContainer } from 'react-toastify';
+import { ThemeContextProvider } from './contexts/ThemeContext'; // Import ThemeContextProvider
 import 'react-toastify/dist/ReactToastify.css';
 
 // Layouts
@@ -29,6 +28,7 @@ import PropTypes from 'prop-types'; // Import PropTypes
 
 import './App.css';
 import Profile from './pages/profile/Profile'; // Import the new Profile page
+import Settings from './pages/settings/Settings'; // Import the new Settings page
 // import logo from './logo.svg'; // Remove old logo import if it exists and is not used
 
 // Protected Route Component
@@ -113,6 +113,7 @@ function AppContent() {
           <Route path="admin/domain-requests" element={<DomainRequestManagement />} /> {/* New route for domain request management */}
           <Route path="profile" element={<Profile />} />
           <Route path="about" element={<AboutPage />} /> {/* New route for About page */}
+          <Route path="settings" element={<Settings />} /> {/* New route for Settings page */}
         </Route>
 
         {/* Catch all route - might need adjustment based on the conditional rendering */}
@@ -127,11 +128,11 @@ function App() {
   return (
     <Provider store={store}>
       <ToastContainer />
-      <ThemeProvider theme={theme}> {/* Apply the custom theme */}
+      <ThemeContextProvider> {/* Apply the custom theme context */}
         <Router>
           <AppContent />
         </Router>
-      </ThemeProvider>
+      </ThemeContextProvider>
     </Provider>
   );
 }

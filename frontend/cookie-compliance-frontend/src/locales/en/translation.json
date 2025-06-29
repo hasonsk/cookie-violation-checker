@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dashboard",
+  "websites": "Websites",
+  "about": "About",
+  "settings": {
+    "title": "Settings",
+    "themeSettings": "Theme Settings",
+    "selectTheme": "Select Theme",
+    "lightTheme": "Light Theme",
+    "darkTheme": "Dark Theme",
+    "applyTheme": "Apply Theme",
+    "languageSettings": "Language Settings",
+    "selectLanguage": "Select Language",
+    "english": "English",
+    "vietnamese": "Vietnamese",
+    "fontSizeSettings": "Font Size Settings",
+    "currentFontSize": "Current Font Size"
+  }
+}

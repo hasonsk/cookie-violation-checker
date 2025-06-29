@@ -1,0 +1,19 @@
+{
+  "dashboard": "Bảng điều khiển",
+  "websites": "Trang web",
+  "about": "Về chúng tôi",
+  "settings": {
+    "title": "Cài đặt",
+    "themeSettings": "Cài đặt giao diện",
+    "selectTheme": "Chọn giao diện",
+    "lightTheme": "Giao diện sáng",
+    "darkTheme": "Giao diện tối",
+    "applyTheme": "Áp dụng giao diện",
+    "languageSettings": "Cài đặt ngôn ngữ",
+    "selectLanguage": "Chọn ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt",
+    "fontSizeSettings": "Cài đặt cỡ chữ",
+    "currentFontSize": "Cỡ chữ hiện tại"
+  }
+}
