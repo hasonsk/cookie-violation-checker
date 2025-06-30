@@ -71,7 +71,6 @@ class AuthService:
                 email=user.email,
                 role=user.role,
                 approved_by_admin=user.approved_by_admin,
-                company_name=user.company_name # Ensure company_name is included
             )
         )
 

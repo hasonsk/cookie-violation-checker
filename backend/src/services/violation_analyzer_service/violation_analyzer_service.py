@@ -98,7 +98,6 @@ class ViolationAnalyzerService:
                 # Lưu website mới vào DB để tái sử dụng lần sau
                 new_website_data = {
                     "domain": root_url,
-                    "company_name": None, # Added missing field
                     "provider_id": None, # Hoặc provider_id nếu có
                     "last_checked_at": datetime.utcnow(),
                     "policy_url": policy_url,

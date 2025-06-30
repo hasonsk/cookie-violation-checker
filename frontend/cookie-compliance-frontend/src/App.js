@@ -14,27 +14,26 @@ import AdminLayout from './layouts/AdminLayout';
 // Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword'; // Import ForgotPassword
-import ResetPassword from './pages/auth/ResetPassword'; // Import ResetPassword
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import Dashboard from './pages/dashboard/Dashboard';
 import WebsitesList from './pages/websites/Websites';
 import WebsiteDetail from './pages/websites/WebsiteDetail';
 import UserManagement from './pages/users/UserManagement';
 import DomainRequestManagement from './pages/domain_requests/DomainRequestManagement';
-import AboutPage from './pages/AboutPage'; // Import the new AboutPage
-import TermsOfService from './pages/TermsOfService'; // Import TermsOfService
-import PrivacyPolicy from './pages/PrivacyPolicy'; // Import PrivacyPolicy
-import NotFound from './pages/NotFound'; // Import NotFound
+import AboutPage from './pages/AboutPage';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import NotFound from './pages/NotFound';
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
 import Loading from './components/Loading';
-import PropTypes from 'prop-types'; // Import PropTypes
+import PropTypes from 'prop-types';
 
 import './App.css';
-import Profile from './pages/profile/Profile'; // Import the new Profile page
-import Settings from './pages/settings/Settings'; // Import the new Settings page
-// import logo from './logo.svg'; // Remove old logo import if it exists and is not used
+import Profile from './pages/profile/Profile';
+import Settings from './pages/settings/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -44,8 +43,6 @@ const ProtectedRoute = ({ children }) => {
     return <Loading />;
   }
 
-  // If authenticated but not approved, redirect to a specific pending page or show overlay
-  // For now, we'll let the ApprovalPending component handle the overlay
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
@@ -145,10 +142,8 @@ function AppContent() {
           <Route path="settings" element={<Settings />} />
         </Route>
 
-        {/* Catch all route - might need adjustment based on the conditional rendering */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {/* {isAuthenticated && !isApproved && <ApprovalPending />} */}
     </ErrorBoundary>
   );
 }

@@ -7,7 +7,6 @@
 | `hashed_password` | `String` | Mật khẩu đã được mã hóa bằng thuật toán hash |
 | `full_name` | `String` | Tên đầy đủ của người dùng |
 | `role`  | `Enum<String>` | Vai trò: `admin`, `manager`, `provider` |
-| `company_name` | `String`  | Tên công ty (bắt buộc nếu role = `provider`) |
 | `status` | `Enum<String>` | Trạng thái tài khoản: `pending`, `approved`, `rejected` |
 | `created_at` | `DateTime` | Thời điểm tạo tài khoản |
 | `updated_at` | `DateTime` | Thời điểm cập nhật thông tin lần cuối |

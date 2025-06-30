@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from pydantic_core import core_schema
 
@@ -36,8 +36,8 @@ class PyObjectId(ObjectId):
 
 class BaseMongoDBModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         validate_by_name = True

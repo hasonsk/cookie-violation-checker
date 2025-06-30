@@ -11,8 +11,8 @@ class InvalidCredentialsError(HTTPException):
         super().__init__(status_code=401, detail="Thông tin đăng nhập không chính xác")
 
 class UnauthorizedError(HTTPException):
-    def __init__(self):
-        super().__init__(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn")
+    def __init__(self, detail: str = "Token không hợp lệ hoặc đã hết hạn"):
+        super().__init__(status_code=401, detail=detail)
 
 class UserNotFoundError(HTTPException):
     def __init__(self):
@@ -91,4 +91,8 @@ class BadRequestException(Exception):
 
 class PolicyCrawlException(Exception):
     def __init__(self, message: str = "Failed to crawl policy"):
+        super().__init__(message)
+
+class InternalServerError(Exception):
+    def __init__(self, message: str = "Failed "):
         super().__init__(message)

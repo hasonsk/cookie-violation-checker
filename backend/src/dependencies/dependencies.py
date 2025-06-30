@@ -157,9 +157,9 @@ def get_violation_analyzer_service(
 def get_website_management_service(
     website_repo: WebsiteRepository = Depends(get_website_repository),
     violation_repo: ViolationRepository = Depends(get_violation_repository),
-    domain_request_repo: DomainRequestRepository = Depends(get_domain_request_repository) # Add domain_request_repo
+    user_repo: UserRepository = Depends(get_user_repository)
 ) -> WebsiteManagementService:
-    return WebsiteManagementService(website_repo, violation_repo, domain_request_repo) # Pass domain_request_repo
+    return WebsiteManagementService(website_repo, violation_repo, user_repo)
 
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),

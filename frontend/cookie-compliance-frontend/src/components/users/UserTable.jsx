@@ -54,7 +54,6 @@ const UserTable = ({ filteredUsers, loading, error, handleOpenApprovalPanel, han
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.role}</TableCell>
-              <TableCell>{user.company_name || 'N/A'}</TableCell>
               <TableCell>{user.approved_by_admin ? 'Yes' : 'No'}</TableCell>
               <TableCell>
                 {user.domain_requests && user.domain_requests.length > 0 ? (
@@ -100,7 +99,6 @@ UserTable.propTypes = {
     name: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
     role: PropTypes.string.isRequired,
-    company_name: PropTypes.string,
     approved_by_admin: PropTypes.bool.isRequired,
     requested_role: PropTypes.string,
     domain_requests: PropTypes.arrayOf(PropTypes.shape({

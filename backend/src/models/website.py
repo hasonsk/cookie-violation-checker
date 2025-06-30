@@ -8,8 +8,8 @@ from src.models.cookie import PolicyCookie
 
 class Website(BaseMongoDBModel):
     domain: HttpUrl = Field(..., description="The URL of the website")
-    company_name: Optional[str] = Field(default=None, description="The name of the company owning the website") # Add company_name
-    provider_id: Optional[PyObjectId] = Field(default=None)
+    user_id: PyObjectId = Field(..., description="ID of the user who owns this website")
+    is_approved: bool = Field(default=False, description="Whether the website has been approved by an admin")
     last_checked_at: datetime = Field(default_factory=datetime.now, description="Date of the most recent check")
     policy_url: Optional[str] = Field(default=None, description="The URL of the cookie policy page")
     detected_language: Optional[str] = Field(default=None)

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDomainRequests, approveDomainRequest, rejectDomainRequest } from '../../store/slices/domainRequestSlice';
-import DomainRequestDetailsModal from '../../components/DomainRequestDetailsModal'; // Import the modal
+import DomainRequestDetailsModal from './DomainRequestDetailsModal';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 
 const DomainRequestManagement = () => {
   const dispatch = useDispatch();
   const { requests, loading, error } = useSelector((state) => state.domainRequests);
-  const { user } = useAuth(); // To get current admin user ID for approval/rejection
+  const { user } = useAuth();
+
+  console.log(requests);
 
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -109,7 +111,6 @@ const DomainRequestManagement = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'grey.50' }}>
-                <TableCell sx={{ fontWeight: 'bold' }}>Tên công ty</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Người yêu cầu</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Số lượng Domain</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
@@ -125,8 +126,7 @@ const DomainRequestManagement = () => {
               ) : (
                 requests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell>{request.company_name}</TableCell>
-                    <TableCell>{request.user_email}</TableCell> {/* Assuming user_email is available */}
+                    <TableCell>{request.user_email}</TableCell>
                     <TableCell>{request.domains.length}</TableCell>
                     <TableCell>{getStatusChip(request.status)}</TableCell>
                     <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>

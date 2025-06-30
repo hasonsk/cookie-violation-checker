@@ -19,9 +19,20 @@ export const createDomainRequest = createAsyncThunk(
 // Async thunk for fetching all domain requests (for admin)
 export const fetchDomainRequests = createAsyncThunk(
   'domainRequests/fetchDomainRequests',
-  async (status = '', { rejectWithValue }) => {
+  async ({ status = '', requesterId = null }, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/domain-requests${status ? `?status=${status}` : ''}`);
+      let url = `/domain-requests`;
+      const params = new URLSearchParams();
+      if (status) {
+        params.append('status', status);
+      }
+      if (requesterId) {
+        params.append('requester_id', requesterId);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await api.get(url);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.detail || error.message;

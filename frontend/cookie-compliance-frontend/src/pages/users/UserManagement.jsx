@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers } from '../../store/slices/userManagementSlice';
 import { userAPI } from '../../store/api/userAPI';
-import DomainRequestDetailsModal from '../../components/DomainRequestDetailsModal';
+import DomainRequestDetailsModal from '../domain_requests/DomainRequestDetailsModal';
 import UserFilterAndSearch from '../../components/users/UserFilterAndSearch';
 import UserTable from '../../components/users/UserTable';
 import RoleApprovalDialog from '../../components/users/RoleApprovalDialog';

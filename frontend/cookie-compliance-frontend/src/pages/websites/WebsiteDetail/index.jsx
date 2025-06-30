@@ -107,16 +107,6 @@ const WebsiteInfo = ({ currentWebsite }) => (
             {currentWebsite.domain}
           </Typography>
         </Grid>
-        {currentWebsite.company_name && (
-          <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="body2" color="text.secondary">
-              Công ty
-            </Typography>
-            <Typography variant="body1" fontWeight="medium">
-              {currentWebsite.company_name || "N/A"}
-            </Typography>
-          </Grid>
-        )}
         <Grid item xs={12} sm={6} md={3}>
           <Typography variant="body2" color="text.secondary">
             URL Chính sách

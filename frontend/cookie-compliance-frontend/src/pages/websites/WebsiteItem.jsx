@@ -1,11 +1,14 @@
 import React, { memo } from 'react';
 import { TableCell, TableRow, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth'; // Import useAuth
 
 const WebsiteItem = ({ website }) => {
   const navigate = useNavigate();
 
-  const handleViewDetail = async () => {
+  console.log("WebsiteItem received website:", website);
+
+  const handleViewDetail = () => {
       navigate(`/websites/detail/${website._id}`);
   };
 

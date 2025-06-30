@@ -17,7 +17,16 @@ class WebsiteRepository(BaseRepository):
         """
         Retrieves a website by its root URL (domain).
         """
-        website_data = await self.collection.find_one({"domain": root_url})
+        website_data = await self.collection.find_one({"domain": str(root_url)})
+        if website_data:
+            return Website(**website_data)
+        return None
+
+    async def get_by_domain_and_user(self, domain: str, user_id: str) -> Optional[Website]:
+        """
+        Retrieves a website by its domain and user ID.
+        """
+        website_data = await self.collection.find_one({"domain": str(domain), "user_id": ObjectId(user_id)})
         if website_data:
             return Website(**website_data)
         return None
@@ -34,6 +43,13 @@ class WebsiteRepository(BaseRepository):
             updated_website_data = await self.collection.find_one({"_id": ObjectId(website_id)})
             return Website(**updated_website_data)
         return None
+
+    async def delete_website(self, website_id: str) -> int:
+        """
+        Deletes a website by its ID.
+        """
+        result = await self.collection.delete_one({"_id": ObjectId(website_id)})
+        return result.deleted_count
 
     async def get_all_websites(self, filters: Optional[Dict] = None, skip: int = 0, limit: int = 100) -> List[Website]:
         query = filters if filters is not None else {}

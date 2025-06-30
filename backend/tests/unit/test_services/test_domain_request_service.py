@@ -29,7 +29,6 @@ def sample_requester_id():
 @pytest.fixture
 def sample_domain_request_data():
     return DomainRequestCreateSchema(
-        company_name="Test Company",
         domains=["example.com", "test.org"],
         purpose="Testing service"
     )
@@ -41,7 +40,6 @@ def sample_domain_request_model(sample_requester_id):
     return DomainRequest(
         id=str(ObjectId()),
         requester_id=ObjectId(sample_requester_id),
-        company_name="Test Company",
         domains=["example.com", "test.org"],
         purpose="Testing service",
         status=DomainRequestStatus.PENDING,
@@ -64,7 +62,6 @@ class TestDomainRequestService:
             result = await domain_request_service.create_domain_request(sample_domain_request_data, sample_requester_id)
 
         assert isinstance(result, DomainRequestResponseSchema)
-        assert result.company_name == sample_domain_request_data.company_name
         assert result.domains == sample_domain_request_data.domains
         assert result.status == DomainRequestStatus.PENDING
         assert result.feedback == "This is a default feedback message for testing." # Approved requests should have default feedback
@@ -91,7 +88,6 @@ class TestDomainRequestService:
 
         with pytest.raises(ValidationError) as exc_info:
             DomainRequestCreateSchema(
-                company_name="Invalid Test",
                 domains=["invalid-domain"], # Invalid domain format
                 purpose="Testing invalid domain"
             )
@@ -164,7 +160,6 @@ class TestDomainRequestService:
         sample_request = DomainRequest(
             id=str(ObjectId()),
             requester_id=ObjectId(sample_requester_id),
-            company_name="Test Company",
             domains=["example.com"],
             purpose="Testing service",
             status=DomainRequestStatus.APPROVED, # Already approved
@@ -220,7 +215,6 @@ class TestDomainRequestService:
         sample_request = DomainRequest(
             id=str(ObjectId()),
             requester_id=ObjectId(sample_requester_id),
-            company_name="Test Company",
             domains=["example.com"],
             purpose="Testing service",
             status=DomainRequestStatus.REJECTED, # Already rejected

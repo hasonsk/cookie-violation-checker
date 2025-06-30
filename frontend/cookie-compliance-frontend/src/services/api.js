@@ -16,10 +16,7 @@ export const websiteAPI = {
       skip,
       limit,
       ...(search && { search }),
-      // userId and role are passed from the frontend, but the backend might handle filtering
-      // based on the authenticated user. Including them here for completeness if the backend
-      // expects them explicitly for certain roles/scenarios.
-      ...(userId && { user_id: userId }), // Assuming backend expects user_id
+      ...(userId && { user_id: userId }),
       ...(role && { role }),
     };
     return await api.get('/websites', { params });
@@ -48,8 +45,11 @@ export const domainRequestAPI = {
   create: async (requestData) => {
     return await api.post('/domain-requests', requestData);
   },
-  getAll: async (status) => {
-    const params = status ? { status } : {};
+  getAll: async ({ status = null, requesterId = null } = {}) => {
+    const params = {
+      ...(status && { status }),
+      ...(requesterId && { requester_id: requesterId }),
+    };
     return await api.get('/domain-requests', { params });
   },
   approve: async (id) => {
@@ -57,6 +57,9 @@ export const domainRequestAPI = {
   },
   reject: async (id, feedback) => {
     return await api.patch(`/domain-requests/${id}/reject`, { feedback });
+  },
+  delete: async (id) => {
+    return await api.delete(`/domain-requests/${id}`);
   },
 };
 

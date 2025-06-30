@@ -68,3 +68,40 @@ class DomainRequestRepository(BaseRepository):
         Retrieves a domain request by its ID.
         """
         return await self.find_by_id(request_id)
+
+    async def update_domain_request(self, request_id: str, update_data: Dict[str, Any]) -> int:
+        """
+        Updates an existing domain request in the database.
+        """
+        return await self.update_one(
+            {"_id": ObjectId(request_id)},
+            update_data
+        )
+
+    async def get_latest_domain_request_by_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves the latest domain request for a given user.
+        """
+        return await self.collection.find_one(
+            {"requester_id": ObjectId(user_id)},
+            sort=[("created_at", -1)] # Sort by creation date descending to get the latest
+        )
+
+    async def get_domain_request_by_domain_and_status(self, domain: str, statuses: List[str], exclude_request_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Checks if a domain exists in any domain request with the given statuses.
+        Optionally excludes a specific request ID.
+        """
+        query = {
+            "domains": domain,
+            "status": {"$in": statuses}
+        }
+        if exclude_request_id:
+            query["_id"] = {"$ne": ObjectId(exclude_request_id)}
+        return await self.collection.find_one(query)
+
+    async def delete_domain_request(self, request_id: str) -> int:
+        """
+        Deletes a domain request by its ID.
+        """
+        return await self.delete_one({"_id": ObjectId(request_id)})

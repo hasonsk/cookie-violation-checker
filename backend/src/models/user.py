@@ -14,7 +14,6 @@ class User(BaseMongoDBModel):
     name: str
     email: EmailStr
     password: str
-    company_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.PROVIDER)
     approved_by_admin: bool = Field(default=False)
     reset_token: Optional[str] = None

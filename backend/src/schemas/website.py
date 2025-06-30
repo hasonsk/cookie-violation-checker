@@ -1,13 +1,13 @@
 from datetime import datetime
 from src.models.base import PyObjectId
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict # Import ConfigDict
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict, model_validator
 from typing import Optional, List
 from src.schemas.cookie import PolicyCookie
 
 class WebsiteBase(BaseModel):
     domain: HttpUrl = Field(..., description="The URL of the website")
-    company_name: Optional[str] = Field(default=None, description="The name of the company owning the website") # Add company_name
-    provider_id: Optional[PyObjectId] = Field(default=None)
+    user_id: PyObjectId = Field(..., description="ID of the user who owns this website")
+    is_approved: bool = Field(default=False, description="Whether the website has been approved by an admin")
     last_checked_at: datetime = Field(default_factory=datetime.now)
     policy_url: Optional[str] = Field(default=None, description="The URL of the cookie policy page")
     detected_language: Optional[str] = Field(default=None)
@@ -20,14 +20,22 @@ class WebsiteBase(BaseModel):
 
 class WebsiteCreateSchema(BaseModel):
     domain: HttpUrl = Field(..., description="The URL of the website")
-    company_name: Optional[str] = Field(default=None, description="The name of the company owning the website")
+    is_approved: bool = Field(default=False, description="Whether the website has been approved by an admin")
     policy_url: Optional[str] = Field(default=None, description="The URL of the cookie policy page")
     original_content: str = Field(...)
     is_specific: int = Field(...)
 
+    @model_validator(mode='before')
+    @classmethod
+    def validate_domain_prefix(cls, data: dict):
+        if isinstance(data, dict) and 'domain' in data:
+            domain = data['domain']
+            if isinstance(domain, str) and not (domain.startswith('http://') or domain.startswith('https://')):
+                data['domain'] = 'https://' + domain
+        return data
+
 class WebsiteUpdateSchema(BaseModel):
     domain: Optional[HttpUrl] = Field(None, description="The URL of the website")
-    company_name: Optional[str] = Field(None, description="The name of the company owning the website")
     policy_url: Optional[str] = Field(None, description="The URL of the cookie policy page")
     original_content: Optional[str] = Field(None)
     translated_content: Optional[str] = Field(None)
@@ -55,7 +63,6 @@ class WebsiteListResponseSchema(BaseModel):
 
     id: PyObjectId = Field(alias="_id")
     domain: str = Field(..., description="The domain name of the website")
-    company_name: Optional[str] = Field(default=None, description="The name of the company owning the website")
     policy_status: str = Field(default="unknown", description="Status of the cookie policy")
     policy_url: Optional[str] = Field(default=None, description="URL of the cookie policy page")
     last_checked_at: Optional[datetime] = Field(default=None, description="Date of the most recent check")

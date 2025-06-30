@@ -52,7 +52,6 @@ def mock_user_model_data():
         "password": "hashed_password",
         "role": UserRole.PROVIDER,
         "approved_by_admin": True,
-        "company_name": "Test Company"
     }
 
 # --- Test register_user ---
@@ -99,7 +98,6 @@ async def test_login_user_success(auth_service, mock_user_repository, login_data
     assert isinstance(response, LoginResponseSchema)
     assert response.user.email == mock_user_model_data["email"]
     assert str(response.user.id) == mock_user_model_data["id"] # Convert ObjectId to string for comparison
-    assert response.user.company_name == mock_user_model_data["company_name"]
     assert response.token is not None
     # Optionally, decode token to verify content
     decoded_token = decode_access_token(response.token)

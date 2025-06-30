@@ -1,39 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
-import { Modal, Box, Typography, Button, TextField, Chip, Alert } from '@mui/material';
-// import { toast } from 'react-toastify'; // Removing react-toastify
-import { DOMAIN_STATUS } from '../constants/domainStatus';
+import PropTypes from 'prop-types';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Chip,
+  Alert,
+  Dialog, // Changed from Modal
+  DialogTitle, // Added
+  DialogContent, // Added
+  DialogActions, // Added
+  IconButton, // Added for close button
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close'; // Added for close button
+import { DOMAIN_STATUS } from '../../constants/domainStatus';
 
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 600,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-  maxHeight: '90vh',
-  overflowY: 'auto',
-};
+// Removed the 'style' object as Dialog handles positioning
+// const style = {
+//   position: 'absolute',
+//   top: '50%',
+//   left: '50%',
+//   transform: 'translate(-50%, -50%)',
+//   width: 600,
+//   bgcolor: 'background.paper',
+//   border: '2px solid #000',
+//   boxShadow: 24,
+//   p: 4,
+//   maxHeight: '90vh',
+//   overflowY: 'auto',
+// };
 
 const DomainRequestDetailsModal = ({ open, onClose, request, onApprove, onReject, loading }) => {
   const [feedback, setFeedback] = useState('');
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(''); // Moved here for better scope
 
   useEffect(() => {
     if (!open) {
       setFeedback('');
       setShowFeedbackInput(false);
+      setFeedbackError(''); // Clear error on close
     }
   }, [open]);
 
   const handleRejectClick = () => {
     setShowFeedbackInput(true);
   };
-
-  const [feedbackError, setFeedbackError] = useState('');
 
   const handleConfirmReject = () => {
     if (!feedback.trim()) {
@@ -48,24 +61,24 @@ const DomainRequestDetailsModal = ({ open, onClose, request, onApprove, onReject
     return null;
   }
 
-// Extracted StatusChip component
-const StatusChip = ({ status }) => {
-  let color = 'default';
-  switch (status) {
-    case DOMAIN_STATUS.PENDING:
-      color = 'warning';
-      break;
-    case DOMAIN_STATUS.APPROVED:
-      color = 'success';
-      break;
-    case DOMAIN_STATUS.REJECTED:
-      color = 'error';
-      break;
-    default:
-      color = 'default';
-  }
-  return <Chip label={status.toUpperCase()} color={color} size="small" />;
-};
+  // Extracted StatusChip component
+  const StatusChip = ({ status }) => {
+    let color = 'default';
+    switch (status) {
+      case DOMAIN_STATUS.PENDING:
+        color = 'warning';
+        break;
+      case DOMAIN_STATUS.APPROVED:
+        color = 'success';
+        break;
+      case DOMAIN_STATUS.REJECTED:
+        color = 'error';
+        break;
+      default:
+        color = 'default';
+    }
+    return <Chip label={status.toUpperCase()} color={color} size="small" />;
+  };
 
   StatusChip.propTypes = {
     status: PropTypes.string.isRequired,
@@ -83,6 +96,8 @@ const StatusChip = ({ status }) => {
     setShowFeedbackInput,
     handleRejectClick,
     handleConfirmReject,
+    feedbackError, // Pass feedbackError to RequestActions
+    setFeedbackError, // Pass setFeedbackError to RequestActions
   }) => (
     <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
       {!showFeedbackInput ? (
@@ -163,27 +178,35 @@ const StatusChip = ({ status }) => {
     setShowFeedbackInput: PropTypes.func.isRequired,
     handleRejectClick: PropTypes.func.isRequired,
     handleConfirmReject: PropTypes.func.isRequired,
+    feedbackError: PropTypes.string.isRequired,
+    setFeedbackError: PropTypes.func.isRequired,
   };
 
   return (
-    <Modal
+    <Dialog
       open={open}
       onClose={onClose}
       aria-labelledby="domain-request-modal-title"
       aria-describedby="domain-request-modal-description"
+      maxWidth="sm" // Added maxWidth
+      fullWidth // Added fullWidth
     >
-      <Box sx={style}>
-        <Typography id="domain-request-modal-title" variant="h6" component="h2" gutterBottom>
-          Chi tiết yêu cầu Domain
-        </Typography>
+      <DialogTitle id="domain-request-modal-title">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" component="h2">
+            Chi tiết yêu cầu Domain
+          </Typography>
+          <IconButton aria-label="close" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers> {/* Added dividers */}
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>ID Yêu cầu:</strong> {request._id}
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Tên công ty:</strong> {request.company_name}
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Người yêu cầu:</strong> {request.requester_id}
+          <strong>Người yêu cầu:</strong> {request.requester_username} ({request.requester_email})
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
           <strong>Trạng thái:</strong> <StatusChip status={request.status} />
@@ -232,13 +255,17 @@ const StatusChip = ({ status }) => {
             setShowFeedbackInput={setShowFeedbackInput}
             handleRejectClick={handleRejectClick}
             handleConfirmReject={handleConfirmReject}
+            feedbackError={feedbackError}
+            setFeedbackError={setFeedbackError}
           />
         )}
-        <Button variant="outlined" color="primary" onClick={onClose} sx={{ mt: 2 }}>
+      </DialogContent>
+      <DialogActions>
+        <Button variant="outlined" color="primary" onClick={onClose}>
           Đóng
         </Button>
-      </Box>
-    </Modal>
+      </DialogActions>
+    </Dialog>
   );
 };
 

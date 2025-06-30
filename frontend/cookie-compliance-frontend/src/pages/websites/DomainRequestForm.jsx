@@ -9,128 +9,108 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
-  Paper, // Import Paper component
-} from '@mui/material'; // Import MUI components
-import CloseIcon from '@mui/icons-material/Close'; // For Snackbar close button
-import IconButton from '@mui/material/IconButton'; // For Snackbar close button
+  IconButton,
+  Paper,
+  DialogTitle,
+  DialogActions,
+  DialogContent, // Added DialogContent import
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import CloseIcon from '@mui/icons-material/Close';
 
-// Constants for validation
-const COMPANY_NAME_MIN_LENGTH = 2;
-const COMPANY_NAME_MAX_LENGTH = 200;
 const DOMAIN_MAX_COUNT = 100;
 const PURPOSE_MIN_LENGTH = 10;
 const PURPOSE_MAX_LENGTH = 1000;
 const DOMAIN_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
-const DomainRequestForm = () => {
+const DomainRequestForm = ({ onClose, showSnackbar, onSuccess }) => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.domainRequests);
 
   const [formData, setFormData] = useState({
-    company_name: '',
-    domains: '',
+    domains: [''],
     purpose: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [duplicateWarning, setDuplicateWarning] = useState('');
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false); // Re-added
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Re-added
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // Re-added
 
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const handleSnackbarClose = (_, reason) => { // Re-added
+    if (reason === 'clickaway') return;
     setSnackbarOpen(false);
   };
 
-  const showSnackbar = (message, severity) => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
+  const handleDomainChange = (index, value) => {
+    const updated = [...formData.domains];
+    updated[index] = value;
+    setFormData(prev => ({ ...prev, domains: updated }));
+    if (formErrors.domains) setFormErrors(prev => ({ ...prev, domains: '' }));
+    if (duplicateWarning) setDuplicateWarning('');
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Clear errors when user starts typing
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: '' }));
-    }
-
-    // Clear duplicate warning when domains change
-    if (name === 'domains' && duplicateWarning) {
-      setDuplicateWarning('');
+  const addDomainField = () => {
+    if (formData.domains.length < DOMAIN_MAX_COUNT) {
+      setFormData(prev => ({ ...prev, domains: [...prev.domains, ''] }));
     }
   };
 
-  const validateCompanyName = (name) => {
-    if (!name.trim()) {
-      return 'Tên công ty là bắt buộc.';
-    } else if (name.trim().length < COMPANY_NAME_MIN_LENGTH) {
-      return `Tên công ty phải có ít nhất ${COMPANY_NAME_MIN_LENGTH} ký tự.`;
-    } else if (name.trim().length > COMPANY_NAME_MAX_LENGTH) {
-      return `Tên công ty không được vượt quá ${COMPANY_NAME_MAX_LENGTH} ký tự.`;
-    }
-    return '';
+  const removeDomainField = (index) => {
+    const updated = formData.domains.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, domains: updated }));
   };
 
-  const validateDomains = (domainsString, setDuplicateWarning) => {
-    const domainList = domainsString
-      .split('\n')
-      .map(d => d.trim())
-      .filter(Boolean);
+  const handleFileImport = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const content = evt.target?.result;
+        if (typeof content === 'string') {
+          const lines = content.split('\n')
+            .map(l => l.trim())
+            .filter(Boolean)
+            .slice(0, DOMAIN_MAX_COUNT);
+          setFormData(prev => ({ ...prev, domains: lines }));
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
 
-    if (domainList.length === 0) {
-      return 'Vui lòng nhập ít nhất một domain.';
-    } else if (domainList.length > DOMAIN_MAX_COUNT) {
-      return `Số lượng domain không được vượt quá ${DOMAIN_MAX_COUNT}.`;
+  const validateDomains = (domainList) => {
+    if (domainList.length === 0) return 'Vui lòng nhập ít nhất một domain.';
+    if (domainList.length > DOMAIN_MAX_COUNT) return `Không quá ${DOMAIN_MAX_COUNT} domain.`;
+
+    const invalidDomains = domainList.filter(domain => !DOMAIN_REGEX.test(domain));
+    if (invalidDomains.length > 0) return `Domain không hợp lệ: ${invalidDomains.join(', ')}`;
+
+    const duplicates = domainList.filter((d, i) => domainList.indexOf(d) !== i);
+    if (duplicates.length > 0) {
+      setDuplicateWarning(`Trùng lặp: ${[...new Set(duplicates)].join(', ')}`);
     } else {
-      const invalidDomains = domainList.filter(domain => !DOMAIN_REGEX.test(domain));
-      if (invalidDomains.length > 0) {
-        return `Các domain sau không hợp lệ: ${invalidDomains.join(', ')}`;
-      }
-
-      const duplicates = domainList.filter((domain, index) => domainList.indexOf(domain) !== index);
-      if (duplicates.length > 0) {
-        const uniqueDuplicates = [...new Set(duplicates)];
-        setDuplicateWarning(`Phát hiện domain trùng lặp: ${uniqueDuplicates.join(', ')}`);
-      } else {
-        setDuplicateWarning(''); // Clear warning if no duplicates
-      }
+      setDuplicateWarning('');
     }
     return '';
   };
 
   const validatePurpose = (purpose) => {
-    if (!purpose.trim()) {
-      return 'Mục đích đăng ký là bắt buộc.';
-    } else if (purpose.trim().length < PURPOSE_MIN_LENGTH) {
-      return `Mục đích đăng ký phải có ít nhất ${PURPOSE_MIN_LENGTH} ký tự.`;
-    } else if (purpose.trim().length > PURPOSE_MAX_LENGTH) {
-      return `Mục đích đăng ký không được vượt quá ${PURPOSE_MAX_LENGTH} ký tự.`;
-    }
+    if (!purpose.trim()) return 'Bắt buộc nhập mục đích.';
+    if (purpose.trim().length < PURPOSE_MIN_LENGTH) return `Ít nhất ${PURPOSE_MIN_LENGTH} ký tự.`;
+    if (purpose.trim().length > PURPOSE_MAX_LENGTH) return `Không quá ${PURPOSE_MAX_LENGTH} ký tự.`;
     return '';
   };
 
   const validateForm = () => {
     const errors = {};
-
-    const companyNameError = validateCompanyName(formData.company_name);
-    if (companyNameError) {
-      errors.company_name = companyNameError;
-    }
-
-    const domainsError = validateDomains(formData.domains, setDuplicateWarning);
-    if (domainsError) {
-      errors.domains = domainsError;
-    }
-
+    const cleanedDomains = formData.domains.map(d => d.trim()).filter(Boolean);
+    const domainsError = validateDomains(cleanedDomains);
     const purposeError = validatePurpose(formData.purpose);
-    if (purposeError) {
-      errors.purpose = purposeError;
-    }
+
+    if (domainsError) errors.domains = domainsError;
+    if (purposeError) errors.purpose = purposeError;
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -138,215 +118,183 @@ const DomainRequestForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       showSnackbar('Vui lòng kiểm tra lại thông tin đã nhập.', 'error');
       return;
     }
 
-    const domainsArray = formData.domains
-      .split('\n')
-      .map(d => d.trim())
-      .filter(Boolean);
-
-    // Remove duplicates from domains array
-    const uniqueDomains = [...new Set(domainsArray)];
+    const cleanedDomains = formData.domains.map(d => d.trim()).filter(Boolean);
+    const uniqueDomains = [...new Set(cleanedDomains)];
 
     try {
       const result = await dispatch(createDomainRequest({
-        company_name: formData.company_name.trim(),
         domains: uniqueDomains,
         purpose: formData.purpose.trim()
       }));
 
       if (createDomainRequest.fulfilled.match(result)) {
         const { request_id, status, valid_domains } = result.payload;
-
-        showSnackbar(
-          `Yêu cầu đăng ký domain đã được gửi thành công! Mã yêu cầu: ${request_id}. Trạng thái: ${status === 'pending' ? 'Chờ duyệt' : status}. ${valid_domains.length}/${uniqueDomains.length} domain hợp lệ được chấp nhận.`,
-          'success'
+        // Use internal snackbar for form specific messages
+        setSnackbarMessage(
+          `Gửi thành công! Mã yêu cầu: ${request_id}. Trạng thái: ${status}. ${valid_domains.length}/${uniqueDomains.length} domain hợp lệ.`
         );
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
 
-        // Reset form
-        setFormData({ company_name: '', domains: '', purpose: '' });
-        setFormErrors({}); // Clear form errors on success
+        setFormData({ domains: [''], purpose: '' });
+        setFormErrors({});
         setDuplicateWarning('');
+        if (onSuccess) onSuccess();
+        if (onClose) onClose();
       } else {
-        const errorMessage = result.payload?.message || result.payload || 'Gửi yêu cầu thất bại. Vui lòng thử lại.';
-        showSnackbar(errorMessage, 'error');
+        const message = result.payload?.message || 'Gửi thất bại. Vui lòng thử lại.';
+        // Use internal snackbar for form specific messages
+        setSnackbarMessage(message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
     } catch (err) {
-      showSnackbar('Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại sau.', 'error');
-      console.error('Domain request submission error:', err);
+      // Use internal snackbar for form specific messages
+      setSnackbarMessage('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      console.error(err);
     }
   };
 
-  const domainCount = formData.domains.split('\n').filter(d => d.trim()).length;
+  const domainCount = formData.domains.filter(d => d.trim()).length;
   const characterCount = formData.purpose.length;
 
-  const snackbarAction = (
-    <IconButton
-      size="small"
-      aria-label="close"
-      color="inherit"
-      onClick={handleSnackbarClose}
-    >
-      <CloseIcon fontSize="small" />
-    </IconButton>
-  );
-
   return (
-    <Box
-      component={Paper} // Use Paper component for consistent styling
-      elevation={1} // Apply a standard elevation
-      sx={{
-        padding: { xs: '25px 20px', md: '35px' },
-        maxWidth: '700px',
-        margin: { xs: '20px 16px', md: '40px auto' },
-        // borderRadius and boxShadow are handled by MuiCard/MuiPaper in theme.js
-        // background is handled by bgcolor: 'background.paper' implicitly by Paper
-        border: '1px solid #e2e8f0', // Keep the border for now if it's a specific design choice
-      }}
-    >
-      <Box sx={{ textAlign: 'center', marginBottom: '35px' }}>
-        <Typography variant="h5" component="h2" sx={{ color: 'text.primary', marginBottom: '12px', fontWeight: 700 }}>
-          Gửi yêu cầu đăng ký Domain
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, fontSize: '15px' }}>
-          Nhà cung cấp dịch vụ có thể đăng ký các domain để xem thống kê chi tiết.
-          Vui lòng điền đầy đủ thông tin bên dưới.
-        </Typography>
-      </Box>
-
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-        {error && (
-          <Alert severity="error" sx={{ fontSize: '14px', textAlign: 'center' }}> {/* borderRadius handled by theme */}
-            <strong>Lỗi hệ thống:</strong> {error}
-          </Alert>
-        )}
-
-        <TextField
-          label={
-            <>
-              Tên công ty <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>*</span>
-            </>
-          }
-          id="company_name"
-          name="company_name"
-          value={formData.company_name}
-          onChange={handleChange}
-          error={!!formErrors.company_name}
-          helperText={formErrors.company_name || `${formData.company_name.length}/200 ký tự`}
-          placeholder="Nhập tên công ty hoặc tổ chức"
-          disabled={loading}
-          inputProps={{ maxLength: 200 }}
-          fullWidth
-          variant="outlined"
-        />
-
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '15px', marginBottom: '8px' }}>
-            Danh sách Domain <span style={{ color: 'error.main', fontWeight: 'bold' }}>*</span>
+    <>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" fontWeight={700}>
+            Đăng ký giám sát website
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '13px' }}>
-              Mỗi domain một dòng (tối đa 100 domain)
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 500 }}>
-              {domainCount}/100 domain
-            </Typography>
-          </Box>
-          <TextField
-            id="domains"
-            name="domains"
-            value={formData.domains}
-            onChange={handleChange}
-            error={!!formErrors.domains}
-            helperText={formErrors.domains}
-            multiline
-            rows={6}
-            placeholder="Ví dụ:&#10;example.com&#10;subdomain.example.org&#10;test.vn"
-            disabled={loading}
-            fullWidth
-            variant="outlined"
-          />
-          {duplicateWarning && (
-            <Alert severity="warning" sx={{ marginTop: '10px' }}> {/* borderRadius and borderLeft handled by theme */}
-              ⚠️ {duplicateWarning}
-            </Alert>
-          )}
+          <IconButton aria-label="close" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
         </Box>
-
-        <TextField
-          label={
-            <>
-              Mục đích/Nguyện vọng đăng ký <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>*</span>
-            </>
-          }
-          id="purpose"
-          name="purpose"
-          value={formData.purpose}
-          onChange={handleChange}
-          error={!!formErrors.purpose}
-          helperText={
-            formErrors.purpose ||
-            `${characterCount}/1000 ký tự ${characterCount < 10 ? `(còn thiếu ${10 - characterCount})` : ''}`
-          }
-          multiline
-          rows={4}
-          placeholder="Mô tả chi tiết mục đích đăng ký các domain này (ít nhất 10 ký tự). Ví dụ: Kiểm tra tuân thủ cookie cho khách hàng, cải thiện dịch vụ web..."
-          disabled={loading}
-          inputProps={{ maxLength: 1000 }}
-          fullWidth
-          variant="outlined"
-        />
-
-        <Box sx={{ display: 'flex', gap: '15px', marginTop: '10px', flexDirection: { xs: 'column', md: 'row' } }}>
-          <Button
-            type="button"
-            variant="outlined"
-            color="primary"
-            onClick={() => {
-              setFormData({ company_name: '', domains: '', purpose: '' });
-              setFormErrors({});
-              setDuplicateWarning('');
-            }}
-            disabled={loading}
-            sx={{ flex: 1 }}
-          >
-            Đặt lại
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            sx={{ flex: 2 }}
-          >
-            {loading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CircularProgress size={16} color="inherit" />
-                Đang gửi yêu cầu...
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+          Nhập danh sách domain và lý do đăng ký để hệ thống xử lý.
+        </Typography>
+      </DialogTitle>
+      <DialogContent dividers> {/* Added DialogContent */}
+        <Box
+          component={Paper}
+          elevation={0} // Remove elevation as it's now part of the Dialog
+          sx={{
+            padding: { xs: '25px 20px', md: '35px' },
+            maxWidth: '700px',
+            margin: '0 auto', // Adjust margin as it's inside a Dialog
+            border: 'none', // Remove border as it's inside a Dialog
+          }}
+        >
+          <form onSubmit={handleSubmit}>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography fontWeight={600}>
+                  Danh sách domain <span style={{ color: 'red' }}>*</span>
+                </Typography>
+                <label htmlFor="file-input">
+                  <Button variant="text" component="span" startIcon={<UploadFileIcon />}>
+                    Nhập từ file
+                  </Button>
+                </label>
+                <input id="file-input" type="file" accept=".txt" hidden onChange={handleFileImport} />
               </Box>
-            ) : (
-              'Gửi yêu cầu đăng ký'
-            )}
-          </Button>
+
+              {formData.domains.map((domain, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <TextField
+                    fullWidth
+                    value={domain}
+                    onChange={(e) => handleDomainChange(index, e.target.value)}
+                    error={!!formErrors.domains}
+                    placeholder={`domain #${index + 1}`}
+                  />
+                  <IconButton onClick={() => removeDomainField(index)} disabled={formData.domains.length === 1}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Typography variant="caption">{domainCount}/100 domain</Typography>
+                <Button size="small" variant="outlined" onClick={addDomainField} disabled={domainCount >= DOMAIN_MAX_COUNT}>
+                  + Thêm domain
+                </Button>
+              </Box>
+
+              {formErrors.domains && (
+                <Alert severity="error" sx={{ mt: 1 }}>{formErrors.domains}</Alert>
+              )}
+              {duplicateWarning && (
+                <Alert severity="warning" sx={{ mt: 1 }}>{duplicateWarning}</Alert>
+              )}
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                label="Lý do đăng ký *"
+                name="purpose"
+                value={formData.purpose}
+                onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                error={!!formErrors.purpose}
+                helperText={
+                  formErrors.purpose ||
+                  `${characterCount}/1000 ký tự ${characterCount < 10 ? `(còn thiếu ${10 - characterCount})` : ''}`
+                }
+                fullWidth
+                multiline
+                rows={5}
+                inputProps={{ maxLength: PURPOSE_MAX_LENGTH }}
+              />
+            </Box>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              sx={{ height: 50 }}
+            >
+              {loading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={18} />
+                  Đang gửi...
+                </Box>
+              ) : (
+                'Gửi yêu cầu'
+              )}
+            </Button>
+          </form>
         </Box>
-      </Box>
+      </DialogContent> {/* Closed DialogContent */}
+      <DialogActions>
+        <Button onClick={onClose} color="secondary">
+          Đóng
+        </Button>
+      </DialogActions>
 
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        action={snackbarAction}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
       >
         <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+    </>
   );
 };
 

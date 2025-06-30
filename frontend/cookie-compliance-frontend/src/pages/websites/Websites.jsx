@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import WebsiteItem from './WebsiteItem';
+import { useAuth } from '../../hooks/useAuth';
+import { useWebsites } from '../../hooks/useWebsites';
 import {
   TextField,
   Box,
@@ -10,13 +13,14 @@ import {
   TableRow,
   TablePagination,
   Paper,
+  Typography,
+  Tab,
+  Tabs,
 } from '@mui/material';
 import { LoadingSkeleton } from '../../components/Loading';
-import WebsiteItem from './WebsiteItem';
-import DomainRequestForm from './DomainRequestForm';
-import { useAuth } from '../../hooks/useAuth';
-import { useWebsites } from '../../hooks/useWebsites';
+import { useDomainRequest } from '../../hooks/useDomainRequest';
 import { toast } from 'react-toastify';
+import DomainRequestList from '../domain_requests/DomainRequestList';
 
 const WebsiteList = () => {
   const { user, isProvider, isApproved, loading: authLoading, userId } = useAuth();
@@ -32,14 +36,15 @@ const WebsiteList = () => {
 
   const [searchText, setSearchText] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
+  const [currentTab, setCurrentTab] = useState(0);
 
-  // Gọi API mỗi khi committedSearch hoặc bộ lọc thay đổi
   useEffect(() => {
     if (!authLoading && userId) {
       const params = {
         userId,
         role: user?.role,
         search: committedSearch,
+        isApproved: isProvider ? true : undefined, // Only fetch approved for providers
       };
       getWebsites(currentPage, pageSize, params);
     }
@@ -47,14 +52,14 @@ const WebsiteList = () => {
     authLoading,
     userId,
     user?.role,
-    isApproved, // Add isApproved to dependencies
+    isApproved,
     currentPage,
     pageSize,
     committedSearch,
     getWebsites,
+    isProvider,
   ]);
 
-  // Hiển thị toast nếu không có kết quả
   useEffect(() => {
     if (committedSearch && !websitesLoading && websites.length === 0) {
       toast.warning('Không tìm thấy kết quả phù hợp.', {
@@ -90,6 +95,7 @@ const WebsiteList = () => {
     }
   };
 
+  console.log("authLoading || websitesLoading", authLoading, websitesLoading)
   if (authLoading || websitesLoading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -99,60 +105,81 @@ const WebsiteList = () => {
     );
   }
 
-  if (isProvider) {
-    if (isApproved) {
-      return (
-        <Box sx={{ p: 3 }}>
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <TextField
-              label="Tìm kiếm website..."
-              variant="outlined"
-              fullWidth
-              value={searchText}
-              onChange={handleSearchInputChange}
-              onKeyDown={handleSearchKeyDown}
-              sx={{ maxWidth: '100%' }}
-            />
-          </Box>
+  const handleChangeTab = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
 
-          <Paper elevation={1}>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Domain</TableCell>
-                    <TableCell>Chính sách cookie</TableCell>
-                    <TableCell>Lần kiểm tra cuối</TableCell>
-                    <TableCell>Hành động</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {websites.map((row) => (
-                    <WebsiteItem key={row.id} website={row} />
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={totalCount}
-              rowsPerPage={pageSize}
-              page={currentPage - 1}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage="Số dòng mỗi trang:"
-            />
-          </Paper>
+  if (isProvider) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs value={currentTab} onChange={handleChangeTab} aria-label="provider website tabs">
+            <Tab label="Danh sách website quản lý" />
+            <Tab label="Danh sách yêu cầu" />
+          </Tabs>
         </Box>
-      );
-    } else {
-      return (
-        <Box sx={{ p: 3 }}>
-          <DomainRequestForm />
-        </Box>
-      );
-    }
+
+        {currentTab === 0 && (
+          <Box>
+            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <TextField
+                label="Tìm kiếm website..."
+                variant="outlined"
+                fullWidth
+                value={searchText}
+                onChange={handleSearchInputChange}
+                onKeyDown={handleSearchKeyDown}
+                sx={{ maxWidth: '100%' }}
+              />
+            </Box>
+
+            <Paper elevation={1}>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Domain</TableCell>
+                      <TableCell>Chính sách cookie</TableCell>
+                      <TableCell>Lần kiểm tra cuối</TableCell>
+                      <TableCell>Hành động</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {websites.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">
+                          {isApproved ? "Chưa có website nào được phê duyệt." : "Chưa có website nào. Yêu cầu của bạn cần được phê duyệt."}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      websites.map((row) => (
+                        <WebsiteItem key={row.id} website={row}/>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={totalCount}
+                rowsPerPage={pageSize}
+                page={currentPage - 1}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage="Số dòng mỗi trang:"
+              />
+            </Paper>
+          </Box>
+        )}
+
+        {currentTab === 1 && (
+          <Box>
+            <DomainRequestList />
+          </Box>
+        )}
+      </Box>
+    );
   }
 
   return (

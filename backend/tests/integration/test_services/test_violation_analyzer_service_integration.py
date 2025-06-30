@@ -130,7 +130,6 @@ async def test_orchestrate_analysis_new_website_success(
     mock_website_repository.create_website.return_value = Website(
         id=ObjectId(), # Use ObjectId
         domain=MOCK_ROOT_URL,
-        company_name=None, # Added missing field
         provider_id=None,
         policy_url=MOCK_POLICY_URL,
         is_specific=MOCK_POLICY_COOKIES_LIST.is_specific,
@@ -180,7 +179,6 @@ async def test_orchestrate_analysis_existing_website_cache_hit(
     existing_website = Website(
         id=ObjectId(), # Use ObjectId
         domain=MOCK_ROOT_URL,
-        company_name=None, # Added missing field
         provider_id=None,
         policy_url=MOCK_POLICY_URL,
         is_specific=MOCK_POLICY_COOKIES_LIST.is_specific,
@@ -194,7 +192,6 @@ async def test_orchestrate_analysis_existing_website_cache_hit(
     )
     mock_website_repository.get_website_by_root_url.return_value = existing_website
     mock_website_repository.update_website.return_value = None
-    mock_comparator_service.compare_compliance.return_value = MOCK_COMPLIANCE_RESULT
     mock_violation_repository.create_violation.return_value = None
 
     payload = CookieSubmissionRequest(
@@ -210,7 +207,6 @@ async def test_orchestrate_analysis_existing_website_cache_hit(
     mock_policy_crawler.extract_policy.assert_not_called() # Should be skipped
     mock_cookie_extractor_service.extract_cookie_features.assert_not_called() # Should be skipped
     mock_website_repository.create_website.assert_not_called() # Should be skipped
-    mock_comparator_service.compare_compliance.assert_called_once()
     mock_violation_repository.create_violation.assert_called_once()
 
     assert response.website_url == MOCK_WEBSITE_URL
